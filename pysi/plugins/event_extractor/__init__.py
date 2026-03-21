@@ -1,0 +1,1 @@
+"""Event extractor plugin package."""

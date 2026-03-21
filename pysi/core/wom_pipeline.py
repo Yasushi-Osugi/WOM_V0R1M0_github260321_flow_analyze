@@ -263,6 +263,18 @@ class WOMPipelineRunner:
 
         # collect result and allow result filters (visualize/export etc.)
         result = self.io.collect_result(root)
+
+        # bridge payload (v0.1 minimal handoff)
+        # plugin stores bridge artifacts on env; pipeline copies them into result["bridge"].
+        if isinstance(result, dict):
+            bridge_events = getattr(env, "_bridge_events", [])
+            bridge_flow_events = getattr(env, "_bridge_kernel_flow_events", [])
+            bridge_sidecar_events = getattr(env, "_bridge_sidecar_events", [])
+            result["bridge"] = {
+                "events": bridge_events,
+                "flow_events": bridge_flow_events,
+                "sidecar_events": bridge_sidecar_events,
+            }
         result = self.bus.apply_filters("pipeline:result", result)
         self.bus.do_action("pipeline:after_run", result=result)
 
@@ -284,4 +296,3 @@ def main_cli():
 
 if __name__ == "__main__":
     main_cli()
-
