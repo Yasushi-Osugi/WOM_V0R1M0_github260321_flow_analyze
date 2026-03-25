@@ -185,35 +185,46 @@ def copy_P_demand2supply(node):  # TOBE 240926
         node.psi4supply[w][3] = node.psi4demand[w][3].copy()
 
 
-def PUSH_process(node):
-    node.calcPS2I4supply()  # calc_psi with PULL_S
-    print(f"PUSH_process applied to {node.name}")
+def PUSH_process(node, tracer=None):
+    if tracer is None:
+        node.calcPS2I4supply()  # calc_psi with PULL_S
+        print(f"PUSH_process applied to {node.name}")
+    else:
+        node.calcPS2I4supply_trace(tracer=tracer)  # native emit path
+        print(f"PUSH_process_trace applied to {node.name}")
 
 
-def PULL_process(node):
+def PULL_process(node, tracer=None):
     copy_S_demand2supply(node)
     copy_P_demand2supply(node)
-    node.calcPS2I4supply()  # calc_psi with PULL_S&P
-    print(f"PULL_process applied to {node.name}")
+    if tracer is None:
+        node.calcPS2I4supply()  # calc_psi with PULL_S&P
+        print(f"PULL_process applied to {node.name}")
+    else:
+        node.calcPS2I4supply_trace(tracer=tracer)  # native emit path
+        print(f"PULL_process_trace applied to {node.name}")
 
 
-def apply_pull_process(node):
+def apply_pull_process(node, tracer=None):
     for child in node.children:
-        PULL_process(child)
-        apply_pull_process(child)
+        PULL_process(child, tracer=tracer)
+        apply_pull_process(child, tracer=tracer)
 
 
-def push_pull_all_psi2i_decouple4supply5(node, decouple_nodes):
+def push_pull_all_psi2i_decouple4supply5(node, decouple_nodes, tracer=None):
     print("node in supply_proc", node.name)
     if node.name in decouple_nodes:
-        node.calcPS2I4supply()  # calc_psi with PULL_S
+        if tracer is None:
+            node.calcPS2I4supply()  # calc_psi with PULL_S
+        else:
+            node.calcPS2I4supply_trace(tracer=tracer)  # native emit path
         copy_S_demand2supply(node)
-        PUSH_process(node)
-        apply_pull_process(node)
+        PUSH_process(node, tracer=tracer)
+        apply_pull_process(node, tracer=tracer)
     else:
-        PUSH_process(node)
+        PUSH_process(node, tracer=tracer)
         for child in node.children:
-            push_pull_all_psi2i_decouple4supply5(child, decouple_nodes)
+            push_pull_all_psi2i_decouple4supply5(child, decouple_nodes, tracer=tracer)
 
 
 # *****************

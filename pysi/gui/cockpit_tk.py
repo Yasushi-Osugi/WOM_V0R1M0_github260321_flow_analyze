@@ -40,6 +40,187 @@ class SelectionState:
     selected_product: str | None = None
     selected_week: int | None = None
 
+
+# ---- Step Workbench: data / helpers ---------------------------------
+
+@dataclass
+class StepContext:
+    step_type: str                  # "demand" / "supply"
+    direction: str                  # "outbound" / "inbound"
+    execution_scope: str = "one_step"
+    step_count: int = 1
+    decoupling_node: str | None = None
+    bottleneck_node: str | None = None
+    capacity_ratio: float | None = None
+    push_pull_mode: str | None = None
+    priority_rule: str | None = None
+
+
+def _normalize_step_type(value: str) -> str:
+    v = (value or "").strip().lower()
+    if v in ("demand", "dm"):
+        return "demand"
+    if v in ("supply", "sp"):
+        return "supply"
+    raise ValueError(f"Unsupported step_type: {value}")
+
+
+def _normalize_direction(value: str) -> str:
+    v = (value or "").strip().lower()
+    if v in ("outbound", "out"):
+        return "outbound"
+    if v in ("inbound", "in"):
+        return "inbound"
+    raise ValueError(f"Unsupported direction: {value}")
+
+
+def _safe_capture_snapshot(env, ctx: StepContext):
+    try:
+        from pysi.bridge.state_snapshot import SnapshotBuildContext, build_snapshot_from_v0r8
+
+        time_bucket = str(getattr(env, "current_time_bucket", "202601"))
+        return build_snapshot_from_v0r8(
+            env_or_root=env,
+            time_bucket=time_bucket,
+            ctx=SnapshotBuildContext(
+                product_id=getattr(env, "product_selected", None)
+            ),
+        )
+    except Exception as e:
+        print(f"[step] snapshot capture skipped: {e}")
+        return None
+
+
+def _safe_extract_bridge(previous, current):
+    if previous is None or current is None:
+        return {
+            "events": [],
+            "kernel_flow_events": [],
+            "sidecar_events": [],
+        }
+
+    try:
+        from pysi.bridge.event_extractor import ExtractContext, extract_events
+        from pysi.bridge.event_mapper import map_bridge_events_to_kernel_v1
+
+        bridge_events = extract_events(
+            previous_state=previous,
+            current_state=current,
+            ctx=ExtractContext(time_bucket=current.time_bucket, seq_start=1),
+        )
+        mapped = map_bridge_events_to_kernel_v1(bridge_events)
+
+        return {
+            "events": bridge_events,
+            "kernel_flow_events": mapped.flow_events,
+            "sidecar_events": mapped.sidecar_events,
+        }
+    except Exception as e:
+        print(f"[step] bridge extraction skipped: {e}")
+        return {
+            "events": [],
+            "kernel_flow_events": [],
+            "sidecar_events": [],
+        }
+
+
+def _run_demand_outbound_step(env, ctx: StepContext, tracer=None):
+    print("[step] running demand/outbound")
+    if hasattr(env, "demand_planning4multi_product"):
+        env.demand_planning4multi_product()
+    if hasattr(env, "demand_leveling4multi_prod"):
+        env.demand_leveling4multi_prod()
+
+
+def _run_demand_inbound_step(env, ctx: StepContext, tracer=None):
+    print("[step] running demand/inbound")
+    if hasattr(env, "demand_planning4multi_product"):
+        env.demand_planning4multi_product()
+    if hasattr(env, "demand_leveling4multi_prod"):
+        env.demand_leveling4multi_prod()
+
+
+def _run_supply_outbound_step(env, ctx: StepContext, tracer=None):
+    print("[step] running supply/outbound")
+    print("[trace] tracer is None:", tracer is None)
+    print(
+        "[trace] outbound root candidate:",
+        getattr(env, "root_node_outbound_byprod", None),
+        getattr(env, "root_node_outbound", None),
+        getattr(env, "root", None),
+    )
+    print(
+        "[trace] decouple candidate:",
+        getattr(env, "decouple_node_names", None),
+        getattr(env, "decouple_nodes", None),
+    )
+
+    if ctx.decoupling_node is not None:
+        setattr(env, "decoupling_node_selected", ctx.decoupling_node)
+    if ctx.push_pull_mode is not None:
+        setattr(env, "push_pull_mode", ctx.push_pull_mode)
+
+    if tracer is None:
+        if hasattr(env, "supply_planning4multi_product"):
+            env.supply_planning4multi_product()
+    else:
+        try:
+            from pysi.plan.engines import push_pull_all_psi2i_decouple4supply5
+        except Exception:
+            try:
+                from pysi.core.engines import push_pull_all_psi2i_decouple4supply5
+            except Exception as e:
+                print(f"[trace] engines import failed: {e}")
+                if hasattr(env, "supply_planning4multi_product"):
+                    env.supply_planning4multi_product()
+                return
+
+        root = (
+            getattr(env, "root_node_outbound_byprod", None)
+            or getattr(env, "root_node_outbound", None)
+            or getattr(env, "root", None)
+        )
+        decouple_nodes = (
+            getattr(env, "decouple_node_names", None)
+            or getattr(env, "decouple_nodes", None)
+            or []
+        )
+
+        if root is not None:
+            push_pull_all_psi2i_decouple4supply5(root, decouple_nodes, tracer=tracer)
+        else:
+            print("[trace] outbound trace skipped: root not found")
+            if hasattr(env, "supply_planning4multi_product"):
+                env.supply_planning4multi_product()
+
+
+
+def _run_supply_inbound_step(env, ctx: StepContext, tracer=None):
+    print("[step] running supply/inbound")
+
+    if ctx.bottleneck_node is not None:
+        setattr(env, "bottleneck_node_selected", ctx.bottleneck_node)
+    if ctx.capacity_ratio is not None:
+        setattr(env, "capacity_ratio", ctx.capacity_ratio)
+
+    if hasattr(env, "supply_planning4multi_product"):
+        env.supply_planning4multi_product()
+
+
+def _dispatch_step(env, ctx: StepContext, tracer=None):
+    if ctx.step_type == "demand" and ctx.direction == "outbound":
+        return _run_demand_outbound_step(env, ctx, tracer=tracer)
+    if ctx.step_type == "demand" and ctx.direction == "inbound":
+        return _run_demand_inbound_step(env, ctx, tracer=tracer)
+    if ctx.step_type == "supply" and ctx.direction == "outbound":
+        return _run_supply_outbound_step(env, ctx, tracer=tracer)
+    if ctx.step_type == "supply" and ctx.direction == "inbound":
+        return _run_supply_inbound_step(env, ctx, tracer=tracer)
+
+    raise ValueError(f"Unsupported step combination: {ctx}")
+
+
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -474,6 +655,26 @@ class WOMCockpit(tk.Tk):
         self.var_product = tk.StringVar(value=getattr(env, "product_selected", self.products[0] if self.products else ""))
         self.var_mom = tk.StringVar(value=self.moms[0] if self.moms else "")
 
+        # step workbench state
+        self.var_step_type = tk.StringVar(value="Supply")
+        self.var_direction = tk.StringVar(value="Outbound")
+
+        # optional future controls
+        self.var_decoupling_node = tk.StringVar(value="")
+        self.var_bottleneck_node = tk.StringVar(value="")
+        self.var_capacity_ratio = tk.StringVar(value="")
+        self.var_push_pull_mode = tk.StringVar(value="COMBINED")
+        self.var_priority_rule = tk.StringVar(value="Default")
+
+        self.current_mode = "recompute"
+        self.step_seq = 0
+        self.last_step_context = None
+        self.last_bridge_payload = {"events": [], "kernel_flow_events": [], "sidecar_events": []}
+
+        # trace on/off
+        self.var_trace_enabled = tk.BooleanVar(value=False)
+        self.trace_event_sink = []
+
         # selection state (node_name common key)
         self.state = SelectionState(
             selected_node=self.var_mom.get() if self.var_mom.get() else None,
@@ -545,6 +746,22 @@ class WOMCockpit(tk.Tk):
         self.cb_mom.pack(side="left", padx=5)
         self.cb_mom.bind("<<ComboboxSelected>>", lambda e: self.refresh())
 
+        # ---- Step workbench controls ----
+        ttk.Label(frm, text="Step:", width=6).pack(side="left", padx=(20, 0))
+        self.cb_step_type = ttk.Combobox(
+            frm, textvariable=self.var_step_type, values=["Demand", "Supply"], width=10, state="readonly"
+        )
+        self.cb_step_type.pack(side="left", padx=5)
+
+        ttk.Label(frm, text="Dir:", width=4).pack(side="left")
+        self.cb_direction = ttk.Combobox(
+            frm, textvariable=self.var_direction, values=["Outbound", "Inbound"], width=10, state="readonly"
+        )
+        self.cb_direction.pack(side="left", padx=5)
+
+        ttk.Button(frm, text="Run Step", command=self.run_step).pack(side="right")
+        ttk.Checkbutton(frm, text="Trace", variable=self.var_trace_enabled).pack(side="right", padx=8)
+        ttk.Button(frm, text="Refresh", command=self.refresh).pack(side="right", padx=8)
         ttk.Button(frm, text="Run (recompute)", command=self.run_and_refresh).pack(side="right")
         ttk.Button(frm, text="World Map", command=self.open_world_map).pack(side="right", padx=8)
         ttk.Button(frm, text="Network",   command=self.open_network).pack(side="right", padx=8)
@@ -920,6 +1137,282 @@ class WOMCockpit(tk.Tk):
                 self.env.demand_leveling4multi_prod()
 
         self.refresh()
+
+    def run_step(self):
+        """
+        Step-by-step planning の最小実装
+        - self.env を fresh に作り直さない
+        - 現在の env に対して selected step を実行
+        - step 前後 snapshot から bridge payload を作る
+        """
+        if self.env is None:
+            print("[step] skipped: self.env is None")
+            return
+
+        try:
+            raw_step_type = self.var_step_type.get()
+            raw_direction = self.var_direction.get()
+            cap_text = self.var_capacity_ratio.get().strip()
+
+            ctx = StepContext(
+                step_type=_normalize_step_type(raw_step_type),
+                direction=_normalize_direction(raw_direction),
+                execution_scope="one_step",
+                step_count=1,
+                decoupling_node=self.var_decoupling_node.get().strip() or None,
+                bottleneck_node=self.var_bottleneck_node.get().strip() or None,
+                capacity_ratio=float(cap_text) if cap_text else None,
+                push_pull_mode=self.var_push_pull_mode.get().strip() or None,
+                priority_rule=self.var_priority_rule.get().strip() or None,
+            )
+
+            print(f"[step] ctx={ctx}")
+
+            trace_enabled = bool(self.var_trace_enabled.get())
+            if trace_enabled:
+                from pysi.network.node_base import PlanningEventTracer
+
+                self.trace_event_sink = []
+                tracer = PlanningEventTracer(
+                    run_id=f"step_run_{self.step_seq + 1}",
+                    scenario_id="gui_step",
+                    event_sink=self.trace_event_sink,
+                    emitter="cockpit_run_step",
+                )
+                print("[trace] enabled for run_step")
+            else:
+                tracer = None
+                print("[trace] disabled for run_step")
+
+            prod = self.var_product.get()
+            if prod:
+                self.env.product_selected = prod
+
+            #@STOP
+            #before_snapshot = _safe_capture_snapshot(self.env, ctx)
+            #_dispatch_step(self.env, ctx, tracer=tracer)
+            #
+            #after_snapshot = _safe_capture_snapshot(self.env, ctx)
+            #bridge_payload = _safe_extract_bridge(before_snapshot, after_snapshot)
+
+            #@ADD
+
+            before_snapshot = _safe_capture_snapshot(self.env, ctx)
+
+            print("[step] before snapshot exists:", before_snapshot is not None)
+            print("[step] before lots:", len(getattr(before_snapshot, "lots", []) or []))
+            print("[step] before inventory:", len(getattr(before_snapshot, "inventory", []) or []))
+
+            before_lots = list(getattr(before_snapshot, "lots", []) or [])
+            before_inv = list(getattr(before_snapshot, "inventory", []) or [])
+
+            # ---- before: raw snapshot contents ----
+            print("[step] before first 3 lots raw:", before_lots[:3])
+            print("[step] before first 5 inventory raw:", before_inv[:5])
+
+            print("[step] before lot[0] type:", type(before_lots[0]).__name__ if before_lots else None)
+            print("[step] before lot[0] dir sample:", dir(before_lots[0])[:20] if before_lots else None)
+            print("[step] before lot[0] repr:", repr(before_lots[0])[:300] if before_lots else None)
+
+            print("[step] before inv[0] type:", type(before_inv[0]).__name__ if before_inv else None)
+            print("[step] before inv[0] dir sample:", dir(before_inv[0])[:20] if before_inv else None)
+            print("[step] before inv[0] repr:", repr(before_inv[0])[:300] if before_inv else None)
+
+            before_bindings = getattr(before_snapshot, "bindings", None)
+            if before_bindings is None:
+                before_bindings = getattr(before_snapshot, "lot_demand_bindings", None)
+            if before_bindings is None:
+                before_bindings = []
+            print("[step] before binding count:", len(before_bindings or []))
+
+            #@ DUMP
+            from dataclasses import asdict, is_dataclass
+
+            before_snapshot = _safe_capture_snapshot(self.env, ctx)
+
+            print("[step] before snapshot exists:", before_snapshot is not None)
+
+            if before_snapshot is not None:
+                print("[step] before snapshot type:", type(before_snapshot).__name__)
+                print("[step] before snapshot time_bucket:", getattr(before_snapshot, "time_bucket", None))
+
+                # ---- lots ----
+                before_lot_keys = list((getattr(before_snapshot, "lots", {}) or {}).keys())
+                before_lot_vals = list((getattr(before_snapshot, "lots", {}) or {}).values())
+                print("[step] before lots count:", len(before_lot_keys))
+                print("[step] before lot keys sample:", before_lot_keys[:5])
+                print("[step] before lot values sample:", [repr(x) for x in before_lot_vals[:3]])
+
+                # ---- inventory ----
+                before_inv_items = list((getattr(before_snapshot, "inventory", {}) or {}).items())
+                print("[step] before inventory count:", len(before_inv_items))
+                print("[step] before inventory items sample:", before_inv_items[:5])
+
+                # ---- backlog ----
+                before_backlog_items = list((getattr(before_snapshot, "backlog", {}) or {}).items())
+                print("[step] before backlog count:", len(before_backlog_items))
+                print("[step] before backlog items sample:", before_backlog_items[:5])
+
+                # ---- bindings ----
+                before_bind_items = list((getattr(before_snapshot, "lot_demand_bindings", {}) or {}).items())
+                print("[step] before binding count:", len(before_bind_items))
+                print("[step] before binding items sample:", [(k, repr(v)) for k, v in before_bind_items[:5]])
+
+                # ---- allocation pairs ----
+                before_alloc_items = list((getattr(before_snapshot, "allocation_pairs", {}) or {}).items())
+                print("[step] before allocation_pairs count:", len(before_alloc_items))
+                print("[step] before allocation_pairs sample:", before_alloc_items[:5])
+
+                # ---- optional full dict dump (shortened) ----
+                if is_dataclass(before_snapshot):
+                    before_dump = asdict(before_snapshot)
+                    print("[step] before snapshot asdict keys:", list(before_dump.keys()))
+                    print("[step] before snapshot asdict summary:", {
+                        "time_bucket": before_dump.get("time_bucket"),
+                        "lots": len(before_dump.get("lots", {}) or {}),
+                        "inventory": len(before_dump.get("inventory", {}) or {}),
+                        "backlog": len(before_dump.get("backlog", {}) or {}),
+                        "lot_demand_bindings": len(before_dump.get("lot_demand_bindings", {}) or {}),
+                        "allocation_pairs": len(before_dump.get("allocation_pairs", {}) or {}),
+                    })
+
+            #@STOP
+            #_dispatch_step(self.env, ctx)
+            
+            #@UPDATE for Trace
+            _dispatch_step(self.env, ctx, tracer=tracer)
+
+
+            after_snapshot = _safe_capture_snapshot(self.env, ctx)
+
+            print("[step] after snapshot exists:", after_snapshot is not None)
+            print("[step] after lots:", len(getattr(after_snapshot, "lots", []) or []))
+            print("[step] after inventory:", len(getattr(after_snapshot, "inventory", []) or []))
+
+            after_lots = list(getattr(after_snapshot, "lots", []) or [])
+            after_inv = list(getattr(after_snapshot, "inventory", []) or [])
+
+            # ---- after: raw snapshot contents ----
+            print("[step] after first 3 lots raw:", after_lots[:3])
+            print("[step] after first 5 inventory raw:", after_inv[:5])
+
+            print("[step] after lot[0] type:", type(after_lots[0]).__name__ if after_lots else None)
+            print("[step] after lot[0] dir sample:", dir(after_lots[0])[:20] if after_lots else None)
+            print("[step] after lot[0] repr:", repr(after_lots[0])[:300] if after_lots else None)
+
+            print("[step] after inv[0] type:", type(after_inv[0]).__name__ if after_inv else None)
+            print("[step] after inv[0] dir sample:", dir(after_inv[0])[:20] if after_inv else None)
+            print("[step] after inv[0] repr:", repr(after_inv[0])[:300] if after_inv else None)
+
+            after_bindings = getattr(after_snapshot, "bindings", None)
+            if after_bindings is None:
+                after_bindings = getattr(after_snapshot, "lot_demand_bindings", None)
+            if after_bindings is None:
+                after_bindings = []
+            print("[step] after binding count:", len(after_bindings or []))
+
+            # ---- set diff: lots / inventory keys ----
+            before_lot_set = set(before_lots)
+            after_lot_set = set(after_lots)
+            added_lots = sorted(list(after_lot_set - before_lot_set))
+            removed_lots = sorted(list(before_lot_set - after_lot_set))
+
+            print("[step] added lots count:", len(added_lots))
+            print("[step] removed lots count:", len(removed_lots))
+            print("[step] added lots sample:", added_lots[:10])
+            print("[step] removed lots sample:", removed_lots[:10])
+
+            before_inv_set = set(before_inv)
+            after_inv_set = set(after_inv)
+            added_inv = sorted(list(after_inv_set - before_inv_set))
+            removed_inv = sorted(list(before_inv_set - after_inv_set))
+
+            print("[step] added inventory keys count:", len(added_inv))
+            print("[step] removed inventory keys count:", len(removed_inv))
+            print("[step] added inventory keys sample:", added_inv[:10])
+            print("[step] removed inventory keys sample:", removed_inv[:10])
+
+            # ---- bindings diff (count only for now) ----
+            print("[step] binding count delta:", len(after_bindings or []) - len(before_bindings or []))
+
+            #@ DUMP
+            after_snapshot = _safe_capture_snapshot(self.env, ctx)
+
+            print("[step] after snapshot exists:", after_snapshot is not None)
+
+            if after_snapshot is not None:
+                print("[step] after snapshot type:", type(after_snapshot).__name__)
+                print("[step] after snapshot time_bucket:", getattr(after_snapshot, "time_bucket", None))
+
+                # ---- lots ----
+                after_lot_keys = list((getattr(after_snapshot, "lots", {}) or {}).keys())
+                after_lot_vals = list((getattr(after_snapshot, "lots", {}) or {}).values())
+                print("[step] after lots count:", len(after_lot_keys))
+                print("[step] after lot keys sample:", after_lot_keys[:5])
+                print("[step] after lot values sample:", [repr(x) for x in after_lot_vals[:3]])
+
+                # ---- inventory ----
+                after_inv_items = list((getattr(after_snapshot, "inventory", {}) or {}).items())
+                print("[step] after inventory count:", len(after_inv_items))
+                print("[step] after inventory items sample:", after_inv_items[:5])
+
+                # ---- backlog ----
+                after_backlog_items = list((getattr(after_snapshot, "backlog", {}) or {}).items())
+                print("[step] after backlog count:", len(after_backlog_items))
+                print("[step] after backlog items sample:", after_backlog_items[:5])
+
+                # ---- bindings ----
+                after_bind_items = list((getattr(after_snapshot, "lot_demand_bindings", {}) or {}).items())
+                print("[step] after binding count:", len(after_bind_items))
+                print("[step] after binding items sample:", [(k, repr(v)) for k, v in after_bind_items[:5]])
+
+                # ---- allocation pairs ----
+                after_alloc_items = list((getattr(after_snapshot, "allocation_pairs", {}) or {}).items())
+                print("[step] after allocation_pairs count:", len(after_alloc_items))
+                print("[step] after allocation_pairs sample:", after_alloc_items[:5])
+
+                # ---- optional full dict dump (shortened) ----
+                if is_dataclass(after_snapshot):
+                    after_dump = asdict(after_snapshot)
+                    print("[step] after snapshot asdict keys:", list(after_dump.keys()))
+                    print("[step] after snapshot asdict summary:", {
+                        "time_bucket": after_dump.get("time_bucket"),
+                        "lots": len(after_dump.get("lots", {}) or {}),
+                        "inventory": len(after_dump.get("inventory", {}) or {}),
+                        "backlog": len(after_dump.get("backlog", {}) or {}),
+                        "lot_demand_bindings": len(after_dump.get("lot_demand_bindings", {}) or {}),
+                        "allocation_pairs": len(after_dump.get("allocation_pairs", {}) or {}),
+                    })
+
+
+            bridge_payload = _safe_extract_bridge(before_snapshot, after_snapshot)
+
+
+
+            self.last_bridge_payload = bridge_payload
+            self.current_mode = "step"
+            self.step_seq += 1
+            self.last_step_context = ctx
+
+            setattr(self.env, "_bridge_events", bridge_payload.get("events", []))
+            setattr(self.env, "_bridge_kernel_flow_events", bridge_payload.get("kernel_flow_events", []))
+            setattr(self.env, "_bridge_sidecar_events", bridge_payload.get("sidecar_events", []))
+
+            print(
+                "[step] bridge payload:",
+                len(bridge_payload.get("events", [])),
+                len(bridge_payload.get("kernel_flow_events", [])),
+                len(bridge_payload.get("sidecar_events", [])),
+            )
+
+            if trace_enabled:
+                print("[trace] event count:", len(self.trace_event_sink))
+                print("[trace] first 5 events:", self.trace_event_sink[:5])
+        except Exception as e:
+            print(f"[step] failed: {e}")
+            raise
+        finally:
+            self.refresh()
 
     def refresh(self):
         prod = self.var_product.get()

@@ -42,6 +42,7 @@ def check_lv_week_bw(const_lst, check_week):
         while num in const_lst:
             num -= 1
     return num
+
 def check_lv_week_fw(const_lst, check_week):
     num = check_week
     if const_lst == []:
@@ -50,6 +51,55 @@ def check_lv_week_fw(const_lst, check_week):
         while num in const_lst:
             num += 1
     return num
+
+# ****************************
+# Trace ON definition
+# ****************************
+# ============================================================
+# Trace helper classes for PSI lot handling
+# ============================================================
+
+class NullTracer:
+    """
+    通常モード用の no-op tracer
+    """
+    def emit(self, **kwargs):
+        return
+
+    def next_seq(self) -> int:
+        return 0
+
+
+class PlanningEventTracer:
+    """
+    最小 trace emitter.
+    event_sink に append(event_dict) する簡易版。
+    将来 make_event(...) / EventSink に差し替え可能。
+    """
+    def __init__(self, run_id, scenario_id, event_sink, emitter="calcPS2I4supply_trace"):
+        self.run_id = run_id
+        self.scenario_id = scenario_id
+        self.event_sink = event_sink
+        self.emitter = emitter
+        self._seq = 0
+
+    def next_seq(self) -> int:
+        self._seq += 1
+        return self._seq
+
+    def emit(self, **kwargs):
+        event = {
+            "run_id": self.run_id,
+            "scenario_id": self.scenario_id,
+            "sequence_no": self.next_seq(),
+            "emitter": self.emitter,
+            "capture_mode": "native_emit",
+            "event_version": "v0",
+            **kwargs,
+        }
+        self.event_sink.append(event)
+
+
 # ****************************
 # after demand leveling / planning outbound supply
 # ****************************
@@ -812,24 +862,89 @@ class Node:
             i1 = self.psi4demand[w][2]
             p  = self.psi4demand[w][3]
             print("s = self.psi4demand[w][0]", w, s, "&[w][3]", p, "&[w][2]", i1)
+    
+    #@260325 STOP
+    ##@250818 UPDATE
+    #def calcPS2I4supply(self):
+    #    plan_len = len(self.psi4supply)
+    #    for w in range(1, plan_len):
+    #        s  = self.psi4supply[w][0]
+    #        co = self.psi4supply[w][1]
+    #        i0 = self.psi4supply[w - 1][2]
+    #        i1 = self.psi4supply[w][2]
+    #        p  = self.psi4supply[w][3]
+    #        def fifo_lot_diff(i0: list, p: list, s: list) -> list:
+    #            work = i0 + p  # 順序保持
+    #            result, used = [], set()
+    #            for lot in work:
+    #                if lot not in s and lot not in used:
+    #                    result.append(lot); used.add(lot)
+    #            return result
+    #        diff_list = fifo_lot_diff(i0, p, s)
+    #        self.psi4supply[w][2] = diff_list
+
+    #@260325 UPDATE for Trace ON/OFF
     #@250818 UPDATE
-    def calcPS2I4supply(self):
+    #@TRACE READY
+    def _calcPS2I4supply_core(self, tracer=None):
+        """
+        共通 core:
+          - 通常 planner / trace planner の両方から呼ぶ
+          - tracer が None のときは emit しない
+          - tracer が与えられたときだけ native emit する
+
+        PSI slot convention:
+          psi4supply[w][0] = S
+          psi4supply[w][1] = CO
+          psi4supply[w][2] = I
+          psi4supply[w][3] = P
+        """
+        if tracer is None:
+            tracer = NullTracer()
+
         plan_len = len(self.psi4supply)
+
         for w in range(1, plan_len):
-            s  = self.psi4supply[w][0]
+            s = self.psi4supply[w][0]
             co = self.psi4supply[w][1]
             i0 = self.psi4supply[w - 1][2]
             i1 = self.psi4supply[w][2]
-            p  = self.psi4supply[w][3]
-            def fifo_lot_diff(i0: list, p: list, s: list) -> list:
-                work = i0 + p  # 順序保持
-                result, used = [], set()
-                for lot in work:
-                    if lot not in s and lot not in used:
-                        result.append(lot); used.add(lot)
-                return result
-            diff_list = fifo_lot_diff(i0, p, s)
-            self.psi4supply[w][2] = diff_list
+            p = self.psi4supply[w][3]
+
+            # 念のため list 化
+            s_list = list(s or [])
+            i0_list = list(i0 or [])
+            p_list = list(p or [])
+
+            work = i0_list + p_list  # 順序保持
+            result = []
+            used = set()
+
+            for lot in work:
+                # 売り/出荷に消費されていない lot を inventory に残す
+                if lot not in s_list and lot not in used:
+                    result.append(lot)
+                    used.add(lot)
+
+                    tracer.emit(
+                        event_type="lot_move_to_inventory",
+                        time_bucket=str(w),
+                        node_id=getattr(self, "name", None),
+                        lot_id=str(lot),
+                        product_id=getattr(self, "product_name", None),
+                        quantity=1.0,
+                        uom="lot",
+                        payload={
+                            "from_slot": "prev_I_or_P",
+                            "to_slot": "I",
+                            "prev_inventory_size": len(i0_list),
+                            "production_size": len(p_list),
+                            "sales_size": len(s_list),
+                            "week_no": w,
+                        },
+                    )
+
+            self.psi4supply[w][2] = result
 
             #@STOP
             #if self.name == "DADCAL":
@@ -838,9 +953,20 @@ class Node:
             #        print("s" , w, s )
             #        print("co", w, co)
             #        print("i0", w, i0)
-            #        print("i1", w, diff_list)
+            #        print("i1", w, result)
             #        print("p" , w, p )
-            
+
+        return self.psi4supply
+
+    #@250818 UPDATE
+    def calcPS2I4supply(self):
+        return self._calcPS2I4supply_core(tracer=None)
+
+    def calcPS2I4supply_trace(self, tracer):
+        return self._calcPS2I4supply_core(tracer=tracer)
+
+
+
     #@250818 UPDATE
     def calcPS2I_decouple4supply(self):
         # まず長さを揃える：supply を demand に合わせる
