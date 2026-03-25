@@ -675,6 +675,15 @@ class WOMCockpit(tk.Tk):
         self.var_trace_enabled = tk.BooleanVar(value=False)
         self.trace_event_sink = []
 
+        # trace viewer state
+        self.trace_viewer_win = None
+        self.trace_tree = None
+        self.trace_count_var = tk.StringVar(value="0 events")
+        self.trace_filter_event_type = tk.StringVar(value="")
+        self.trace_filter_node_id = tk.StringVar(value="")
+        self.trace_filter_lot_id = tk.StringVar(value="")
+        self.trace_filter_time_bucket = tk.StringVar(value="")
+
         # selection state (node_name common key)
         self.state = SelectionState(
             selected_node=self.var_mom.get() if self.var_mom.get() else None,
@@ -760,6 +769,7 @@ class WOMCockpit(tk.Tk):
         self.cb_direction.pack(side="left", padx=5)
 
         ttk.Button(frm, text="Run Step", command=self.run_step).pack(side="right")
+        ttk.Button(frm, text="Trace Viewer", command=self.open_trace_viewer).pack(side="right", padx=8)
         ttk.Checkbutton(frm, text="Trace", variable=self.var_trace_enabled).pack(side="right", padx=8)
         ttk.Button(frm, text="Refresh", command=self.refresh).pack(side="right", padx=8)
         ttk.Button(frm, text="Run (recompute)", command=self.run_and_refresh).pack(side="right")
@@ -1412,7 +1422,129 @@ class WOMCockpit(tk.Tk):
             print(f"[step] failed: {e}")
             raise
         finally:
+            if self.trace_viewer_win is not None and self.trace_viewer_win.winfo_exists():
+                self._reload_trace_viewer()
             self.refresh()
+
+    def _get_filtered_trace_events(self):
+        events = list(self.trace_event_sink or [])
+
+        event_type = self.trace_filter_event_type.get().strip()
+        node_id = self.trace_filter_node_id.get().strip()
+        lot_id = self.trace_filter_lot_id.get().strip()
+        time_bucket = self.trace_filter_time_bucket.get().strip()
+
+        out = []
+        for ev in events:
+            if event_type and str(ev.get("event_type", "")) != event_type:
+                continue
+            if node_id and str(ev.get("node_id", "")) != node_id:
+                continue
+            if lot_id and str(ev.get("lot_id", "")) != lot_id:
+                continue
+            if time_bucket and str(ev.get("time_bucket", "")) != time_bucket:
+                continue
+            out.append(ev)
+        return out
+
+    def _reload_trace_viewer(self):
+        if self.trace_tree is None:
+            return
+
+        tree = self.trace_tree
+        for iid in tree.get_children():
+            tree.delete(iid)
+
+        events = self._get_filtered_trace_events()
+        self.trace_count_var.set(f"{len(events)} events")
+
+        max_rows = 2000
+        for ev in events[:max_rows]:
+            payload = ev.get("payload", {})
+            payload_text = str(payload) if isinstance(payload, dict) else str(payload)
+
+            tree.insert(
+                "",
+                "end",
+                values=(
+                    ev.get("sequence_no", ""),
+                    ev.get("event_type", ""),
+                    ev.get("node_id", ""),
+                    ev.get("lot_id", ""),
+                    ev.get("time_bucket", ""),
+                    payload_text[:120],
+                ),
+            )
+
+        if len(events) > max_rows:
+            tree.insert(
+                "",
+                "end",
+                values=("", "...", "", "", "", f"(truncated: showing first {max_rows} rows)")
+            )
+
+    def clear_trace_filters(self):
+        self.trace_filter_event_type.set("")
+        self.trace_filter_node_id.set("")
+        self.trace_filter_lot_id.set("")
+        self.trace_filter_time_bucket.set("")
+        self._reload_trace_viewer()
+
+    def open_trace_viewer(self):
+        if self.trace_viewer_win is not None and self.trace_viewer_win.winfo_exists():
+            self.trace_viewer_win.lift()
+            self._reload_trace_viewer()
+            return
+
+        win = tk.Toplevel(self)
+        win.title("Trace Viewer")
+        win.geometry("1100x520")
+        self.trace_viewer_win = win
+
+        frm_filter = ttk.Frame(win, padding=8)
+        frm_filter.pack(fill="x")
+
+        ttk.Label(frm_filter, text="event_type").grid(row=0, column=0, sticky="w", padx=4, pady=2)
+        ttk.Entry(frm_filter, textvariable=self.trace_filter_event_type, width=18).grid(row=1, column=0, sticky="w", padx=4, pady=2)
+        ttk.Label(frm_filter, text="node_id").grid(row=0, column=1, sticky="w", padx=4, pady=2)
+        ttk.Entry(frm_filter, textvariable=self.trace_filter_node_id, width=18).grid(row=1, column=1, sticky="w", padx=4, pady=2)
+        ttk.Label(frm_filter, text="lot_id").grid(row=0, column=2, sticky="w", padx=4, pady=2)
+        ttk.Entry(frm_filter, textvariable=self.trace_filter_lot_id, width=24).grid(row=1, column=2, sticky="w", padx=4, pady=2)
+        ttk.Label(frm_filter, text="time_bucket").grid(row=0, column=3, sticky="w", padx=4, pady=2)
+        ttk.Entry(frm_filter, textvariable=self.trace_filter_time_bucket, width=12).grid(row=1, column=3, sticky="w", padx=4, pady=2)
+        ttk.Button(frm_filter, text="Apply Filter", command=self._reload_trace_viewer).grid(row=1, column=4, sticky="w", padx=8, pady=2)
+        ttk.Button(frm_filter, text="Clear", command=self.clear_trace_filters).grid(row=1, column=5, sticky="w", padx=4, pady=2)
+        ttk.Button(frm_filter, text="Reload", command=self._reload_trace_viewer).grid(row=1, column=6, sticky="w", padx=4, pady=2)
+        ttk.Label(frm_filter, textvariable=self.trace_count_var).grid(row=1, column=7, sticky="e", padx=12, pady=2)
+
+        frm_table = ttk.Frame(win, padding=(8, 0, 8, 8))
+        frm_table.pack(fill="both", expand=True)
+
+        cols = ("sequence_no", "event_type", "node_id", "lot_id", "time_bucket", "payload")
+        tree = ttk.Treeview(frm_table, columns=cols, show="headings")
+        self.trace_tree = tree
+
+        for c in cols:
+            tree.heading(c, text=c)
+
+        tree.column("sequence_no", width=90, anchor="e")
+        tree.column("event_type", width=180, anchor="w")
+        tree.column("node_id", width=120, anchor="w")
+        tree.column("lot_id", width=260, anchor="w")
+        tree.column("time_bucket", width=90, anchor="center")
+        tree.column("payload", width=320, anchor="w")
+
+        vsb = ttk.Scrollbar(frm_table, orient="vertical", command=tree.yview)
+        hsb = ttk.Scrollbar(frm_table, orient="horizontal", command=tree.xview)
+        tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+
+        tree.grid(row=0, column=0, sticky="nsew")
+        vsb.grid(row=0, column=1, sticky="ns")
+        hsb.grid(row=1, column=0, sticky="ew")
+        frm_table.rowconfigure(0, weight=1)
+        frm_table.columnconfigure(0, weight=1)
+
+        self._reload_trace_viewer()
 
     def refresh(self):
         prod = self.var_product.get()

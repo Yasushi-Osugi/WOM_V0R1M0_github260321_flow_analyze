@@ -922,7 +922,7 @@ total_profit 6132
 profit_ratio 1.4
 [pipeline] before after_supply_planning hook
 [pipeline] bus._actions type=<class 'dict'>
-[pipeline] registered actions for after_supply_planning: [_CB(priority=50, fn=<function on_after_supply_planning at 0x000001F780B6E340>, src='pysi.plugins.event_extractor.plugin:on_after_supply_planning')]
+[pipeline] registered actions for after_supply_planning: [_CB(priority=50, fn=<function on_after_supply_planning at 0x00000239DEECE340>, src='pysi.plugins.event_extractor.plugin:on_after_supply_planning')]
 [bridge] on_after_supply_planning invoked
 [bridge] current snapshot time_bucket=202601
 [bridge] previous snapshot exists=False
@@ -1059,7 +1059,7 @@ profit_ratio 1.4
 [step] before snapshot asdict summary: {'time_bucket': '202601', 'lots': 520, 'inventory': 6, 'backlog': 6, 'lot_demand_bindings': 0, 'allocation_pairs': 0}
 [step] running supply/outbound
 [trace] tracer is None: False
-[trace] outbound root candidate: <pysi.network.node_base.PlanNode object at 0x000001F780BEA390> <pysi.network.node_base.GUINode object at 0x000001F7803F7680> None
+[trace] outbound root candidate: <pysi.network.node_base.PlanNode object at 0x00000239DE52AF60> <pysi.network.node_base.GUINode object at 0x00000239DE772960> None
 [trace] decouple candidate: None None
 node in supply_proc supply_point
 PUSH_process_trace applied to supply_point
@@ -1244,7 +1244,7 @@ profit_ratio 1.4
 [step] before snapshot asdict summary: {'time_bucket': '202601', 'lots': 520, 'inventory': 6, 'backlog': 6, 'lot_demand_bindings': 0, 'allocation_pairs': 0}
 [step] running supply/outbound
 [trace] tracer is None: False
-[trace] outbound root candidate: <pysi.network.node_base.PlanNode object at 0x000001F780BEA390> <pysi.network.node_base.GUINode object at 0x000001F7803F7680> None
+[trace] outbound root candidate: <pysi.network.node_base.PlanNode object at 0x00000239DE52AF60> <pysi.network.node_base.GUINode object at 0x00000239DE772960> None
 [trace] decouple candidate: None None
 node in supply_proc supply_point
 PUSH_process_trace applied to supply_point
