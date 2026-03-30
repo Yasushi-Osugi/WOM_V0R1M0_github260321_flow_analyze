@@ -1156,7 +1156,10 @@ class WOMCockpit(tk.Tk):
     def _get_node_char_by_node_id(self):
         """
         node_id -> Node Character の辞書を返す。
-        未整備の段階では空 dict fallback でよい。
+        優先順位:
+        1) self.node_char_by_node_id
+        2) self.env.node_char_by_node_id
+        3) cockpit 側の最小 fallback 推定
         """
         d = getattr(self, "node_char_by_node_id", None)
         if isinstance(d, dict) and d:
@@ -1166,7 +1169,119 @@ class WOMCockpit(tk.Tk):
         if isinstance(d, dict) and d:
             return d
 
-        return {}
+        d = self._build_default_node_char_by_node_id()
+        self.node_char_by_node_id = d
+        return d
+
+    def _build_default_node_char_by_node_id(self):
+        """
+        GUI 側の最小 fallback node character を作る。
+        目的:
+        - event_rules.py に consumer / retail / warehouse / dc の最低限の意味を渡す
+        - 特に CS_CAL のような consumer node を consumer として解釈できるようにする
+
+        ルールは暫定:
+        - supply_point => supplier
+        - CS*         => consumer
+        - RT*         => retail
+        - WS* / GR_WS*=> warehouse
+        - DAD* / GR_* => dc
+        - MOM* / PAD* => factory
+        """
+        out = {}
+
+        def put(node_id, **kwargs):
+            nid = str(node_id or "").strip()
+            if not nid:
+                return
+            if nid not in out:
+                out[nid] = {"node_role": "generic"}
+            out[nid].update(kwargs)
+
+        # 明示ルール
+        put("supply_point", node_role="supplier", can_purchase=True, can_store=True, can_ship=True)
+        put("root", node_role="root")
+
+        # 現在 product の planning tree を起点に node 名を収集
+        product_name = (self.var_product.get() or "").strip()
+        roots = []
+        try:
+            prod_tree_dict_OT = getattr(self.env, "prod_tree_dict_OT", {}) or {}
+            prod_tree_dict_IN = getattr(self.env, "prod_tree_dict_IN", {}) or {}
+            if product_name:
+                roots.append(prod_tree_dict_OT.get(product_name))
+                roots.append(prod_tree_dict_IN.get(product_name))
+        except Exception:
+            pass
+
+        def walk(root):
+            stack = [root]
+            seen = set()
+            while stack:
+                node = stack.pop()
+                if node is None:
+                    continue
+                node_key = id(node)
+                if node_key in seen:
+                    continue
+                seen.add(node_key)
+                yield node
+                for child in getattr(node, "children", []) or []:
+                    stack.append(child)
+
+        for root in roots:
+            for node in walk(root):
+                nid = str(getattr(node, "name", None) or getattr(node, "node_id", None) or "").strip()
+                if not nid:
+                    continue
+
+                upper = nid.upper()
+
+                if upper.startswith("CS"):
+                    put(
+                        nid,
+                        node_role="consumer",
+                        can_store=True,
+                        can_sell=True,
+                    )
+                elif upper.startswith("RT"):
+                    put(
+                        nid,
+                        node_role="retail",
+                        can_store=True,
+                        can_sell=True,
+                    )
+                elif upper.startswith("WS") or upper.startswith("GR_WS"):
+                    put(
+                        nid,
+                        node_role="warehouse",
+                        can_store=True,
+                        can_ship=True,
+                    )
+                elif upper.startswith("DAD") or upper.startswith("GR_"):
+                    put(
+                        nid,
+                        node_role="dc",
+                        can_store=True,
+                        can_ship=True,
+                        can_allocate=True,
+                        is_decoupling_point=True,
+                    )
+                elif upper.startswith("MOM") or upper.startswith("PAD"):
+                    put(
+                        nid,
+                        node_role="factory",
+                        can_produce=True,
+                        can_purchase=True,
+                        can_store=True,
+                    )
+                else:
+                    put(nid, node_role="generic")
+
+        print("[trace] fallback node_char count =", len(out))
+        print("[trace] fallback node_char sample =", list(out.items())[:10])
+        print("[trace] fallback node_char[CS_CAL] =", out.get("CS_CAL"))
+        return out
 
     def infer_and_append_trace_events_from_rows(self, rows):
         """
@@ -1184,6 +1299,11 @@ class WOMCockpit(tk.Tk):
 
         node_char_by_node_id = self._get_node_char_by_node_id()
         graph_edges = self._get_graph_edges_for_event_inference()
+
+        print("[trace] actual node_char[CS_CAL] =", node_char_by_node_id.get("CS_CAL"))
+        print("[trace] actual node_char[RT_CAL] =", node_char_by_node_id.get("RT_CAL"))
+        print("[trace] actual node_char[WS2CAL] =", node_char_by_node_id.get("WS2CAL"))
+        print("[trace] actual node_char[DADCAL] =", node_char_by_node_id.get("DADCAL"))
 
         lots = defaultdict(list)
         for row in rows:

@@ -2,8 +2,22 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence, Tuple
+
+from pysi.bridge.canonical_events import (
+    BusinessEventType,
+    CanonicalEventRecord,
+    CanonicalEventType,
+    canonical_event_record_to_trace_dict,
+    make_i_to_s_event,
+    make_p_to_i_event,
+    make_s_to_next_p_event,
+)
+from pysi.bridge.consumer_events import (
+    MomentOfTruthEvent,
+    MomentOfTruthType,
+)
+from pysi.bridge.consumer_state_repository import ConsumerStateRepository
 
 
 # ------------------------------------------------------------
@@ -28,20 +42,10 @@ PSI_STATE_ORDER = {
 
 
 # ------------------------------------------------------------
-# Event model (minimal canonical event)
+# Minimal consumer state repository (module-level)
 # ------------------------------------------------------------
 
-@dataclass(frozen=True)
-class CanonicalEvent:
-    event_type: str
-    lot_id: str
-    node_id: str
-    time_bucket: str
-    from_node_id: Optional[str] = None
-    to_node_id: Optional[str] = None
-    prev_state: Optional[str] = None
-    curr_state: Optional[str] = None
-    payload: Optional[Dict[str, Any]] = None
+_CONSUMER_STATE_REPO = ConsumerStateRepository()
 
 
 # ------------------------------------------------------------
@@ -61,19 +65,21 @@ def get_row_node_id(row: Row) -> str:
 
 
 def get_row_time_bucket(row: Row) -> str:
-    # "week_no" と "time_bucket" の両方に対応
     if "time_bucket" in row:
         return safe_str(row.get("time_bucket"))
     return safe_str(row.get("week_no"))
 
 
 def get_row_state(row: Row) -> str:
-    # "psi_state" を基本にしつつ、他名でも拾える余地を残す
     if "psi_state" in row:
         return safe_str(row.get("psi_state"))
     if "psi_slot" in row:
         return safe_str(row.get("psi_slot"))
     return ""
+
+
+def get_row_product_id(row: Row) -> str:
+    return safe_str(row.get("product_id"))
 
 
 def get_state_rank(state: str) -> int:
@@ -82,14 +88,6 @@ def get_state_rank(state: str) -> int:
 
 def build_edge(prev_row: Row, curr_row: Row) -> Tuple[str, str]:
     return (get_row_node_id(prev_row), get_row_node_id(curr_row))
-
-
-def is_same_node(prev_row: Row, curr_row: Row) -> bool:
-    return get_row_node_id(prev_row) == get_row_node_id(curr_row)
-
-
-def is_same_state(prev_row: Row, curr_row: Row) -> bool:
-    return get_row_state(prev_row) == get_row_state(curr_row)
 
 
 def is_pull_allocation_node(node_char: NodeChar) -> bool:
@@ -104,6 +102,45 @@ def is_shipping_node(node_char: NodeChar) -> bool:
     return bool(node_char.get("can_ship")) and not bool(node_char.get("can_sell"))
 
 
+def is_consumer_node(node_char: NodeChar) -> bool:
+    return safe_str(node_char.get("node_role")).lower() == "consumer"
+
+
+# ------------------------------------------------------------
+# Consumer MOT helper
+# ------------------------------------------------------------
+
+def _build_consumer_mot_event(curr_row: Row, curr_char: NodeChar) -> MomentOfTruthEvent:
+    """
+    最小版:
+    consumer の I->S を、まずは VALUE_EXPECTATION_MET として扱う。
+    将来は payload / quality / price / stockout で分岐可能。
+    """
+    consumer_node_id = get_row_node_id(curr_row)
+    product_id = get_row_product_id(curr_row)
+    time_bucket = get_row_time_bucket(curr_row)
+    lot_id = get_row_lot_id(curr_row)
+
+    # 最小仮定: score_delta は固定の小さな正値
+    return MomentOfTruthEvent(
+        event_type=MomentOfTruthType.VALUE_EXPECTATION_MET,
+        consumer_node_id=consumer_node_id,
+        product_id=product_id,
+        time_bucket=time_bucket,
+        lot_id=lot_id,
+        score_delta=0.2,
+        payload={
+            "source": "event_rules.consumer.I_TO_S",
+            "node_role": curr_char.get("node_role"),
+        },
+    )
+
+
+# ------------------------------------------------------------
+# Compatibility wrapper:
+# old make_event() API -> CanonicalEventRecord
+# ------------------------------------------------------------
+
 def make_event(
     event_type: str,
     prev_row: Row,
@@ -111,18 +148,82 @@ def make_event(
     *,
     from_node_id: Optional[str] = None,
     to_node_id: Optional[str] = None,
+    business_event: Optional[BusinessEventType] = None,
     payload: Optional[Dict[str, Any]] = None,
-) -> CanonicalEvent:
-    return CanonicalEvent(
-        event_type=event_type,
-        lot_id=get_row_lot_id(curr_row) or get_row_lot_id(prev_row),
-        node_id=get_row_node_id(curr_row) or get_row_node_id(prev_row),
-        time_bucket=get_row_time_bucket(curr_row) or get_row_time_bucket(prev_row),
+) -> CanonicalEventRecord:
+    """
+    旧 make_event API を保ちながら、
+    内部では CanonicalEventRecord を返す互換ラッパー。
+    """
+    prev_state = get_row_state(prev_row)
+    curr_state = get_row_state(curr_row)
+
+    lot_id = get_row_lot_id(curr_row) or get_row_lot_id(prev_row)
+    node_id = get_row_node_id(curr_row) or get_row_node_id(prev_row)
+    time_bucket = get_row_time_bucket(curr_row) or get_row_time_bucket(prev_row)
+    product_id = get_row_product_id(curr_row) or get_row_product_id(prev_row)
+
+    payload = payload or {}
+
+    if from_node_id and to_node_id and prev_state == "S" and curr_state == "P":
+        return make_s_to_next_p_event(
+            lot_id=lot_id,
+            from_node_id=from_node_id,
+            to_node_id=to_node_id,
+            time_bucket=time_bucket,
+            operational_event_type=event_type,
+            business_event=business_event,
+            prev_state=prev_state,
+            curr_state=curr_state,
+            product_id=product_id,
+            payload=payload,
+        )
+
+    if prev_state == "P" and curr_state == "I":
+        return make_p_to_i_event(
+            lot_id=lot_id,
+            node_id=node_id,
+            time_bucket=time_bucket,
+            operational_event_type=event_type,
+            business_event=business_event,
+            prev_state=prev_state,
+            curr_state=curr_state,
+            product_id=product_id,
+            payload=payload,
+        )
+
+    if (prev_state == "I" and curr_state == "S") or (prev_state == "CO" and curr_state == "S"):
+        return make_i_to_s_event(
+            lot_id=lot_id,
+            node_id=node_id,
+            time_bucket=time_bucket,
+            operational_event_type=event_type,
+            business_event=business_event,
+            prev_state=prev_state,
+            curr_state=curr_state,
+            product_id=product_id,
+            payload=payload,
+        )
+
+    canonical_event = (
+        CanonicalEventType.S_TO_NEXT_P
+        if (from_node_id and to_node_id)
+        else CanonicalEventType.I_TO_S
+    )
+
+    return CanonicalEventRecord(
+        canonical_event=canonical_event,
+        lot_id=lot_id,
+        node_id=node_id,
+        time_bucket=time_bucket,
+        operational_event_type=event_type,
+        business_event=business_event,
         from_node_id=from_node_id,
         to_node_id=to_node_id,
-        prev_state=get_row_state(prev_row),
-        curr_state=get_row_state(curr_row),
-        payload=payload or {},
+        prev_state=prev_state,
+        curr_state=curr_state,
+        product_id=product_id,
+        payload=payload,
     )
 
 
@@ -136,12 +237,12 @@ def infer_events_from_row_pair(
     prev_char: NodeChar,
     curr_char: NodeChar,
     graph_edges: GraphEdges,
-) -> List[CanonicalEvent]:
+) -> List[CanonicalEventRecord]:
     """
     同一 lot の連続した 2 row から canonical events を推定する。
     判定の土台は row 差分、Node Character は意味づけの触媒。
     """
-    events: List[CanonicalEvent] = []
+    events: List[CanonicalEventRecord] = []
 
     prev_node = get_row_node_id(prev_row)
     curr_node = get_row_node_id(curr_row)
@@ -167,7 +268,6 @@ def infer_events_from_row_pair(
             )
             return events
 
-        # departure-side meaning
         if prev_state in ("CO", "S") and prev_char.get("can_ship"):
             events.append(
                 make_event(
@@ -176,10 +276,10 @@ def infer_events_from_row_pair(
                     curr_row,
                     from_node_id=prev_node,
                     to_node_id=curr_node,
+                    business_event=BusinessEventType.SHIPMENT_RELEASED,
                 )
             )
 
-        # main transit
         events.append(
             make_event(
                 "lot_transit_node_to_node",
@@ -187,11 +287,11 @@ def infer_events_from_row_pair(
                 curr_row,
                 from_node_id=prev_node,
                 to_node_id=curr_node,
+                business_event=BusinessEventType.SHIPMENT_TRANSPORT_RECEIPT,
                 payload={"edge_pair": edge},
             )
         )
 
-        # arrival-side meaning
         if curr_char.get("is_decoupling_point") and curr_state == "I":
             events.append(
                 make_event(
@@ -200,6 +300,7 @@ def infer_events_from_row_pair(
                     curr_row,
                     from_node_id=prev_node,
                     to_node_id=curr_node,
+                    business_event=BusinessEventType.GOODS_RECEIVED,
                 )
             )
 
@@ -211,6 +312,7 @@ def infer_events_from_row_pair(
                     curr_row,
                     from_node_id=prev_node,
                     to_node_id=curr_node,
+                    business_event=BusinessEventType.GOODS_RECEIVED,
                 )
             )
 
@@ -222,6 +324,7 @@ def infer_events_from_row_pair(
                     curr_row,
                     from_node_id=prev_node,
                     to_node_id=curr_node,
+                    business_event=BusinessEventType.GOODS_RECEIVED,
                 )
             )
 
@@ -233,6 +336,7 @@ def infer_events_from_row_pair(
                     curr_row,
                     from_node_id=prev_node,
                     to_node_id=curr_node,
+                    business_event=BusinessEventType.HANDOVER_COMPLETED,
                 )
             )
 
@@ -249,11 +353,32 @@ def infer_events_from_row_pair(
     # --------------------------------------------------------
     if prev_state == "P" and curr_state == "I":
         if curr_char.get("can_produce"):
-            events.append(make_event("lot_production_completed", prev_row, curr_row))
+            events.append(
+                make_event(
+                    "lot_production_completed",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.PRODUCTION_COMPLETED,
+                )
+            )
         elif curr_char.get("can_purchase") and not curr_char.get("can_produce"):
-            events.append(make_event("lot_procurement_received", prev_row, curr_row))
+            events.append(
+                make_event(
+                    "lot_procurement_received",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.PROCUREMENT_RECEIVED,
+                )
+            )
         else:
-            events.append(make_event("lot_moved_to_inventory", prev_row, curr_row))
+            events.append(
+                make_event(
+                    "lot_moved_to_inventory",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.PUTAWAY_COMPLETED,
+                )
+            )
         return events
 
     # --------------------------------------------------------
@@ -261,18 +386,67 @@ def infer_events_from_row_pair(
     # --------------------------------------------------------
     if prev_state == "I" and curr_state == "CO":
         if curr_char.get("is_decoupling_point") and curr_char.get("can_allocate"):
-            events.append(make_event("lot_pulled_by_demand", prev_row, curr_row))
-            events.append(make_event("lot_allocated", prev_row, curr_row))
+            events.append(
+                make_event(
+                    "lot_pulled_by_demand",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.HANDOVER_COMPLETED,
+                )
+            )
+            events.append(
+                make_event(
+                    "lot_allocated",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.HANDOVER_COMPLETED,
+                )
+            )
         elif curr_char.get("is_decoupling_point"):
-            events.append(make_event("demand_bound_to_lot", prev_row, curr_row))
+            events.append(
+                make_event(
+                    "demand_bound_to_lot",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.HANDOVER_COMPLETED,
+                )
+            )
         elif curr_char.get("can_sell"):
-            events.append(make_event("lot_sales_committed", prev_row, curr_row))
+            events.append(
+                make_event(
+                    "lot_sales_committed",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.SALE_EXECUTION,
+                )
+            )
         elif curr_char.get("can_ship"):
-            events.append(make_event("lot_ship_committed", prev_row, curr_row))
+            events.append(
+                make_event(
+                    "lot_ship_committed",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.SHIPMENT_PREPARATION,
+                )
+            )
         elif curr_char.get("can_allocate"):
-            events.append(make_event("lot_allocated", prev_row, curr_row))
+            events.append(
+                make_event(
+                    "lot_allocated",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.HANDOVER_COMPLETED,
+                )
+            )
         else:
-            events.append(make_event("lot_committed_at_node", prev_row, curr_row))
+            events.append(
+                make_event(
+                    "lot_committed_at_node",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.HANDOVER_COMPLETED,
+                )
+            )
         return events
 
     # --------------------------------------------------------
@@ -280,29 +454,109 @@ def infer_events_from_row_pair(
     # --------------------------------------------------------
     if prev_state == "CO" and curr_state == "S":
         if curr_char.get("can_sell"):
-            events.append(make_event("lot_sold", prev_row, curr_row))
+            events.append(
+                make_event(
+                    "lot_sold",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.SALE_EXECUTION,
+                )
+            )
         elif curr_char.get("can_ship"):
-            events.append(make_event("lot_shipped", prev_row, curr_row))
+            events.append(
+                make_event(
+                    "lot_shipped",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.SHIPMENT_RELEASED,
+                )
+            )
         else:
-            events.append(make_event("lot_released_from_node", prev_row, curr_row))
+            events.append(
+                make_event(
+                    "lot_released_from_node",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.HANDOVER_COMPLETED,
+                )
+            )
         return events
 
     # --------------------------------------------------------
     # 5) I -> S
     # --------------------------------------------------------
     if prev_state == "I" and curr_state == "S":
+        # consumer special branch
+        if is_consumer_node(curr_char):
+            mot_event = _build_consumer_mot_event(curr_row, curr_char)
+            wb_state = _CONSUMER_STATE_REPO.apply_event(mot_event)
+
+            events.append(
+                make_event(
+                    "consumer_consumption_completed",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.CONSUMPTION_EXECUTION,
+                    payload={
+                        "mot_event_type": mot_event.event_type.value,
+                        "mot_score_delta": mot_event.score_delta,
+                        "well_being_state": {
+                            "consumer_node_id": wb_state.consumer_node_id,
+                            "product_id": wb_state.product_id,
+                            "satisfaction_stock": wb_state.satisfaction_stock,
+                            "brand_loyalty": wb_state.brand_loyalty,
+                            "repeat_intent": wb_state.repeat_intent,
+                            "switch_cost_perception": wb_state.switch_cost_perception,
+                            "price_sensitivity": wb_state.price_sensitivity,
+                            "habit_strength": wb_state.habit_strength,
+                            "well_being_degree": wb_state.well_being_degree,
+                            "last_time_bucket": wb_state.last_time_bucket,
+                            "history_count": wb_state.history_count,
+                        },
+                    },
+                )
+            )
+            return events
+
         if curr_char.get("can_sell"):
-            events.append(make_event("lot_sold", prev_row, curr_row))
+            events.append(
+                make_event(
+                    "lot_sold",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.SALE_EXECUTION,
+                )
+            )
         elif curr_char.get("can_ship"):
-            events.append(make_event("lot_shipped", prev_row, curr_row))
+            events.append(
+                make_event(
+                    "lot_shipped",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.SHIPMENT_RELEASED,
+                )
+            )
         else:
-            events.append(make_event("lot_released_from_node", prev_row, curr_row))
+            events.append(
+                make_event(
+                    "lot_released_from_node",
+                    prev_row,
+                    curr_row,
+                    business_event=BusinessEventType.HANDOVER_COMPLETED,
+                )
+            )
         return events
 
     # --------------------------------------------------------
     # 6) fallback
     # --------------------------------------------------------
-    events.append(make_event("lot_state_changed_unclassified", prev_row, curr_row))
+    events.append(
+        make_event(
+            "lot_state_changed_unclassified",
+            prev_row,
+            curr_row,
+        )
+    )
     return events
 
 
@@ -313,8 +567,6 @@ def infer_events_from_row_pair(
 def canonical_sort_key(row: Row) -> Tuple[str, str, int, int, str]:
     """
     bridge 内で同一 lot の row を自然順に並べるための最小 sort key。
-    ここでの sequence は LOT の出生 sequence を再付番するものではなく、
-    dump row を解釈しやすく並べるための順序キー。
     """
     lot_id = get_row_lot_id(row)
     origin_seq = safe_str(row.get("sequence_no") or row.get("lot_birth_seq") or "")
@@ -340,12 +592,9 @@ def infer_events_for_lot_rows(
     rows: Sequence[Row],
     node_char_by_node_id: Dict[str, NodeChar],
     graph_edges: GraphEdges,
-) -> List[CanonicalEvent]:
-    """
-    同一 lot の複数 row から event をまとめて推定する。
-    """
+) -> List[CanonicalEventRecord]:
     sorted_rows = sort_rows_for_event_inference(rows)
-    events: List[CanonicalEvent] = []
+    events: List[CanonicalEventRecord] = []
 
     if len(sorted_rows) < 2:
         return events
@@ -367,6 +616,24 @@ def infer_events_for_lot_rows(
         events.extend(pair_events)
 
     return events
+
+
+# ------------------------------------------------------------
+# Trace adapter
+# ------------------------------------------------------------
+
+def canonical_event_to_trace_dict(event: CanonicalEventRecord, sequence_no: int) -> dict:
+    return canonical_event_record_to_trace_dict(event, sequence_no)
+
+
+def canonical_events_to_trace_dicts(
+    events: Sequence[CanonicalEventRecord],
+    start_sequence_no: int = 1,
+) -> List[dict]:
+    return [
+        canonical_event_to_trace_dict(event, sequence_no=i)
+        for i, event in enumerate(events, start=start_sequence_no)
+    ]
 
 
 # ------------------------------------------------------------
@@ -413,10 +680,10 @@ if __name__ == "__main__":
     }
 
     rows = [
-        {"lot_id": "CS_CAL-CAL_RICE_1-2024340007", "sequence_no": "0007", "time_bucket": "177", "node_id": "supply_point", "psi_state": "I"},
-        {"lot_id": "CS_CAL-CAL_RICE_1-2024340007", "sequence_no": "0007", "time_bucket": "178", "node_id": "DADCAL", "psi_state": "I"},
-        {"lot_id": "CS_CAL-CAL_RICE_1-2024340007", "sequence_no": "0007", "time_bucket": "179", "node_id": "DADCAL", "psi_state": "CO"},
-        {"lot_id": "CS_CAL-CAL_RICE_1-2024340007", "sequence_no": "0007", "time_bucket": "180", "node_id": "WS2CAL", "psi_state": "I"},
+        {"lot_id": "CS_CAL-CAL_RICE_1-2024340007", "sequence_no": "0007", "time_bucket": "177", "node_id": "RT_CAL", "product_id": "CAL_RICE_1", "psi_state": "I"},
+        {"lot_id": "CS_CAL-CAL_RICE_1-2024340007", "sequence_no": "0007", "time_bucket": "178", "node_id": "CS_CAL", "product_id": "CAL_RICE_1", "psi_state": "P"},
+        {"lot_id": "CS_CAL-CAL_RICE_1-2024340007", "sequence_no": "0007", "time_bucket": "179", "node_id": "CS_CAL", "product_id": "CAL_RICE_1", "psi_state": "I"},
+        {"lot_id": "CS_CAL-CAL_RICE_1-2024340007", "sequence_no": "0007", "time_bucket": "180", "node_id": "CS_CAL", "product_id": "CAL_RICE_1", "psi_state": "S"},
     ]
 
     inferred = infer_events_for_lot_rows(
@@ -425,43 +692,5 @@ if __name__ == "__main__":
         graph_edges=graph_edges,
     )
 
-    for ev in inferred:
-        print(ev)
-
-
-def canonical_event_to_trace_dict(event: CanonicalEvent, sequence_no: int) -> dict:
-    payload = dict(event.payload or {})
-    payload.update({
-        "from_node_id": event.from_node_id,
-        "to_node_id": event.to_node_id,
-        "prev_state": event.prev_state,
-        "curr_state": event.curr_state,
-    })
-    return {
-        "sequence_no": sequence_no,
-        "event_type": event.event_type,
-        "node_id": event.node_id,
-        "lot_id": event.lot_id,
-        "time_bucket": event.time_bucket,
-        "payload": payload,
-    }
-
-
-#@STOP
-#def canonical_events_to_trace_dicts(events, start_sequence_no: int = 1) -> list[dict]:
-#    return [
-#        canonical_event_to_trace_dict(event, sequence_no=i)
-#        for i, event in enumerate(events, start=start_sequence_no)
-#    ]
-
-def canonical_events_to_trace_dicts(
-    events: Sequence[CanonicalEvent],
-    start_sequence_no: int = 1,
-) -> List[dict]:
-    return [
-        canonical_event_to_trace_dict(event, sequence_no=i)
-        for i, event in enumerate(events, start=start_sequence_no)
-    ]
-
-
-
+    for i, ev in enumerate(inferred, start=1):
+        print(canonical_event_to_trace_dict(ev, i))
