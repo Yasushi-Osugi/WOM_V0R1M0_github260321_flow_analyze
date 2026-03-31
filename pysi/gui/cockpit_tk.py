@@ -20,6 +20,9 @@ import numpy as np
 # for events dump
 from pysi.bridge.dump_rows import build_dump_rows_from_product_plan_tree
 
+# consumer node CSV input
+from pysi.bridge.event_rules import initialize_consumer_experience_inputs
+
 # cockpit_tk.py の上部に追加
 try:
     from pysi.gui.world_map_view import show_world_map
@@ -756,6 +759,13 @@ class WOMCockpit(tk.Tk):
 
         # initial draw
         self.refresh()
+
+        # condumer node CSV input
+        csv_path = os.path.join(os.getcwd(), "data", "consumer_experience_input.csv")
+        initialize_consumer_experience_inputs(csv_path)
+
+
+
 
     def _build_header(self):
         frm = ttk.Frame(self)

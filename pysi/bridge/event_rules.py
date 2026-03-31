@@ -18,6 +18,11 @@ from pysi.bridge.consumer_events import (
     MomentOfTruthType,
 )
 from pysi.bridge.consumer_state_repository import ConsumerStateRepository
+from pysi.bridge.consumer_experience_input import (
+    ConsumerExperienceInput,
+    load_consumer_experience_inputs,
+    lookup_consumer_experience,
+)
 
 
 # ------------------------------------------------------------
@@ -42,10 +47,24 @@ PSI_STATE_ORDER = {
 
 
 # ------------------------------------------------------------
-# Minimal consumer state repository (module-level)
+# Module-level repositories / caches
 # ------------------------------------------------------------
 
 _CONSUMER_STATE_REPO = ConsumerStateRepository()
+_CONSUMER_EXPERIENCE_INPUTS: Dict[Tuple[str, str, str, str], ConsumerExperienceInput] = {}
+
+
+# ------------------------------------------------------------
+# Initialization helper
+# ------------------------------------------------------------
+
+def initialize_consumer_experience_inputs(csv_path: str) -> None:
+    """
+    consumer_experience_input.csv を読み込み、module-level cache に保持する。
+    """
+    global _CONSUMER_EXPERIENCE_INPUTS
+    _CONSUMER_EXPERIENCE_INPUTS = load_consumer_experience_inputs(csv_path)
+    print("[trace] consumer experience inputs loaded:", len(_CONSUMER_EXPERIENCE_INPUTS))
 
 
 # ------------------------------------------------------------
@@ -112,25 +131,74 @@ def is_consumer_node(node_char: NodeChar) -> bool:
 
 def _build_consumer_mot_event(curr_row: Row, curr_char: NodeChar) -> MomentOfTruthEvent:
     """
-    最小版:
-    consumer の I->S を、まずは VALUE_EXPECTATION_MET として扱う。
-    将来は payload / quality / price / stockout で分岐可能。
+    consumer node の I->S に対して Moment of Truth event を生成する。
+
+    優先順位:
+    1) consumer_experience_input.csv の観測入力
+    2) fallback として value_expectation_met / score_delta=0.2
     """
     consumer_node_id = get_row_node_id(curr_row)
     product_id = get_row_product_id(curr_row)
     time_bucket = get_row_time_bucket(curr_row)
     lot_id = get_row_lot_id(curr_row)
 
-    # 最小仮定: score_delta は固定の小さな正値
+    exp = lookup_consumer_experience(
+        _CONSUMER_EXPERIENCE_INPUTS,
+        lot_id=lot_id,
+        consumer_node_id=consumer_node_id,
+        product_id=product_id,
+        time_bucket=time_bucket,
+    )
+
+    # fallback: 入力が無い場合は従来どおり
+    if exp is None:
+        return MomentOfTruthEvent(
+            event_type=MomentOfTruthType.VALUE_EXPECTATION_MET,
+            consumer_node_id=consumer_node_id,
+            product_id=product_id,
+            time_bucket=time_bucket,
+            lot_id=lot_id,
+            score_delta=0.2,
+            payload={
+                "source": "event_rules.consumer.I_TO_S.fallback",
+                "node_role": curr_char.get("node_role"),
+            },
+        )
+
+    # 1) stockout
+    if exp.availability_ok == 0:
+        event_type = MomentOfTruthType.STOCKOUT_EXPERIENCED
+        score_delta = -1.0
+
+    # 2) price resistance
+    elif exp.reference_price > 0 and exp.price_paid > exp.reference_price * 1.1:
+        event_type = MomentOfTruthType.PRICE_RESISTANCE_FELT
+        score_delta = -0.4
+
+    # 3) negative experience
+    elif exp.quality_score < 2.5 or exp.complaint_flag == 1:
+        event_type = MomentOfTruthType.EXPERIENCE_NEGATIVE
+        score_delta = -0.8
+
+    # 4) expectation met
+    else:
+        event_type = MomentOfTruthType.VALUE_EXPECTATION_MET
+        score_delta = 0.2
+
     return MomentOfTruthEvent(
-        event_type=MomentOfTruthType.VALUE_EXPECTATION_MET,
+        event_type=event_type,
         consumer_node_id=consumer_node_id,
         product_id=product_id,
         time_bucket=time_bucket,
         lot_id=lot_id,
-        score_delta=0.2,
+        score_delta=score_delta,
         payload={
-            "source": "event_rules.consumer.I_TO_S",
+            "source": "consumer_experience_input.csv",
+            "availability_ok": exp.availability_ok,
+            "price_paid": exp.price_paid,
+            "reference_price": exp.reference_price,
+            "quality_score": exp.quality_score,
+            "complaint_flag": exp.complaint_flag,
             "node_role": curr_char.get("node_role"),
         },
     )
@@ -165,6 +233,9 @@ def make_event(
 
     payload = payload or {}
 
+    # --------------------------------------------------------
+    # 1) cross-node S -> next P
+    # --------------------------------------------------------
     if from_node_id and to_node_id and prev_state == "S" and curr_state == "P":
         return make_s_to_next_p_event(
             lot_id=lot_id,
@@ -179,6 +250,9 @@ def make_event(
             payload=payload,
         )
 
+    # --------------------------------------------------------
+    # 2) same-node P -> I
+    # --------------------------------------------------------
     if prev_state == "P" and curr_state == "I":
         return make_p_to_i_event(
             lot_id=lot_id,
@@ -192,6 +266,9 @@ def make_event(
             payload=payload,
         )
 
+    # --------------------------------------------------------
+    # 3) same-node I -> S / CO -> S
+    # --------------------------------------------------------
     if (prev_state == "I" and curr_state == "S") or (prev_state == "CO" and curr_state == "S"):
         return make_i_to_s_event(
             lot_id=lot_id,
@@ -205,6 +282,9 @@ def make_event(
             payload=payload,
         )
 
+    # --------------------------------------------------------
+    # 4) fallback
+    # --------------------------------------------------------
     canonical_event = (
         CanonicalEventType.S_TO_NEXT_P
         if (from_node_id and to_node_id)
@@ -268,6 +348,7 @@ def infer_events_from_row_pair(
             )
             return events
 
+        # departure-side meaning
         if prev_state in ("CO", "S") and prev_char.get("can_ship"):
             events.append(
                 make_event(
@@ -280,6 +361,7 @@ def infer_events_from_row_pair(
                 )
             )
 
+        # main transit
         events.append(
             make_event(
                 "lot_transit_node_to_node",
@@ -292,6 +374,7 @@ def infer_events_from_row_pair(
             )
         )
 
+        # arrival-side meaning
         if curr_char.get("is_decoupling_point") and curr_state == "I":
             events.append(
                 make_event(
@@ -500,6 +583,7 @@ def infer_events_from_row_pair(
                     payload={
                         "mot_event_type": mot_event.event_type.value,
                         "mot_score_delta": mot_event.score_delta,
+                        "mot_payload": dict(mot_event.payload or {}),
                         "well_being_state": {
                             "consumer_node_id": wb_state.consumer_node_id,
                             "product_id": wb_state.product_id,
@@ -680,10 +764,38 @@ if __name__ == "__main__":
     }
 
     rows = [
-        {"lot_id": "CS_CAL-CAL_RICE_1-2024340007", "sequence_no": "0007", "time_bucket": "177", "node_id": "RT_CAL", "product_id": "CAL_RICE_1", "psi_state": "I"},
-        {"lot_id": "CS_CAL-CAL_RICE_1-2024340007", "sequence_no": "0007", "time_bucket": "178", "node_id": "CS_CAL", "product_id": "CAL_RICE_1", "psi_state": "P"},
-        {"lot_id": "CS_CAL-CAL_RICE_1-2024340007", "sequence_no": "0007", "time_bucket": "179", "node_id": "CS_CAL", "product_id": "CAL_RICE_1", "psi_state": "I"},
-        {"lot_id": "CS_CAL-CAL_RICE_1-2024340007", "sequence_no": "0007", "time_bucket": "180", "node_id": "CS_CAL", "product_id": "CAL_RICE_1", "psi_state": "S"},
+        {
+            "lot_id": "CS_CAL-CAL_RICE_1-2024340007",
+            "sequence_no": "0007",
+            "time_bucket": "177",
+            "node_id": "RT_CAL",
+            "product_id": "CAL_RICE_1",
+            "psi_state": "I",
+        },
+        {
+            "lot_id": "CS_CAL-CAL_RICE_1-2024340007",
+            "sequence_no": "0007",
+            "time_bucket": "178",
+            "node_id": "CS_CAL",
+            "product_id": "CAL_RICE_1",
+            "psi_state": "P",
+        },
+        {
+            "lot_id": "CS_CAL-CAL_RICE_1-2024340007",
+            "sequence_no": "0007",
+            "time_bucket": "179",
+            "node_id": "CS_CAL",
+            "product_id": "CAL_RICE_1",
+            "psi_state": "I",
+        },
+        {
+            "lot_id": "CS_CAL-CAL_RICE_1-2024340007",
+            "sequence_no": "0007",
+            "time_bucket": "180",
+            "node_id": "CS_CAL",
+            "product_id": "CAL_RICE_1",
+            "psi_state": "S",
+        },
     ]
 
     inferred = infer_events_for_lot_rows(
