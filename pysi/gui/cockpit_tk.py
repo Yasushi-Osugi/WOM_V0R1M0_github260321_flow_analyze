@@ -23,6 +23,15 @@ from pysi.bridge.dump_rows import build_dump_rows_from_product_plan_tree
 # consumer node CSV input
 from pysi.bridge.event_rules import initialize_consumer_experience_inputs
 
+
+# business_animation
+try:
+    from pysi.gui.business_animation.business_animation_panel import BusinessAnimationPanel
+except Exception:
+    BusinessAnimationPanel = None
+
+
+
 # cockpit_tk.py の上部に追加
 try:
     from pysi.gui.world_map_view import show_world_map
@@ -691,6 +700,12 @@ class WOMCockpit(tk.Tk):
         self.trace_filter_node_id = tk.StringVar(value="")
         self.trace_filter_lot_id = tk.StringVar(value="")
         self.trace_filter_time_bucket = tk.StringVar(value="")
+
+
+        # business animation
+        self.business_animation_window = None
+        self.business_animation_panel = None
+
 
         # animation viewer state
         self.anim_viewer_win = None
