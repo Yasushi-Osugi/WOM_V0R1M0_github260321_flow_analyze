@@ -1,0 +1,9 @@
+﻿record_status,source_type,source_ref,confidence_level,owner_name,last_updated_at,remarks,part_id,part_name,part_category,criticality_class,unit_uom,standard_lot_size,yield_assumption,is_key_part
+ACTIVE,ASSUMPTION,WOM proxy dataset v0.1,MEDIUM,OpenAI,2026-04-01,,SOC_A18,Application Processor,SOC,CRITICAL,EA,10000,0.97,Y
+ACTIVE,ASSUMPTION,WOM proxy dataset v0.1,MEDIUM,OpenAI,2026-04-01,,OLED_68,6.8in OLED Display,DISPLAY,CRITICAL,EA,8000,0.96,Y
+ACTIVE,ASSUMPTION,WOM proxy dataset v0.1,MEDIUM,OpenAI,2026-04-01,,MEM_256,256GB NAND+DRAM Package,MEMORY,CRITICAL,EA,12000,0.985,Y
+ACTIVE,ASSUMPTION,WOM proxy dataset v0.1,MEDIUM,OpenAI,2026-04-01,,CAM_PRO,Pro Camera Module,CAMERA,CRITICAL,EA,6000,0.95,Y
+ACTIVE,ASSUMPTION,WOM proxy dataset v0.1,MEDIUM,OpenAI,2026-04-01,,BATT_X,Battery Pack X,BATTERY,HIGH,EA,15000,0.99,Y
+ACTIVE,ASSUMPTION,WOM proxy dataset v0.1,MEDIUM,OpenAI,2026-04-01,,HOUSING_AL,Aluminum Housing,ENCLOSURE,HIGH,EA,10000,0.98,Y
+ACTIVE,ASSUMPTION,WOM proxy dataset v0.1,MEDIUM,OpenAI,2026-04-01,,PCB_MAIN,Main PCB,PCB,CRITICAL,EA,9000,0.97,Y
+ACTIVE,ASSUMPTION,WOM proxy dataset v0.1,MEDIUM,OpenAI,2026-04-01,,PKG_BOX,Retail Packaging Box,PACKAGING,MEDIUM,EA,20000,0.995,Y

@@ -1,0 +1,10 @@
+file_name,rows,cols
+node_geo.csv,27,3
+product_tree_inbound.csv,10,22
+product_tree_outbound.csv,42,22
+offering_price_ASIS_TOBE.csv,42,4
+sku_cost_table_inbound.csv,8,18
+sku_cost_table_outbound.csv,42,18
+sku_P_month_data.csv,12,15
+sku_S_month_data.csv,42,15
+tariff_table.csv,20,4

@@ -1,0 +1,6 @@
+﻿record_status,source_type,source_ref,confidence_level,owner_name,last_updated_at,remarks,milestone_id,product_id,milestone_type,bucket_id,affected_node_id,impact_type,impact_value,description
+ACTIVE,ASSUMPTION,WOM proxy dataset v0.1,MEDIUM,OpenAI,2026-04-01,,MS_NPI_START,IPHONE_NM_2028_BASE,NPI_START,2027M01,ASM_CHINA_MAIN,ENGINEERING_RAMP,1,NPI planning starts
+ACTIVE,ASSUMPTION,WOM proxy dataset v0.1,MEDIUM,OpenAI,2026-04-01,,MS_PROTO_BUILD,IPHONE_NM_2028_BASE,PROTO_BUILD,2027M10,ASM_INDIA_MAIN,PILOT_BUILD,1,Prototype build phase
+ACTIVE,ASSUMPTION,WOM proxy dataset v0.1,MEDIUM,OpenAI,2026-04-01,,MS_MP_RAMP,IPHONE_NM_2028_BASE,MP_RAMP_START,2028M07,ASM_CHINA_MAIN,RAMP_UP,1.2,Mass production ramp starts
+ACTIVE,ASSUMPTION,WOM proxy dataset v0.1,MEDIUM,OpenAI,2026-04-01,,MS_GLOBAL_LAUNCH,IPHONE_NM_2028_BASE,GLOBAL_LAUNCH,2028W36,RH_NA,DEMAND_UPLIFT,1.25,Global launch week
+ACTIVE,ASSUMPTION,WOM proxy dataset v0.1,MEDIUM,OpenAI,2026-04-01,,MS_PROMO_11,IPHONE_NM_2028_BASE,PROMOTION_WAVE,2028M11,CHANNEL_CN_ECOM,PROMOTION,1.10,Singles/holiday promo wave

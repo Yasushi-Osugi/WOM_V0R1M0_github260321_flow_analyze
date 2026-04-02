@@ -1,0 +1,11 @@
+V0R8準拠のCSV変換ルール再定義 v0.2
+
+1. Product_name は inbound/outbound で完成品名に統一する。
+2. 予約語 root は inbound/outbound で別ツリーの根として使う。
+3. supply_point は root 配下の共通 node とする。
+4. inbound tree では supply_point 直下に MOM+str の node を置く。
+5. outbound tree では supply_point 直下に DAD+str の node を置く。
+6. P_month は product x MOM node に出力する。
+7. S_month は product x consumer node に出力する。
+8. node_geo は physical layer の共通 node 名で管理する。
+9. 部材名は Product_name に使わず、原価は product別 node cost に畳み込む。

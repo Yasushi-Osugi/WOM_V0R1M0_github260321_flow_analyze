@@ -1,0 +1,9 @@
+product_name,node_name,price_sales_shipped,cost_total,profit,marketing_promotion,sales_admin_cost,SGA_total,logistics_costs,warehouse_cost,direct_materials_costs,tariff_cost,purchase_total_cost,prod_indirect_labor,prod_indirect_others,direct_labor_costs,depreciation_others,manufacturing_overhead
+IPHONE_NM_2028_BASE,MOM_final_assy_ASIA,373.14,345.5,27.64,0,2.0,2.0,6.0,0.0,318.5,0.0,324.5,1.5,0.0,16.0,1.0,2.0
+IPHONE_NM_2028_BASE,MOM_final_assy_EURO,391.22,362.24,28.98,0,2.0,2.0,6.0,0.0,331.24,0.0,337.24,1.5,0.0,20.0,1.0,2.0
+IPHONE_NM_2028_BASE,PAD_final_assy_ASIA,357.62,331.13,26.49,0,2.0,2.0,6.0,0.0,312.13,0.0,318.13,1.5,0.0,8.0,1.0,2.0
+IPHONE_NM_2028_BASE,PAD_final_assy_EURO,372.46,344.87,27.59,0,2.0,2.0,6.0,0.0,324.87,0.0,330.87,1.5,0.0,9.0,1.0,2.0
+IPHONE_NM_2028_PRO,MOM_final_assy_ASIA,474.12,439.0,35.12,0,2.0,2.0,6.0,0.0,412.0,0.0,418.0,1.5,0.0,16.0,1.0,2.0
+IPHONE_NM_2028_PRO,MOM_final_assy_EURO,496.24,459.48,36.76,0,2.0,2.0,6.0,0.0,428.48,0.0,434.48,1.5,0.0,20.0,1.0,2.0
+IPHONE_NM_2028_PRO,PAD_final_assy_ASIA,456.58,422.76,33.82,0,2.0,2.0,6.0,0.0,403.76,0.0,409.76,1.5,0.0,8.0,1.0,2.0
+IPHONE_NM_2028_PRO,PAD_final_assy_EURO,475.46,440.24,35.22,0,2.0,2.0,6.0,0.0,420.24,0.0,426.24,1.5,0.0,9.0,1.0,2.0
