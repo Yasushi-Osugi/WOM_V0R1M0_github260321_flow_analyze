@@ -27,8 +27,10 @@ from pysi.bridge.event_rules import initialize_consumer_experience_inputs
 # business_animation
 try:
     from pysi.gui.business_animation.business_animation_panel import BusinessAnimationPanel
+    from pysi.gui.business_animation.context_models import BusinessAnimationContext
 except Exception:
     BusinessAnimationPanel = None
+    BusinessAnimationContext = None
 
 
 
@@ -281,6 +283,97 @@ def count_lots(x):
     return len(x) if x else 0
 
 
+def build_edges_from_root(root):
+    edges = []
+    try:
+        for n in iter_nodes(root):
+            for c in getattr(n, "children", []) or []:
+                edges.append((getattr(n, "name", ""), getattr(c, "name", "")))
+    except Exception:
+        pass
+    return edges
+
+
+def make_E2E_positions(root_node_outbound, root_node_inbound,
+                     dx=1.2, dy=0.9, office_margin=1.0):
+    from collections import defaultdict, deque
+
+    def bfs_layout(root):
+        """children を辿って BFS。x=depth*dx, y=同深さで整列。"""
+        if not root:
+            return {}
+
+        edges = []
+        st, seen, nodes = [root], set(), set()
+        while st:
+            p = st.pop()
+            if id(p) in seen:
+                continue
+            seen.add(id(p))
+            pn = getattr(p, "name", "")
+            if pn:
+                nodes.add(pn)
+            for c in getattr(p, "children", []) or []:
+                cn = getattr(c, "name", "")
+                if pn and cn:
+                    edges.append((pn, cn))
+                st.append(c)
+
+        if not nodes:
+            return {}
+
+        indeg = defaultdict(int)
+        for u, v in edges:
+            indeg[v] += 1
+
+        roots = [n for n in nodes if indeg[n] == 0]
+        if not roots:
+            roots = ["supply_point"] if "supply_point" in nodes else [next(iter(nodes))]
+
+        depth = {}
+        for r in roots:
+            dq = deque([(r, 0)])
+            while dq:
+                n, d = dq.popleft()
+                if d < depth.get(n, 10**9):
+                    depth[n] = d
+                    for (u, v) in edges:
+                        if u == n:
+                            dq.append((v, d + 1))
+
+        by_d = defaultdict(list)
+        for n, d in depth.items():
+            by_d[d].append(n)
+
+        pos = {}
+        for d, arr in by_d.items():
+            arr.sort()
+            mid = (len(arr) - 1) / 2.0
+            for i, n in enumerate(arr):
+                pos[n] = (d * dx, -(i - mid) * dy)
+        return pos
+
+    pos_out = bfs_layout(root_node_outbound)
+    if "supply_point" in pos_out:
+        spx = pos_out["supply_point"][0]
+        pos_out = {n: (x - spx, y) for n, (x, y) in pos_out.items()}
+
+    pos_in = bfs_layout(root_node_inbound)
+    if "supply_point" in pos_in:
+        spx = pos_in["supply_point"][0]
+        pos_in = {n: (x - spx, y) for n, (x, y) in pos_in.items()}
+    pos_in = {n: (-x, y) for n, (x, y) in pos_in.items()}
+
+    pos = dict(pos_in)
+    pos.update(pos_out)
+    pos["supply_point"] = (0.0, 0.0)
+
+    print("pos_out => ", pos_out)
+    print("pos_in => ", pos_in)
+    print("pos_mmerged => ", pos)
+    return pos
+
+
 # ----------------------------
 # Service KPI (JIT deviation)
 # ----------------------------
@@ -473,6 +566,125 @@ def build_cashflow_df_outbound(root_outbound, output_period: int):
 
     cols = ["node_name", "Level", "Position", "Price", "PSI_attribute"] + week_cols
     return pd.DataFrame(data, columns=cols)
+
+def build_animation_kpi_df_from_cashflow(df_cash: pd.DataFrame) -> pd.DataFrame:
+    """
+    Convert build_cashflow_df_outbound() style wide cashflow DataFrame
+    into long-form animation KPI DataFrame.
+
+    Input:
+        node_name, Level, Position, Price, PSI_attribute, w1, w2, ... wN
+
+    Output:
+        week_no, node_name, revenue, cost, profit, inventory, cash_in, cash_out, net_cash
+    """
+    if df_cash is None or df_cash.empty:
+        return pd.DataFrame(
+            columns=[
+                "week_no",
+                "node_name",
+                "revenue",
+                "cost",
+                "profit",
+                "inventory",
+                "cash_in",
+                "cash_out",
+                "net_cash",
+            ]
+        )
+
+    week_cols = [c for c in df_cash.columns if str(c).startswith("w")]
+    if not week_cols:
+        return pd.DataFrame(
+            columns=[
+                "week_no",
+                "node_name",
+                "revenue",
+                "cost",
+                "profit",
+                "inventory",
+                "cash_in",
+                "cash_out",
+                "net_cash",
+            ]
+        )
+
+    keep_cols = ["node_name", "PSI_attribute"] + week_cols
+    long_df = df_cash[keep_cols].melt(
+        id_vars=["node_name", "PSI_attribute"],
+        value_vars=week_cols,
+        var_name="week_label",
+        value_name="amount",
+    ).copy()
+
+    long_df["week_no"] = (
+        long_df["week_label"].astype(str).str.extract(r"w(\d+)", expand=False).fillna("0").astype(int)
+    )
+    long_df["node_name"] = long_df["node_name"].astype(str)
+    long_df["amount"] = pd.to_numeric(long_df["amount"], errors="coerce").fillna(0.0)
+
+    def _norm_attr(x):
+        s = str(x).strip().upper()
+        if s == "0":
+            return "S"
+        if s == "1":
+            return "CO"
+        if s == "2":
+            return "I"
+        if s == "3":
+            return "P"
+        if s in ("IN", "OUT", "NET"):
+            return s
+        return s
+
+    long_df["attr_norm"] = long_df["PSI_attribute"].map(_norm_attr)
+
+    pivot = (
+        long_df.pivot_table(
+            index=["node_name", "week_no"],
+            columns="attr_norm",
+            values="amount",
+            aggfunc="sum",
+            fill_value=0.0,
+        )
+        .reset_index()
+        .copy()
+    )
+
+    for c in ["S", "P", "I", "IN", "OUT", "NET"]:
+        if c not in pivot.columns:
+            pivot[c] = 0.0
+
+    pivot["revenue"] = pivot["S"].where(pivot["S"] != 0.0, pivot["IN"])
+    pivot["cost"] = pivot["P"].where(pivot["P"] != 0.0, pivot["OUT"])
+    pivot["inventory"] = pivot["I"]
+    pivot["cash_in"] = pivot["IN"]
+    pivot["cash_out"] = pivot["OUT"]
+    pivot["net_cash"] = pivot["NET"].where(
+        pivot["NET"] != 0.0,
+        pivot["cash_in"] - pivot["cash_out"],
+    )
+    pivot["profit"] = pivot["revenue"] - pivot["cost"]
+
+    return (
+        pivot[
+            [
+                "week_no",
+                "node_name",
+                "revenue",
+                "cost",
+                "profit",
+                "inventory",
+                "cash_in",
+                "cash_out",
+                "net_cash",
+            ]
+        ]
+        .sort_values(["week_no", "node_name"])
+        .reset_index(drop=True)
+    )
+
+
 
 def cashflow_kpis_from_df(df, node_name: str | None = None):
     week_cols = [c for c in df.columns if c.startswith("w")]
@@ -771,6 +983,7 @@ class WOMCockpit(tk.Tk):
 
         # cached cash df
         self.df_cash = None
+        self.df_animation_kpi = None
 
         # initial draw
         self.refresh()
@@ -811,6 +1024,7 @@ class WOMCockpit(tk.Tk):
 
         ttk.Button(frm, text="Run Step", command=self.run_step).pack(side="right")
         ttk.Button(frm, text="Animation Viewer", command=self.open_animation_viewer).pack(side="right", padx=8)
+        ttk.Button(frm, text="Business Animation", command=self.open_business_animation).pack(side="right", padx=8)
         ttk.Button(frm, text="Trace Viewer", command=self.open_trace_viewer).pack(side="right", padx=8)
         ttk.Checkbutton(frm, text="Trace", variable=self.var_trace_enabled).pack(side="right", padx=8)
         ttk.Button(frm, text="Refresh", command=self.refresh).pack(side="right", padx=8)
@@ -818,6 +1032,136 @@ class WOMCockpit(tk.Tk):
         ttk.Button(frm, text="World Map", command=self.open_world_map).pack(side="right", padx=8)
         ttk.Button(frm, text="Network",   command=self.open_network).pack(side="right", padx=8)
         ttk.Button(frm, text="Select Node", command=self.open_node_selector).pack(side="right", padx=8)
+
+    def _get_current_root_for_business_animation(self):
+        root = getattr(self, "root_node_outbound", None)
+        if root is not None:
+            return root
+
+        direction = str(self.var_direction.get()).strip().upper() if hasattr(self, "var_direction") else "OUT"
+        if direction.startswith("IN"):
+            return getattr(self.env, "root_node_inbound", None) or getattr(self, "root_node_inbound", None)
+
+        prod = self.var_product.get().strip() if hasattr(self, "var_product") else ""
+        env = self.env
+        if prod:
+            return (
+                (getattr(env, "prod_tree_dict_OT", {}) or {}).get(prod)
+                or getattr(env, "root_node_outbound", None)
+                or getattr(self, "root_node_outbound", None)
+                or getattr(env, "root", None)
+                or getattr(self, "root", None)
+            )
+
+        return (
+            getattr(env, "root_node_outbound", None)
+            or getattr(self, "root_node_outbound", None)
+            or getattr(env, "root", None)
+            or getattr(self, "root", None)
+        )
+
+    def _get_current_edges_for_business_animation(self):
+        edges = getattr(self, "current_planning_tree_edges", None)
+        if edges:
+            return list(edges)
+
+        bridge = getattr(self, "last_bridge_payload", None) or getattr(self, "bridge_payload", None)
+        if isinstance(bridge, dict):
+            candidate = bridge.get("planning_tree_edges") or bridge.get("edges")
+            if candidate:
+                return list(candidate)
+
+        root = self._get_current_root_for_business_animation()
+        if root is None:
+            return []
+        return build_edges_from_root(root)
+
+    def build_business_animation_context(self):
+        if BusinessAnimationContext is None:
+            return None
+
+        try:
+            product_name = str(self.var_product.get()).strip()
+        except Exception:
+            product_name = getattr(self.env, "product_selected", None)
+
+        try:
+            direction = str(self.var_direction.get()).strip()
+        except Exception:
+            direction = "Outbound"
+
+        scenario_name = getattr(self, "current_mode", "recompute")
+        selected_node = getattr(self.state, "selected_node", None) or None
+
+        root_node = self._get_current_root_for_business_animation()
+        edges = self._get_current_edges_for_business_animation()
+
+        node_dict = {}
+        try:
+            env_node_dict = getattr(self.env, "node_dict", None)
+            if isinstance(env_node_dict, dict) and env_node_dict:
+                node_dict = dict(env_node_dict)
+            elif root_node is not None:
+                for n in iter_nodes(root_node):
+                    nn = getattr(n, "name", None)
+                    if nn:
+                        node_dict[nn] = n
+        except Exception:
+            pass
+
+        trace_events = list(getattr(self, "trace_event_sink", []) or [])
+        bridge_payload = getattr(self, "last_bridge_payload", None) or {}
+
+        #@STOP
+        #cashflow_df = getattr(self, "df_cash", None)
+        #@UPDATE
+        cashflow_df = getattr(self, "df_animation_kpi", None)
+        if cashflow_df is None:
+            cashflow_df = build_animation_kpi_df_from_cashflow(getattr(self, "df_cash", None))
+
+        pos_e2e = None
+        try:
+            root_out = (
+                getattr(self.env, "root_node_outbound", None)
+                or getattr(self, "root_node_outbound", None)
+            )
+            root_in = (
+                getattr(self.env, "root_node_inbound", None)
+                or getattr(self, "root_node_inbound", None)
+            )
+            if root_out is not None or root_in is not None:
+                pos_e2e = make_E2E_positions(
+                    root_node_outbound=root_out,
+                    root_node_inbound=root_in,
+                    dx=1.0,
+                    dy=1.0,
+                    office_margin=1.0,
+                )
+        except Exception as e:
+            print(f"[business_animation] make_E2E_positions skipped: {e}")
+            pos_e2e = None
+
+        metadata = {
+            "source": "cockpit_tk",
+            "product_name": product_name,
+            "direction": direction,
+            "scenario_name": scenario_name,
+            "node_positions": pos_e2e,
+        }
+
+        return BusinessAnimationContext(
+            product_name=product_name,
+            scenario_name=scenario_name,
+            direction=direction,
+            selected_node=selected_node,
+            root_node=root_node,
+            node_dict=node_dict,
+            edges=edges,
+            trace_events=trace_events,
+            bridge_payload=bridge_payload,
+            cashflow_df=cashflow_df,
+            metadata=metadata,
+        )
 
 
     #@STOP
@@ -1011,6 +1355,13 @@ class WOMCockpit(tk.Tk):
         if self.moms and self.var_mom.get() not in self.moms:
             self.var_mom.set(self.moms[0])
         self.refresh()
+        try:
+            if self.business_animation_panel is not None:
+                ctx = self.build_business_animation_context()
+                if ctx is not None:
+                    self.business_animation_panel.set_context(ctx)
+        except Exception:
+            pass
 
     def run_and_refresh(self):
         """
@@ -2242,6 +2593,75 @@ class WOMCockpit(tk.Tk):
 
         self._draw_animation_frame()
 
+    def open_business_animation(self):
+        """
+        Open Business Performance Animation viewer in a separate Toplevel.
+
+        Placement policy:
+        - Keep this next to open_animation_viewer() because both are viewer windows.
+        - Reuse current cockpit selection (product / direction / selected node).
+        - If already open, just lift/focus and refresh the context.
+        """
+        if BusinessAnimationPanel is None:
+            messagebox.showerror(
+                "Business Animation",
+                "business_animation module could not be imported.\n"
+                "Please check pysi/gui/business_animation/ placement."
+            )
+            return
+
+        # already opened -> focus + refresh context
+        if self.business_animation_window is not None:
+            try:
+                if self.business_animation_window.winfo_exists():
+                    try:
+                        ctx = self.build_business_animation_context()
+                        if ctx is not None and self.business_animation_panel is not None:
+                            self.business_animation_panel.set_context(ctx)
+                    except Exception as e:
+                        print(f"[business_animation] refresh-on-open skipped: {e}")
+
+                    self.business_animation_window.deiconify()
+                    self.business_animation_window.lift()
+                    self.business_animation_window.focus_force()
+                    return
+            except Exception:
+                self.business_animation_window = None
+                self.business_animation_panel = None
+
+        # create new window
+        win = tk.Toplevel(self)
+        win.title("WOM Business Performance Animation v0.1")
+        win.geometry("1280x720")
+        self.business_animation_window = win
+
+        panel = BusinessAnimationPanel(win)
+        panel.pack(fill="both", expand=True)
+        self.business_animation_panel = panel
+
+        # initial context push
+        try:
+            ctx = self.build_business_animation_context()
+            if ctx is not None:
+                panel.set_context(ctx)
+        except Exception as e:
+            print(f"[business_animation] initial context push failed: {e}")
+
+        def _on_close():
+            try:
+                if self.business_animation_panel is not None:
+                    try:
+                        if hasattr(self.business_animation_panel, "controller") and self.business_animation_panel.controller is not None:
+                            self.business_animation_panel.controller.pause()
+                    except Exception:
+                        pass
+            finally:
+                self.business_animation_panel = None
+                self.business_animation_window = None
+                win.destroy()
+
+        win.protocol("WM_DELETE_WINDOW", _on_close)
+
     def refresh(self):
         prod = self.var_product.get()
         mom = self.var_mom.get()
@@ -2285,6 +2705,7 @@ class WOMCockpit(tk.Tk):
         # Cashflow DF (cache per refresh)
         output_period = 53 * int(getattr(root_ot, "plan_range", 1))
         self.df_cash = build_cashflow_df_outbound(root_ot, output_period=output_period)
+        self.df_animation_kpi = build_animation_kpi_df_from_cashflow(self.df_cash)
 
         # Cash KPIs: total + mom
         cash_total = cashflow_kpis_from_df(self.df_cash, node_name=None)
@@ -2310,6 +2731,14 @@ class WOMCockpit(tk.Tk):
             plot_cashflow(self.frame_cash_total, self.df_cash, title=f"Cashflow TOTAL (Outbound sum) : {prod}", node_name=None)
         else:
             plot_cashflow(self.frame_cash_total, self.df_cash, title=f"Cashflow MOM : {prod} / {mom}", node_name=mom)
+
+        try:
+            if self.business_animation_panel is not None:
+                ctx = self.build_business_animation_context()
+                if ctx is not None:
+                    self.business_animation_panel.set_context(ctx)
+        except Exception:
+            pass
 
 
     #@STOP
@@ -2368,6 +2797,12 @@ class WOMCockpit(tk.Tk):
                 wmv.set_selected_node(node_name)  # ← Cで world_map_view に追加する
             except Exception:
                 pass
+
+        try:
+            if getattr(self, "business_animation_panel", None) is not None:
+                self.business_animation_panel.update_selection(node_name)
+        except Exception:
+            pass
         # -----------------------------------------------
 
         self.render_l1_psi_mini()

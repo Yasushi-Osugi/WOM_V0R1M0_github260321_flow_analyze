@@ -34,6 +34,23 @@ class NetworkAnimView(tk.Frame):
 
         self._build_static_scene()
 
+
+    def rebuild_topology(
+        self,
+        node_positions: dict[str, tuple[int, int]],
+        edges: list[tuple[str, str]],
+    ) -> None:
+        self.node_positions = node_positions
+        self.edges = edges
+
+        self.canvas.delete("all")
+        self._node_circle_ids.clear()
+        self._node_label_ids.clear()
+        self._edge_line_ids.clear()
+
+        self._build_static_scene()
+
+
     def _build_static_scene(self) -> None:
         # edges
         for edge in self.edges:
@@ -47,7 +64,7 @@ class NetworkAnimView(tk.Frame):
         for node_id, (x, y) in self.node_positions.items():
             r = 18
             oval_id = self.canvas.create_oval(x - r, y - r, x + r, y + r, fill="#d9e2ec", outline="#486581", width=2)
-            label_id = self.canvas.create_text(x, y + 30, text=node_id, font=("Arial", 9))
+            label_id = self.canvas.create_text(x, y + 36, text=node_id, font=("Arial", 9))
 
             self._node_circle_ids[node_id] = oval_id
             self._node_label_ids[node_id] = label_id
@@ -89,7 +106,23 @@ class NetworkAnimView(tk.Frame):
             self.canvas.coords(oval_id, x - radius, y - radius, x + radius, y + radius)
             self.canvas.itemconfigure(oval_id, fill=fill, outline=outline, width=outline_w)
 
-            short_text = f"{node_id}\nPft:{nm.profit/1_000_000:.1f}M"
+            mode = getattr(state, "mode", "profit")
+            if mode == "revenue":
+                metric_value = getattr(nm, "revenue", 0.0)
+                metric_tag = "Rev"
+            elif mode == "inventory":
+                metric_value = getattr(nm, "inventory", 0.0)
+                metric_tag = "Inv"
+            else:
+                metric_value = getattr(nm, "profit", 0.0)
+                metric_tag = "Pft"
+
+            if abs(metric_value) >= 1_000_000:
+                shown = f"{metric_value/1_000_000:.1f}M"
+            else:
+                shown = f"{metric_value:,.0f}"
+
+            short_text = f"{node_id}\n{metric_tag}:{shown}"
             self.canvas.itemconfigure(self._node_label_ids[node_id], text=short_text)
 
     def _calc_radius(self, nm, mode: str) -> int:
