@@ -17,12 +17,6 @@ from dataclasses import dataclass
 
 import numpy as np
 
-# for events dump
-from pysi.bridge.dump_rows import build_dump_rows_from_product_plan_tree
-
-# consumer node CSV input
-from pysi.bridge.event_rules import initialize_consumer_experience_inputs
-
 # cockpit_tk.py の上部に追加
 try:
     from pysi.gui.world_map_view import show_world_map
@@ -760,13 +754,6 @@ class WOMCockpit(tk.Tk):
         # initial draw
         self.refresh()
 
-        # condumer node CSV input
-        csv_path = os.path.join(os.getcwd(), "data", "consumer_experience_input.csv")
-        initialize_consumer_experience_inputs(csv_path)
-
-
-
-
     def _build_header(self):
         frm = ttk.Frame(self)
         frm.pack(fill="x", padx=10, pady=10)
@@ -957,8 +944,32 @@ class WOMCockpit(tk.Tk):
         except Exception as e:
             self.l1_show_text(f"[World Map] not available: {e}")
             return None
-        
-        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def _build_kpi_cards(self):
         # simple label grid (not fancy cards, but clean)
         for i, key in enumerate(["Profit", "Service(JIT MAD)", "CCC(placeholder)", "Utilization", "Inventory(last/avg)", "NetCash(min/cum_min)"]):
@@ -1039,317 +1050,6 @@ class WOMCockpit(tk.Tk):
                 self.env.demand_leveling4multi_prod()
 
         self.refresh()
-
-# ********
-# helper
-# ********
-
-
-
-
-
-    def _get_graph_edges_for_event_inference(self):
-        """
-        event inference 用の edge 集合を返す。
-
-        優先順位:
-        1. current product の planning tree を make_highlight_flow と同じ walk で辿る
-        2. fallback として GUI / networkX graph
-        """
-        edges = set()
-
-        product_name = (self.var_product.get() or "").strip()
-        if not product_name:
-            return edges
-
-        # direction 解釈
-        direction = "OUT"
-        raw_direction = ""
-        if hasattr(self, "var_direction"):
-            try:
-                raw_direction = (self.var_direction.get() or "").strip().lower()
-            except Exception:
-                raw_direction = ""
-
-        if raw_direction in ("inbound", "in"):
-            direction = "IN"
-
-        # --------------------------------------------------
-        # 1) planning tree edges
-        #    make_highlight_flow() と同じ tree walk を使う
-        # --------------------------------------------------
-        try:
-            prod_tree_dict_OT = getattr(self.env, "prod_tree_dict_OT", {}) or {}
-            prod_tree_dict_IN = getattr(self.env, "prod_tree_dict_IN", {}) or {}
-
-            prod_tree_OT = prod_tree_dict_OT.get(product_name)
-            prod_tree_IN = prod_tree_dict_IN.get(product_name)
-
-            highlight_flow = {}
-
-            def walk_tree(plan_node):
-                if plan_node is None:
-                    return
-                for child in getattr(plan_node, "children", []) or []:
-                    from_node = getattr(plan_node, "name", None) or getattr(plan_node, "node_id", None)
-                    to_node = getattr(child, "name", None) or getattr(child, "node_id", None)
-                    if from_node is not None and to_node is not None:
-                        if from_node not in highlight_flow:
-                            highlight_flow[from_node] = {}
-                        highlight_flow[from_node][to_node] = 1.0
-                        edges.add((str(from_node), str(to_node)))
-                    walk_tree(child)
-
-            # make_highlight_flow と同様に outbound / inbound の両方を歩けるようにする
-            if direction == "OUT":
-                if prod_tree_OT is not None:
-                    print("[trace] highlight-style outbound root =", getattr(prod_tree_OT, "name", None))
-                    walk_tree(prod_tree_OT)
-            else:
-                if prod_tree_IN is not None:
-                    print("[trace] highlight-style inbound root =", getattr(prod_tree_IN, "name", None))
-                    walk_tree(prod_tree_IN)
-
-            if edges:
-                print(
-                    f"[trace] planning-tree edges for product={product_name}, direction={direction}: {len(edges)}"
-                )
-                print("[trace] planning-tree edge sample:", list(edges)[:10])
-                return edges
-
-        except Exception as e:
-            print(f"[trace] planning-tree edge extraction skipped: {e}")
-
-        # --------------------------------------------------
-        # 2) fallback: GUI/networkX graph
-        # --------------------------------------------------
-        try:
-            viewer = getattr(self, "_network_viewer", None)
-            if viewer is not None:
-                for attr_name in ("G", "graph", "_graph"):
-                    g = getattr(viewer, attr_name, None)
-                    if g is not None:
-                        try:
-                            for u, v in g.edges():
-                                edges.add((str(u), str(v)))
-                        except Exception:
-                            pass
-                        if edges:
-                            print(f"[trace] fallback viewer graph edges: {len(edges)}")
-                            return edges
-        except Exception:
-            pass
-
-        try:
-            for attr_name in ("G", "graph", "_graph"):
-                g = getattr(self, attr_name, None)
-                if g is not None:
-                    try:
-                        for u, v in g.edges():
-                            edges.add((str(u), str(v)))
-                    except Exception:
-                        pass
-                    if edges:
-                        print(f"[trace] fallback cockpit graph edges: {len(edges)}")
-                        return edges
-        except Exception:
-            pass
-
-        return edges
-
-
-
-
-
-
-
-    def _get_node_char_by_node_id(self):
-        """
-        node_id -> Node Character の辞書を返す。
-        優先順位:
-        1) self.node_char_by_node_id
-        2) self.env.node_char_by_node_id
-        3) cockpit 側の最小 fallback 推定
-        """
-        d = getattr(self, "node_char_by_node_id", None)
-        if isinstance(d, dict) and d:
-            return d
-
-        d = getattr(self.env, "node_char_by_node_id", None)
-        if isinstance(d, dict) and d:
-            return d
-
-        d = self._build_default_node_char_by_node_id()
-        self.node_char_by_node_id = d
-        return d
-
-    def _build_default_node_char_by_node_id(self):
-        """
-        GUI 側の最小 fallback node character を作る。
-        目的:
-        - event_rules.py に consumer / retail / warehouse / dc の最低限の意味を渡す
-        - 特に CS_CAL のような consumer node を consumer として解釈できるようにする
-
-        ルールは暫定:
-        - supply_point => supplier
-        - CS*         => consumer
-        - RT*         => retail
-        - WS* / GR_WS*=> warehouse
-        - DAD* / GR_* => dc
-        - MOM* / PAD* => factory
-        """
-        out = {}
-
-        def put(node_id, **kwargs):
-            nid = str(node_id or "").strip()
-            if not nid:
-                return
-            if nid not in out:
-                out[nid] = {"node_role": "generic"}
-            out[nid].update(kwargs)
-
-        # 明示ルール
-        put("supply_point", node_role="supplier", can_purchase=True, can_store=True, can_ship=True)
-        put("root", node_role="root")
-
-        # 現在 product の planning tree を起点に node 名を収集
-        product_name = (self.var_product.get() or "").strip()
-        roots = []
-        try:
-            prod_tree_dict_OT = getattr(self.env, "prod_tree_dict_OT", {}) or {}
-            prod_tree_dict_IN = getattr(self.env, "prod_tree_dict_IN", {}) or {}
-            if product_name:
-                roots.append(prod_tree_dict_OT.get(product_name))
-                roots.append(prod_tree_dict_IN.get(product_name))
-        except Exception:
-            pass
-
-        def walk(root):
-            stack = [root]
-            seen = set()
-            while stack:
-                node = stack.pop()
-                if node is None:
-                    continue
-                node_key = id(node)
-                if node_key in seen:
-                    continue
-                seen.add(node_key)
-                yield node
-                for child in getattr(node, "children", []) or []:
-                    stack.append(child)
-
-        for root in roots:
-            for node in walk(root):
-                nid = str(getattr(node, "name", None) or getattr(node, "node_id", None) or "").strip()
-                if not nid:
-                    continue
-
-                upper = nid.upper()
-
-                if upper.startswith("CS"):
-                    put(
-                        nid,
-                        node_role="consumer",
-                        can_store=True,
-                        can_sell=True,
-                    )
-                elif upper.startswith("RT"):
-                    put(
-                        nid,
-                        node_role="retail",
-                        can_store=True,
-                        can_sell=True,
-                    )
-                elif upper.startswith("WS") or upper.startswith("GR_WS"):
-                    put(
-                        nid,
-                        node_role="warehouse",
-                        can_store=True,
-                        can_ship=True,
-                    )
-                elif upper.startswith("DAD") or upper.startswith("GR_"):
-                    put(
-                        nid,
-                        node_role="dc",
-                        can_store=True,
-                        can_ship=True,
-                        can_allocate=True,
-                        is_decoupling_point=True,
-                    )
-                elif upper.startswith("MOM") or upper.startswith("PAD"):
-                    put(
-                        nid,
-                        node_role="factory",
-                        can_produce=True,
-                        can_purchase=True,
-                        can_store=True,
-                    )
-                else:
-                    put(nid, node_role="generic")
-
-        print("[trace] fallback node_char count =", len(out))
-        print("[trace] fallback node_char sample =", list(out.items())[:10])
-        print("[trace] fallback node_char[CS_CAL] =", out.get("CS_CAL"))
-        return out
-
-    def infer_and_append_trace_events_from_rows(self, rows):
-        """
-        PSI dump rows から canonical event を推定し、
-        self.trace_event_sink に append する。
-        """
-        from collections import defaultdict
-        from pysi.bridge.event_rules import (
-            infer_events_for_lot_rows,
-            canonical_events_to_trace_dicts,
-        )
-
-        if not rows:
-            return []
-
-        node_char_by_node_id = self._get_node_char_by_node_id()
-        graph_edges = self._get_graph_edges_for_event_inference()
-
-        print("[trace] actual node_char[CS_CAL] =", node_char_by_node_id.get("CS_CAL"))
-        print("[trace] actual node_char[RT_CAL] =", node_char_by_node_id.get("RT_CAL"))
-        print("[trace] actual node_char[WS2CAL] =", node_char_by_node_id.get("WS2CAL"))
-        print("[trace] actual node_char[DADCAL] =", node_char_by_node_id.get("DADCAL"))
-
-        lots = defaultdict(list)
-        for row in rows:
-            lot_id = str(row.get("lot_id", "") or "").strip()
-            if not lot_id:
-                continue
-            lots[lot_id].append(row)
-
-        next_sequence_no = len(self.trace_event_sink) + 1
-        added_trace_dicts = []
-
-        for lot_id in sorted(lots.keys()):
-            inferred_events = infer_events_for_lot_rows(
-                rows=lots[lot_id],
-                node_char_by_node_id=node_char_by_node_id,
-                graph_edges=graph_edges,
-            )
-
-            trace_dicts = canonical_events_to_trace_dicts(
-                inferred_events,
-                start_sequence_no=next_sequence_no,
-            )
-
-            self.trace_event_sink.extend(trace_dicts)
-            added_trace_dicts.extend(trace_dicts)
-            next_sequence_no += len(trace_dicts)
-
-        if added_trace_dicts and self.trace_tree is not None:
-            self._reload_trace_viewer()
-
-        return added_trace_dicts
-
-
-
-
-
 
     def run_step(self):
         """
@@ -1598,43 +1298,6 @@ class WOMCockpit(tk.Tk):
                     })
 
 
-
-
-            # ---- optional full dict dump (shortened) ----
-            if is_dataclass(after_snapshot):
-                after_dump = asdict(after_snapshot)
-                print("[step] after snapshot asdict keys:", list(after_dump.keys()))
-                print("[step] after snapshot asdict summary:", {
-                    "time_bucket": after_dump.get("time_bucket"),
-                    "lots": len(after_dump.get("lots", {}) or {}),
-                    "inventory": len(after_dump.get("inventory", {}) or {}),
-                    "backlog": len(after_dump.get("backlog", {}) or {}),
-                    "lot_demand_bindings": len(after_dump.get("lot_demand_bindings", {}) or {}),
-                    "allocation_pairs": len(after_dump.get("allocation_pairs", {}) or {}),
-                })
-
-
-
-
-
-            # --------------------------------------------------
-            # current product planning tree -> dump rows -> inferred events
-            # --------------------------------------------------
-            try:
-                step_dir = "OUT"
-                raw_direction = (self.var_direction.get() or "").strip().lower()
-                if raw_direction in ("inbound", "in"):
-                    step_dir = "IN"
-
-                self.build_and_append_inferred_trace_for_current_product(direction=step_dir)
-
-            except Exception as e:
-                print(f"[trace] build_and_append_inferred_trace_for_current_product skipped: {e}")
-
-
-
-
-
             bridge_payload = _safe_extract_bridge(before_snapshot, after_snapshot)
 
 
@@ -1665,62 +1328,6 @@ class WOMCockpit(tk.Tk):
             if self.trace_viewer_win is not None and self.trace_viewer_win.winfo_exists():
                 self._reload_trace_viewer()
             self.refresh()
-
-# ********
-# event dump
-# ********
-    def build_dump_rows_for_current_product(self, direction="OUT"):
-        """
-        現在選択中 product の planning tree から dump rows を作る。
-        dump rows の本体ロジックは pysi.bridge.dump_rows 側へ委譲する。
-        """
-        product_name = (self.var_product.get() or "").strip()
-        if not product_name:
-            return []
-
-        try:
-            prod_tree_dict_OT = getattr(self.env, "prod_tree_dict_OT", {}) or {}
-            prod_tree_dict_IN = getattr(self.env, "prod_tree_dict_IN", {}) or {}
-
-            rows = build_dump_rows_from_product_plan_tree(
-                product_name=product_name,
-                direction=direction,
-                prod_tree_dict_OT=prod_tree_dict_OT,
-                prod_tree_dict_IN=prod_tree_dict_IN,
-            )
-
-            print(
-                f"[trace] dump rows for product={product_name}, direction={direction}: {len(rows)}"
-            )
-            return rows
-
-        except Exception as e:
-            print(f"[trace] build_dump_rows_for_current_product skipped: {e}")
-            return []
-
-
-    def build_and_append_inferred_trace_for_current_product(self, direction="OUT"):
-        """
-        現在選択中 product の planning tree から dump rows を作り、
-        canonical event 推定結果を self.trace_event_sink に append する。
-        """
-        rows = self.build_dump_rows_for_current_product(direction=direction)
-        if not rows:
-            return []
-
-        added_trace_dicts = self.infer_and_append_trace_events_from_rows(rows)
-
-        print(
-            f"[trace] inferred canonical events for current product: {len(added_trace_dicts)}"
-        )
-        if added_trace_dicts:
-            print("[trace] first 5 inferred events:", added_trace_dicts[:5])
-
-        return added_trace_dicts
-
-
-
-
 
     def _get_filtered_trace_events(self):
         events = list(self.trace_event_sink or [])

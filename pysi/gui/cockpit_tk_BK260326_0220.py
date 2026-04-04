@@ -17,12 +17,6 @@ from dataclasses import dataclass
 
 import numpy as np
 
-# for events dump
-from pysi.bridge.dump_rows import build_dump_rows_from_product_plan_tree
-
-# consumer node CSV input
-from pysi.bridge.event_rules import initialize_consumer_experience_inputs
-
 # cockpit_tk.py の上部に追加
 try:
     from pysi.gui.world_map_view import show_world_map
@@ -692,17 +686,6 @@ class WOMCockpit(tk.Tk):
         self.trace_filter_lot_id = tk.StringVar(value="")
         self.trace_filter_time_bucket = tk.StringVar(value="")
 
-        # animation viewer state
-        self.anim_viewer_win = None
-        self.anim_canvas = None
-        self.anim_lot_id_var = tk.StringVar(value="")
-        self.anim_status_var = tk.StringVar(value="No lot loaded")
-        self.anim_frames = []
-        self.anim_index = 0
-        self.anim_playing = False
-        self.anim_after_id = None
-        self.anim_interval_ms = 700
-
         # selection state (node_name common key)
         self.state = SelectionState(
             selected_node=self.var_mom.get() if self.var_mom.get() else None,
@@ -760,13 +743,6 @@ class WOMCockpit(tk.Tk):
         # initial draw
         self.refresh()
 
-        # condumer node CSV input
-        csv_path = os.path.join(os.getcwd(), "data", "consumer_experience_input.csv")
-        initialize_consumer_experience_inputs(csv_path)
-
-
-
-
     def _build_header(self):
         frm = ttk.Frame(self)
         frm.pack(fill="x", padx=10, pady=10)
@@ -795,7 +771,6 @@ class WOMCockpit(tk.Tk):
         self.cb_direction.pack(side="left", padx=5)
 
         ttk.Button(frm, text="Run Step", command=self.run_step).pack(side="right")
-        ttk.Button(frm, text="Animation Viewer", command=self.open_animation_viewer).pack(side="right", padx=8)
         ttk.Button(frm, text="Trace Viewer", command=self.open_trace_viewer).pack(side="right", padx=8)
         ttk.Checkbutton(frm, text="Trace", variable=self.var_trace_enabled).pack(side="right", padx=8)
         ttk.Button(frm, text="Refresh", command=self.refresh).pack(side="right", padx=8)
@@ -957,8 +932,32 @@ class WOMCockpit(tk.Tk):
         except Exception as e:
             self.l1_show_text(f"[World Map] not available: {e}")
             return None
-        
-        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def _build_kpi_cards(self):
         # simple label grid (not fancy cards, but clean)
         for i, key in enumerate(["Profit", "Service(JIT MAD)", "CCC(placeholder)", "Utilization", "Inventory(last/avg)", "NetCash(min/cum_min)"]):
@@ -1039,317 +1038,6 @@ class WOMCockpit(tk.Tk):
                 self.env.demand_leveling4multi_prod()
 
         self.refresh()
-
-# ********
-# helper
-# ********
-
-
-
-
-
-    def _get_graph_edges_for_event_inference(self):
-        """
-        event inference 用の edge 集合を返す。
-
-        優先順位:
-        1. current product の planning tree を make_highlight_flow と同じ walk で辿る
-        2. fallback として GUI / networkX graph
-        """
-        edges = set()
-
-        product_name = (self.var_product.get() or "").strip()
-        if not product_name:
-            return edges
-
-        # direction 解釈
-        direction = "OUT"
-        raw_direction = ""
-        if hasattr(self, "var_direction"):
-            try:
-                raw_direction = (self.var_direction.get() or "").strip().lower()
-            except Exception:
-                raw_direction = ""
-
-        if raw_direction in ("inbound", "in"):
-            direction = "IN"
-
-        # --------------------------------------------------
-        # 1) planning tree edges
-        #    make_highlight_flow() と同じ tree walk を使う
-        # --------------------------------------------------
-        try:
-            prod_tree_dict_OT = getattr(self.env, "prod_tree_dict_OT", {}) or {}
-            prod_tree_dict_IN = getattr(self.env, "prod_tree_dict_IN", {}) or {}
-
-            prod_tree_OT = prod_tree_dict_OT.get(product_name)
-            prod_tree_IN = prod_tree_dict_IN.get(product_name)
-
-            highlight_flow = {}
-
-            def walk_tree(plan_node):
-                if plan_node is None:
-                    return
-                for child in getattr(plan_node, "children", []) or []:
-                    from_node = getattr(plan_node, "name", None) or getattr(plan_node, "node_id", None)
-                    to_node = getattr(child, "name", None) or getattr(child, "node_id", None)
-                    if from_node is not None and to_node is not None:
-                        if from_node not in highlight_flow:
-                            highlight_flow[from_node] = {}
-                        highlight_flow[from_node][to_node] = 1.0
-                        edges.add((str(from_node), str(to_node)))
-                    walk_tree(child)
-
-            # make_highlight_flow と同様に outbound / inbound の両方を歩けるようにする
-            if direction == "OUT":
-                if prod_tree_OT is not None:
-                    print("[trace] highlight-style outbound root =", getattr(prod_tree_OT, "name", None))
-                    walk_tree(prod_tree_OT)
-            else:
-                if prod_tree_IN is not None:
-                    print("[trace] highlight-style inbound root =", getattr(prod_tree_IN, "name", None))
-                    walk_tree(prod_tree_IN)
-
-            if edges:
-                print(
-                    f"[trace] planning-tree edges for product={product_name}, direction={direction}: {len(edges)}"
-                )
-                print("[trace] planning-tree edge sample:", list(edges)[:10])
-                return edges
-
-        except Exception as e:
-            print(f"[trace] planning-tree edge extraction skipped: {e}")
-
-        # --------------------------------------------------
-        # 2) fallback: GUI/networkX graph
-        # --------------------------------------------------
-        try:
-            viewer = getattr(self, "_network_viewer", None)
-            if viewer is not None:
-                for attr_name in ("G", "graph", "_graph"):
-                    g = getattr(viewer, attr_name, None)
-                    if g is not None:
-                        try:
-                            for u, v in g.edges():
-                                edges.add((str(u), str(v)))
-                        except Exception:
-                            pass
-                        if edges:
-                            print(f"[trace] fallback viewer graph edges: {len(edges)}")
-                            return edges
-        except Exception:
-            pass
-
-        try:
-            for attr_name in ("G", "graph", "_graph"):
-                g = getattr(self, attr_name, None)
-                if g is not None:
-                    try:
-                        for u, v in g.edges():
-                            edges.add((str(u), str(v)))
-                    except Exception:
-                        pass
-                    if edges:
-                        print(f"[trace] fallback cockpit graph edges: {len(edges)}")
-                        return edges
-        except Exception:
-            pass
-
-        return edges
-
-
-
-
-
-
-
-    def _get_node_char_by_node_id(self):
-        """
-        node_id -> Node Character の辞書を返す。
-        優先順位:
-        1) self.node_char_by_node_id
-        2) self.env.node_char_by_node_id
-        3) cockpit 側の最小 fallback 推定
-        """
-        d = getattr(self, "node_char_by_node_id", None)
-        if isinstance(d, dict) and d:
-            return d
-
-        d = getattr(self.env, "node_char_by_node_id", None)
-        if isinstance(d, dict) and d:
-            return d
-
-        d = self._build_default_node_char_by_node_id()
-        self.node_char_by_node_id = d
-        return d
-
-    def _build_default_node_char_by_node_id(self):
-        """
-        GUI 側の最小 fallback node character を作る。
-        目的:
-        - event_rules.py に consumer / retail / warehouse / dc の最低限の意味を渡す
-        - 特に CS_CAL のような consumer node を consumer として解釈できるようにする
-
-        ルールは暫定:
-        - supply_point => supplier
-        - CS*         => consumer
-        - RT*         => retail
-        - WS* / GR_WS*=> warehouse
-        - DAD* / GR_* => dc
-        - MOM* / PAD* => factory
-        """
-        out = {}
-
-        def put(node_id, **kwargs):
-            nid = str(node_id or "").strip()
-            if not nid:
-                return
-            if nid not in out:
-                out[nid] = {"node_role": "generic"}
-            out[nid].update(kwargs)
-
-        # 明示ルール
-        put("supply_point", node_role="supplier", can_purchase=True, can_store=True, can_ship=True)
-        put("root", node_role="root")
-
-        # 現在 product の planning tree を起点に node 名を収集
-        product_name = (self.var_product.get() or "").strip()
-        roots = []
-        try:
-            prod_tree_dict_OT = getattr(self.env, "prod_tree_dict_OT", {}) or {}
-            prod_tree_dict_IN = getattr(self.env, "prod_tree_dict_IN", {}) or {}
-            if product_name:
-                roots.append(prod_tree_dict_OT.get(product_name))
-                roots.append(prod_tree_dict_IN.get(product_name))
-        except Exception:
-            pass
-
-        def walk(root):
-            stack = [root]
-            seen = set()
-            while stack:
-                node = stack.pop()
-                if node is None:
-                    continue
-                node_key = id(node)
-                if node_key in seen:
-                    continue
-                seen.add(node_key)
-                yield node
-                for child in getattr(node, "children", []) or []:
-                    stack.append(child)
-
-        for root in roots:
-            for node in walk(root):
-                nid = str(getattr(node, "name", None) or getattr(node, "node_id", None) or "").strip()
-                if not nid:
-                    continue
-
-                upper = nid.upper()
-
-                if upper.startswith("CS"):
-                    put(
-                        nid,
-                        node_role="consumer",
-                        can_store=True,
-                        can_sell=True,
-                    )
-                elif upper.startswith("RT"):
-                    put(
-                        nid,
-                        node_role="retail",
-                        can_store=True,
-                        can_sell=True,
-                    )
-                elif upper.startswith("WS") or upper.startswith("GR_WS"):
-                    put(
-                        nid,
-                        node_role="warehouse",
-                        can_store=True,
-                        can_ship=True,
-                    )
-                elif upper.startswith("DAD") or upper.startswith("GR_"):
-                    put(
-                        nid,
-                        node_role="dc",
-                        can_store=True,
-                        can_ship=True,
-                        can_allocate=True,
-                        is_decoupling_point=True,
-                    )
-                elif upper.startswith("MOM") or upper.startswith("PAD"):
-                    put(
-                        nid,
-                        node_role="factory",
-                        can_produce=True,
-                        can_purchase=True,
-                        can_store=True,
-                    )
-                else:
-                    put(nid, node_role="generic")
-
-        print("[trace] fallback node_char count =", len(out))
-        print("[trace] fallback node_char sample =", list(out.items())[:10])
-        print("[trace] fallback node_char[CS_CAL] =", out.get("CS_CAL"))
-        return out
-
-    def infer_and_append_trace_events_from_rows(self, rows):
-        """
-        PSI dump rows から canonical event を推定し、
-        self.trace_event_sink に append する。
-        """
-        from collections import defaultdict
-        from pysi.bridge.event_rules import (
-            infer_events_for_lot_rows,
-            canonical_events_to_trace_dicts,
-        )
-
-        if not rows:
-            return []
-
-        node_char_by_node_id = self._get_node_char_by_node_id()
-        graph_edges = self._get_graph_edges_for_event_inference()
-
-        print("[trace] actual node_char[CS_CAL] =", node_char_by_node_id.get("CS_CAL"))
-        print("[trace] actual node_char[RT_CAL] =", node_char_by_node_id.get("RT_CAL"))
-        print("[trace] actual node_char[WS2CAL] =", node_char_by_node_id.get("WS2CAL"))
-        print("[trace] actual node_char[DADCAL] =", node_char_by_node_id.get("DADCAL"))
-
-        lots = defaultdict(list)
-        for row in rows:
-            lot_id = str(row.get("lot_id", "") or "").strip()
-            if not lot_id:
-                continue
-            lots[lot_id].append(row)
-
-        next_sequence_no = len(self.trace_event_sink) + 1
-        added_trace_dicts = []
-
-        for lot_id in sorted(lots.keys()):
-            inferred_events = infer_events_for_lot_rows(
-                rows=lots[lot_id],
-                node_char_by_node_id=node_char_by_node_id,
-                graph_edges=graph_edges,
-            )
-
-            trace_dicts = canonical_events_to_trace_dicts(
-                inferred_events,
-                start_sequence_no=next_sequence_no,
-            )
-
-            self.trace_event_sink.extend(trace_dicts)
-            added_trace_dicts.extend(trace_dicts)
-            next_sequence_no += len(trace_dicts)
-
-        if added_trace_dicts and self.trace_tree is not None:
-            self._reload_trace_viewer()
-
-        return added_trace_dicts
-
-
-
-
-
 
     def run_step(self):
         """
@@ -1598,43 +1286,6 @@ class WOMCockpit(tk.Tk):
                     })
 
 
-
-
-            # ---- optional full dict dump (shortened) ----
-            if is_dataclass(after_snapshot):
-                after_dump = asdict(after_snapshot)
-                print("[step] after snapshot asdict keys:", list(after_dump.keys()))
-                print("[step] after snapshot asdict summary:", {
-                    "time_bucket": after_dump.get("time_bucket"),
-                    "lots": len(after_dump.get("lots", {}) or {}),
-                    "inventory": len(after_dump.get("inventory", {}) or {}),
-                    "backlog": len(after_dump.get("backlog", {}) or {}),
-                    "lot_demand_bindings": len(after_dump.get("lot_demand_bindings", {}) or {}),
-                    "allocation_pairs": len(after_dump.get("allocation_pairs", {}) or {}),
-                })
-
-
-
-
-
-            # --------------------------------------------------
-            # current product planning tree -> dump rows -> inferred events
-            # --------------------------------------------------
-            try:
-                step_dir = "OUT"
-                raw_direction = (self.var_direction.get() or "").strip().lower()
-                if raw_direction in ("inbound", "in"):
-                    step_dir = "IN"
-
-                self.build_and_append_inferred_trace_for_current_product(direction=step_dir)
-
-            except Exception as e:
-                print(f"[trace] build_and_append_inferred_trace_for_current_product skipped: {e}")
-
-
-
-
-
             bridge_payload = _safe_extract_bridge(before_snapshot, after_snapshot)
 
 
@@ -1665,62 +1316,6 @@ class WOMCockpit(tk.Tk):
             if self.trace_viewer_win is not None and self.trace_viewer_win.winfo_exists():
                 self._reload_trace_viewer()
             self.refresh()
-
-# ********
-# event dump
-# ********
-    def build_dump_rows_for_current_product(self, direction="OUT"):
-        """
-        現在選択中 product の planning tree から dump rows を作る。
-        dump rows の本体ロジックは pysi.bridge.dump_rows 側へ委譲する。
-        """
-        product_name = (self.var_product.get() or "").strip()
-        if not product_name:
-            return []
-
-        try:
-            prod_tree_dict_OT = getattr(self.env, "prod_tree_dict_OT", {}) or {}
-            prod_tree_dict_IN = getattr(self.env, "prod_tree_dict_IN", {}) or {}
-
-            rows = build_dump_rows_from_product_plan_tree(
-                product_name=product_name,
-                direction=direction,
-                prod_tree_dict_OT=prod_tree_dict_OT,
-                prod_tree_dict_IN=prod_tree_dict_IN,
-            )
-
-            print(
-                f"[trace] dump rows for product={product_name}, direction={direction}: {len(rows)}"
-            )
-            return rows
-
-        except Exception as e:
-            print(f"[trace] build_dump_rows_for_current_product skipped: {e}")
-            return []
-
-
-    def build_and_append_inferred_trace_for_current_product(self, direction="OUT"):
-        """
-        現在選択中 product の planning tree から dump rows を作り、
-        canonical event 推定結果を self.trace_event_sink に append する。
-        """
-        rows = self.build_dump_rows_for_current_product(direction=direction)
-        if not rows:
-            return []
-
-        added_trace_dicts = self.infer_and_append_trace_events_from_rows(rows)
-
-        print(
-            f"[trace] inferred canonical events for current product: {len(added_trace_dicts)}"
-        )
-        if added_trace_dicts:
-            print("[trace] first 5 inferred events:", added_trace_dicts[:5])
-
-        return added_trace_dicts
-
-
-
-
 
     def _get_filtered_trace_events(self):
         events = list(self.trace_event_sink or [])
@@ -1981,251 +1576,6 @@ class WOMCockpit(tk.Tk):
         frm_table.columnconfigure(0, weight=1)
 
         self._reload_trace_viewer()
-
-
-    def use_current_filter_for_animation(self):
-        self.anim_lot_id_var.set(self.trace_filter_lot_id.get().strip())
-
-    def _animation_sort_key(self, ev):
-        tb = str(ev.get("time_bucket", "") or "")
-        seq = ev.get("sequence_no", 0)
-        try:
-            tb_key = int(tb)
-        except Exception:
-            tb_key = tb
-        try:
-            seq_key = int(seq)
-        except Exception:
-            seq_key = 0
-        return (tb_key, seq_key)
-
-    def _build_lot_animation_frames(self, selected_lot_id: str):
-        selected_lot_id = (selected_lot_id or "").strip()
-        if not selected_lot_id:
-            return []
-
-        events = list(self.trace_event_sink or [])
-        frames = []
-        for ev in events:
-            ev_lot_id = str(ev.get("lot_id", "") or "")
-            if selected_lot_id not in ev_lot_id:
-                continue
-            node_id = str(ev.get("node_id", "") or "").strip()
-            time_bucket = str(ev.get("time_bucket", "") or "").strip()
-            if not node_id or not time_bucket:
-                continue
-            frames.append({
-                "sequence_no": ev.get("sequence_no", ""),
-                "event_type": ev.get("event_type", ""),
-                "node_id": node_id,
-                "lot_id": ev_lot_id,
-                "time_bucket": time_bucket,
-                "payload": ev.get("payload", {}),
-            })
-
-        frames.sort(key=self._animation_sort_key)
-        return frames
-
-    def _get_animation_node_positions(self, frames):
-        known_positions = {
-            "supply_point": (90, 180),
-            "DADCAL": (240, 180),
-            "WS1CAL": (390, 100),
-            "WS2CAL": (390, 260),
-            "RT_CAL": (540, 180),
-            "CS_CAL": (690, 180),
-        }
-        node_ids = []
-        for fr in frames:
-            nid = fr.get("node_id")
-            if nid and nid not in node_ids:
-                node_ids.append(nid)
-
-        positions = {}
-        for nid in node_ids:
-            if nid in known_positions:
-                positions[nid] = known_positions[nid]
-
-        unknown = [nid for nid in node_ids if nid not in positions]
-        for i, nid in enumerate(unknown):
-            col = i % 4
-            row = i // 4
-            positions[nid] = (120 + col * 170, 360 + row * 90)
-
-        return positions
-
-    def _draw_animation_frame(self):
-        if self.anim_canvas is None:
-            return
-
-        canvas = self.anim_canvas
-        canvas.delete("all")
-
-        w = max(canvas.winfo_width(), 760)
-        h = max(canvas.winfo_height(), 420)
-        canvas.create_rectangle(0, 0, w, h, fill="white", outline="")
-
-        if not self.anim_frames:
-            canvas.create_text(
-                w // 2,
-                h // 2,
-                text="No animation frames. Follow Lot or load a lot_id first.",
-                font=("Segoe UI", 12),
-            )
-            self.anim_status_var.set("No lot loaded")
-            return
-
-        frame = self.anim_frames[self.anim_index]
-        positions = self._get_animation_node_positions(self.anim_frames)
-
-        default_edges = [
-            ("supply_point", "DADCAL"),
-            ("DADCAL", "WS1CAL"),
-            ("DADCAL", "WS2CAL"),
-            ("WS1CAL", "RT_CAL"),
-            ("WS2CAL", "RT_CAL"),
-            ("RT_CAL", "CS_CAL"),
-        ]
-        for a, b in default_edges:
-            if a in positions and b in positions:
-                x1, y1 = positions[a]
-                x2, y2 = positions[b]
-                canvas.create_line(x1, y1, x2, y2, fill="#B0B7C3", width=2)
-
-        current_node = frame.get("node_id", "")
-        lot_id = frame.get("lot_id", "")
-        time_bucket = frame.get("time_bucket", "")
-        event_type = frame.get("event_type", "")
-
-        for nid, (x, y) in positions.items():
-            is_current = (nid == current_node)
-            r = 24 if is_current else 18
-            fill = "#FFD966" if is_current else "#F7F9FC"
-            width = 3 if is_current else 1
-            outline = "#C27C0E" if is_current else "#607080"
-            canvas.create_oval(x - r, y - r, x + r, y + r, fill=fill, outline=outline, width=width)
-            canvas.create_text(x, y + 34, text=nid, font=("Segoe UI", 9))
-
-        title = f"Lot: {lot_id}    Week: {time_bucket}    Node: {current_node}    Event: {event_type}"
-        canvas.create_text(18, 18, text=title, anchor="w", font=("Segoe UI", 11, "bold"))
-        canvas.create_text(
-            18,
-            42,
-            text=f"Frame {self.anim_index + 1} / {len(self.anim_frames)}",
-            anchor="w",
-            font=("Segoe UI", 10),
-        )
-
-        self.anim_status_var.set(
-            f"Lot={lot_id} | Week={time_bucket} | Node={current_node} | Frame {self.anim_index + 1}/{len(self.anim_frames)}"
-        )
-
-    def _load_animation_frames(self):
-        lot_id = self.anim_lot_id_var.get().strip()
-        self.pause_animation()
-        self.anim_frames = self._build_lot_animation_frames(lot_id)
-        self.anim_index = 0
-        self._draw_animation_frame()
-        if not self.anim_frames:
-            messagebox.showinfo("Animation Viewer", "No frames found for the selected lot_id.")
-
-    def _animation_tick(self):
-        if not self.anim_playing:
-            return
-        if not self.anim_frames:
-            self.anim_playing = False
-            return
-        if self.anim_index < len(self.anim_frames) - 1:
-            self.anim_index += 1
-            self._draw_animation_frame()
-            if self.anim_viewer_win is not None and self.anim_viewer_win.winfo_exists():
-                self.anim_after_id = self.anim_viewer_win.after(self.anim_interval_ms, self._animation_tick)
-        else:
-            self.anim_playing = False
-            self.anim_after_id = None
-
-    def play_animation(self):
-        if not self.anim_frames:
-            self._load_animation_frames()
-        if not self.anim_frames:
-            return
-        if self.anim_playing:
-            return
-        self.anim_playing = True
-        self.anim_after_id = None
-        if self.anim_viewer_win is not None and self.anim_viewer_win.winfo_exists():
-            self.anim_after_id = self.anim_viewer_win.after(self.anim_interval_ms, self._animation_tick)
-
-    def pause_animation(self):
-        self.anim_playing = False
-        if self.anim_after_id and self.anim_viewer_win is not None and self.anim_viewer_win.winfo_exists():
-            try:
-                self.anim_viewer_win.after_cancel(self.anim_after_id)
-            except Exception:
-                pass
-        self.anim_after_id = None
-
-    def next_animation_frame(self):
-        self.pause_animation()
-        if not self.anim_frames:
-            return
-        if self.anim_index < len(self.anim_frames) - 1:
-            self.anim_index += 1
-        self._draw_animation_frame()
-
-    def prev_animation_frame(self):
-        self.pause_animation()
-        if not self.anim_frames:
-            return
-        if self.anim_index > 0:
-            self.anim_index -= 1
-        self._draw_animation_frame()
-
-    def _close_animation_viewer(self):
-        self.pause_animation()
-        if self.anim_viewer_win is not None and self.anim_viewer_win.winfo_exists():
-            self.anim_viewer_win.destroy()
-        self.anim_viewer_win = None
-        self.anim_canvas = None
-
-    def open_animation_viewer(self):
-        if self.anim_viewer_win is not None and self.anim_viewer_win.winfo_exists():
-            self.anim_viewer_win.lift()
-            self._draw_animation_frame()
-            return
-
-        win = tk.Toplevel(self)
-        win.title("Animation Viewer")
-        win.geometry("920x560")
-        self.anim_viewer_win = win
-        win.protocol("WM_DELETE_WINDOW", self._close_animation_viewer)
-
-        frm_ctrl = ttk.Frame(win, padding=8)
-        frm_ctrl.pack(fill="x")
-
-        ttk.Label(frm_ctrl, text="lot_id").pack(side="left")
-        ttk.Entry(frm_ctrl, textvariable=self.anim_lot_id_var, width=36).pack(side="left", padx=6)
-        ttk.Button(frm_ctrl, text="Use Current Filter", command=self.use_current_filter_for_animation).pack(side="left", padx=4)
-        ttk.Button(frm_ctrl, text="Load", command=self._load_animation_frames).pack(side="left", padx=4)
-        ttk.Button(frm_ctrl, text="Play", command=self.play_animation).pack(side="left", padx=4)
-        ttk.Button(frm_ctrl, text="Pause", command=self.pause_animation).pack(side="left", padx=4)
-        ttk.Button(frm_ctrl, text="Prev", command=self.prev_animation_frame).pack(side="left", padx=4)
-        ttk.Button(frm_ctrl, text="Next", command=self.next_animation_frame).pack(side="left", padx=4)
-
-        ttk.Label(frm_ctrl, textvariable=self.anim_status_var).pack(side="right", padx=8)
-
-        frm_canvas = ttk.Frame(win, padding=(8, 0, 8, 8))
-        frm_canvas.pack(fill="both", expand=True)
-
-        canvas = tk.Canvas(frm_canvas, background="white")
-        canvas.pack(fill="both", expand=True)
-        self.anim_canvas = canvas
-        canvas.bind("<Configure>", lambda _e: self._draw_animation_frame())
-
-        if self.trace_filter_lot_id.get().strip() and not self.anim_lot_id_var.get().strip():
-            self.anim_lot_id_var.set(self.trace_filter_lot_id.get().strip())
-
-        self._draw_animation_frame()
 
     def refresh(self):
         prod = self.var_product.get()

@@ -108,6 +108,7 @@ def run_kernel_scenario(
     lead_time_weeks: int = 0,
     production_nodes=None,
     upstream_by_node=None,
+    bridge_payload: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     """
     Top-level application service:
@@ -126,6 +127,14 @@ def run_kernel_scenario(
         upstream_by_node=upstream_by_node,
     )
 
+    # Minimal bridge injection point (short-term demo):
+    # if bridge flow_events exist, prefer them for visualization replay.
+    if bridge_payload:
+        result["bridge"] = bridge_payload
+        bridge_flow = bridge_payload.get("flow_events") or []
+        if bridge_flow:
+            result["flow_events"] = list(bridge_flow)
+
     snapshots, time_buckets = build_snapshots_from_kernel_result(
         kernel_result=result,
         demand_events=demand_events,
@@ -143,18 +152,20 @@ def run_kernel_scenario(
     }
 
 
-def build_demo_runtime() -> Dict[str, Any]:
+def build_demo_runtime(pipeline_result: Dict[str, Any] | None = None) -> Dict[str, Any]:
     """
     Fast entry point for visualizer app.
     """
     node_master, edge_master = build_demo_master_data()
     lots, demand_events, kernel_kwargs = build_demo_kernel_inputs()
+    bridge_payload = (pipeline_result or {}).get("bridge") if isinstance(pipeline_result, dict) else None
 
     runtime = run_kernel_scenario(
         lots=lots,
         demand_events=demand_events,
         node_master=node_master,
         edge_master=edge_master,
+        bridge_payload=bridge_payload,
         **kernel_kwargs,
     )
 

@@ -111,6 +111,12 @@ def main() -> None:
     autoload_plugins("pysi.plugins")
     call_register_if_present("pysi.plugins", bus)
 
+    #@ADD
+    import pysi.core.wom_pipeline as wp
+    print("[main] wom_pipeline module file:", wp.__file__)
+    print("[main] about to call WOMPipelineRunner.run()")
+
+
     runner = WOMPipelineRunner(bus=bus)
 
     # CSV path
