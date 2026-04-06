@@ -783,6 +783,7 @@ class WOMCockpit(tk.Tk):
 
         ttk.Button(frm, text="Run Step", command=self.run_step).pack(side="right")
         ttk.Button(frm, text="Animation Viewer", command=self.open_animation_viewer).pack(side="right", padx=8)
+        ttk.Button(frm, text="PSI累計+利益率", command=self.open_psi_profit_animation).pack(side="right", padx=8)
         ttk.Button(frm, text="Trace Viewer", command=self.open_trace_viewer).pack(side="right", padx=8)
         ttk.Checkbutton(frm, text="Trace", variable=self.var_trace_enabled).pack(side="right", padx=8)
         ttk.Button(frm, text="Refresh", command=self.refresh).pack(side="right", padx=8)
@@ -799,6 +800,161 @@ class WOMCockpit(tk.Tk):
     #        return
     #    from pysi.gui.node_selector import open_node_selector
     #    open_node_selector(self.root, self.env, prod, on_select=self.set_selected_node)
+
+
+    def _get_selected_node_id_for_psi_profit_animation(self):
+        """
+        Resolve selected node id for PSI/profit animation.
+        Priority:
+        1. state.selected_node
+        2. explicit attrs if already maintained
+        3. selected/current node object
+        4. var_mom fallback
+        """
+        try:
+            selected = getattr(self.state, "selected_node", None)
+            if selected:
+                return str(selected)
+        except Exception:
+            pass
+
+        for attr_name in ["selected_node_id", "current_node_id", "node_id_selected"]:
+            try:
+                value = getattr(self, attr_name, None)
+                if value:
+                    return str(value)
+            except Exception:
+                pass
+
+        for attr_name in ["selected_node_obj", "current_node"]:
+            try:
+                obj = getattr(self, attr_name, None)
+                if obj is None:
+                    continue
+                if isinstance(obj, dict):
+                    value = obj.get("node_id") or obj.get("name")
+                else:
+                    value = getattr(obj, "node_id", None) or getattr(obj, "name", None)
+                if value:
+                    return str(value)
+            except Exception:
+                pass
+
+        try:
+            mom = self.var_mom.get().strip()
+            if mom:
+                return mom
+        except Exception:
+            pass
+
+        return None
+
+    def _get_selected_product_id_for_psi_profit_animation(self):
+        """
+        Resolve selected product id for PSI/profit animation.
+        Priority:
+        1. state.selected_product
+        2. explicit attrs
+        3. var_product
+        4. env.product_selected
+        """
+        try:
+            selected = getattr(self.state, "selected_product", None)
+            if selected:
+                return str(selected)
+        except Exception:
+            pass
+
+        for attr_name in ["selected_product_id", "current_product_id", "product_id_selected"]:
+            try:
+                value = getattr(self, attr_name, None)
+                if value:
+                    return str(value)
+            except Exception:
+                pass
+
+        try:
+            product = self.var_product.get().strip()
+            if product:
+                return product
+        except Exception:
+            pass
+
+        try:
+            env_product = getattr(self.env, "product_selected", None)
+            if env_product:
+                return str(env_product)
+        except Exception:
+            pass
+
+        return None
+
+    def build_psi_profit_animation_provider(self):
+        """
+        Build data provider for PSI accumulated + profit ratio window.
+        Adapter side absorbs WOM internal data structure differences.
+        """
+        node_id = self._get_selected_node_id_for_psi_profit_animation()
+        product_id = self._get_selected_product_id_for_psi_profit_animation()
+
+        provider = build_provider_from_cockpit_context(
+            cockpit=self,
+            node_id=node_id,
+            product_id=product_id,
+        )
+        return provider, node_id, product_id
+
+    def open_psi_profit_animation(self):
+        """
+        Open PSI accumulated + profit ratio animation in a dedicated Toplevel.
+        Reuses current cockpit selection and KPI/PSI context.
+        """
+        if self.psi_profit_anim_win is not None:
+            try:
+                if self.psi_profit_anim_win.winfo_exists():
+                    self.psi_profit_anim_win.deiconify()
+                    self.psi_profit_anim_win.lift()
+                    self.psi_profit_anim_win.focus_force()
+                    return
+            except Exception:
+                self.psi_profit_anim_win = None
+
+        provider, node_id, product_id = self.build_psi_profit_animation_provider()
+
+        master_widget = self.root if hasattr(self, "root") else self
+
+        try:
+            win = open_psi_profit_animation_window(
+                master=master_widget,
+                title="WOM PSI Accumulated + Profit Ratio",
+                data_provider=provider,
+                node_id=node_id,
+                product_id=product_id,
+                interval_ms=1000,   # 1 week = 1 sec
+            )
+            self.psi_profit_anim_win = win
+
+            def _on_close():
+                try:
+                    self.psi_profit_anim_win = None
+                    win.destroy()
+                except Exception:
+                    self.psi_profit_anim_win = None
+
+            win.protocol("WM_DELETE_WINDOW", _on_close)
+
+        except Exception as e:
+            try:
+                from tkinter import messagebox
+                messagebox.showerror(
+                    "PSI累計+利益率",
+                    f"Failed to open PSI/profit animation window.\\n\\n{e}",
+                )
+            except Exception:
+                print(f"[psi_profit_animation] open failed: {e}")
+
+
+
 
     def open_node_selector(self):
         """Open V0R7-like tree selector to pick any node."""

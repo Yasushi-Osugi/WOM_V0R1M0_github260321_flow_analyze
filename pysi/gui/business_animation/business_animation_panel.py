@@ -401,6 +401,13 @@ class BusinessAnimationPanel(tk.Frame):
             # If coordinates are too small, treat them as logical coords and scale them.
             # Example: 0..5 / -1..1 style positions from merged layout.
             if max_abs_x <= 20 and max_abs_y <= 20:
+
+                #@STOP
+                #left_pad = 140
+                #top_pad = 280
+                #x_scale = 170
+                #y_scale = 160
+
                 left_pad = 140
                 top_pad = 280
                 x_scale = 170
