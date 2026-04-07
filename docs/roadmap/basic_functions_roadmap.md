@@ -1,0 +1,262 @@
+# Basic Functions Roadmap
+
+This document summarizes the current implementation priorities for WOM basic functions.
+
+The purpose of this roadmap is to stabilize the core foundation of WOM before moving further toward WOM2 / WOM3 level features such as interactive lane change, balancing simulation, and tax-aware optimization.
+
+---
+
+## Current development policy
+
+WOM already has a strong outbound-side demo foundation:
+
+- cockpit launch from `python -m main`
+- node selection and PSI switching
+- PSI accumulated + profit ratio animation window
+- node-by-node interpretation through visual differences
+
+The next priority is to strengthen the basic core so that WOM can support both outbound and inbound strategy, stable value-model analysis, and future dataset auto-generation.
+
+The development order is:
+
+1. Canonical Scenario Schema
+2. Inbound planning engine and visualization
+3. Inbound / Outbound comparison standardization
+4. Cost / Price / Profit data model
+5. Dataset auto-generation for business cases
+6. Demand / Supply balancing simulation
+
+---
+
+## Priority roadmap
+
+| Priority | Theme | Objective | Why now | Main implementation tasks | Definition of done |
+|---|---|---|---|---|---|
+| 0 | Canonical Scenario Schema | Fix the minimum common data structure for one WOM scenario | All later work depends on this being stable | Define product, node, lane, LT, demand, supply, cost, price, metadata, comparison unit, sample structure | One business case can be stored, rerun, and compared under one schema |
+| 1 | Inbound planning engine and visualization | Enable inbound quantity planning and connect it to cockpit/viewers | Current WOM foundation is outbound-heavy; inbound is the largest missing basic block | Confirm inbound root, planning call path, inbound PSI lot generation, inbound node data, cockpit root switch, animation adapter branch | Inbound nodes show non-zero PSI / profit / summary |
+| 2 | Inbound / Outbound comparison standardization | Compare “sell strategy” and “defend strategy” in the same framework | Once inbound appears, comparison should immediately become standard | Common KPI definitions, root switching UI, common summary semantics, comparison view | Inbound and outbound can be explained in the same viewer and KPI language |
+| 3 | Cost / Price / Profit data setting | Stabilize the value-model foundation | Profit and margin views already matter; the underlying model must be defined clearly | Define node cost, lane cost, product price, inventory holding cost, transfer price, profit logic | Profit structure is consistently calculable by node / lane / product |
+| 4 | Inbound / Outbound dataset auto-generation | Auto-create executable WOM datasets from business cases | Powerful, but should come after schema and value-model stabilization | Define business-case input schema, generate node/lane/LT/cost/price/demand/supply pattern, emit canonical scenario | A representative business case can produce a runnable WOM dataset |
+| 5 | Demand and Supply balancing simulation | Verify the hypothesis that initial phase alignment strongly shapes global demand-supply structure | High value, but more persuasive after core functions are stable | Demand waveform templates, supply waveform templates, batch runner, KPI comparison, summary generation | Multiple waveform scenarios reproduce different inventory/profit/break-even structures |
+
+---
+
+## Recommended implementation sequence
+
+### Step A: Canonical Scenario Schema
+Fix the core representation of a WOM scenario before extending planning, viewers, or generators.
+
+This should define:
+
+- product
+- node
+- lane / edge
+- lead time
+- demand pattern
+- supply pattern
+- cost / price
+- scenario metadata
+- comparison metadata
+
+This is the hidden foundation. It is not the flashiest task, but it is the most important.
+
+---
+
+### Step B: Inbound planning + viewer connection
+After the schema is fixed, connect inbound planning to the same cockpit and viewer flow already working for outbound.
+
+The first goal is quantity-based inbound planning visibility, not full financial perfection.
+
+The first success condition is:
+
+- inbound root can be selected
+- inbound PSI is not zero
+- inbound node can be selected
+- inbound appears in PSI and animation viewers
+- inbound can be explained as “defend strategy”
+
+---
+
+### Step C: Inbound / Outbound comparison standardization
+As soon as inbound is visible, make the comparison framework explicit.
+
+WOM should be able to compare:
+
+- outbound vs inbound
+- before vs after
+- quantity vs value
+- scenario A vs scenario B
+
+Without a standard comparison frame, viewer extensions become fragmented.
+
+---
+
+### Step D: Cost / Price / Profit master structure
+Once both quantity-side flows are visible, formalize the value model.
+
+This includes:
+
+- node-based cost
+- lane-based cost
+- product-based price
+- inventory holding cost
+- transfer price
+- profit calculation logic
+
+This is the bridge toward stronger profit explanation and future tax-aware logic.
+
+---
+
+### Step E: Dataset auto-generation
+Only after schema and value model are fixed, implement automatic dataset generation from business case descriptions.
+
+This function should eventually generate:
+
+- nodes
+- lanes
+- LT defaults
+- cost defaults
+- price defaults
+- demand / supply patterns
+- runnable scenario output
+
+This function is highly valuable, but it becomes much stronger once the data structure beneath it is stable.
+
+---
+
+### Step F: Demand / Supply balancing simulation
+After the core is stable, add structured waveform comparison for hypothesis testing.
+
+This should support comparative simulation such as:
+
+- early demand / late supply
+- late demand / early supply
+- balanced phase alignment
+
+And compare:
+
+- inventory peak
+- profit ratio trend
+- break-even timing
+- service level implications
+
+---
+
+## GitHub issue seed list
+
+Below is the current recommended issue list for the basic-function track.
+
+### 1. Canonical Scenario Schema
+
+- Title: define canonical scenario schema for WOM core planning and comparison
+- Status: Ready
+- Priority: High
+- Area: Data Model
+- Milestone: Basic Functions - Core Foundation
+
+### 2. Inbound planning engine and visualization
+
+- Title: enable inbound planning engine and visualization pipeline
+- Status: Ready
+- Priority: High
+- Area: Inbound
+- Milestone: Basic Functions - Inbound Planning
+
+### 3. Inbound / Outbound comparison standardization
+
+- Title: standardize inbound-outbound comparison view and KPI semantics
+- Status: Backlog
+- Priority: High
+- Area: Comparison
+- Milestone: Basic Functions - Inbound Planning
+
+### 4. Cost / Price / Profit master data structure
+
+- Title: define cost-price-profit master data structure for WOM
+- Status: Backlog
+- Priority: High
+- Area: Finance
+- Milestone: Basic Functions - Value Model
+
+### 5. Dataset auto-generation
+
+- Title: auto-generate WOM datasets for inbound-outbound business cases
+- Status: Backlog
+- Priority: Medium
+- Area: Scenario Generator
+- Milestone: Basic Functions - Scenario Generator
+
+### 6. Demand / Supply balancing simulation
+
+- Title: add demand-supply balancing simulation for phase alignment hypotheses
+- Status: Backlog
+- Priority: Medium
+- Area: Simulation
+- Milestone: Basic Functions - Balancing Simulation
+
+---
+
+## Short operational guidance
+
+For actual execution, keep the project lightweight.
+
+Recommended flow:
+
+- Backlog
+- Ready
+- In Progress
+- Demo Check
+- Done
+
+In WOM, “Done” should mean:
+
+1. the code works
+2. the feature can be explained smoothly in the demo
+
+This is important because WOM is not only a software implementation effort, but also a planning-and-explanation workbench.
+
+---
+
+## Practical recommendation
+
+The immediate coding order should be:
+
+1. define canonical scenario schema for WOM core planning and comparison
+2. enable inbound planning engine and visualization pipeline
+3. standardize inbound-outbound comparison view and KPI semantics
+4. define cost-price-profit master data structure for WOM
+5. auto-generate WOM datasets for inbound-outbound business cases
+6. add demand-supply balancing simulation for phase alignment hypotheses
+
+This order minimizes rework and keeps WOM aligned with both short-term demo value and long-term architecture stability.
+
+---
+
+## Positioning relative to WOM2 / WOM3
+
+The items in this roadmap are not the final destination.
+They are the basic-function foundation required before stronger WOM2 / WOM3 capabilities such as:
+
+- interactive lane change
+- advanced management summary interpretation
+- balancing simulation expansion
+- tax-aware route and build optimization
+- natural-language scenario editing
+
+In that sense, this roadmap is the core stabilization phase before the larger strategic expansion.
+
+---
+
+## Summary
+
+The current priority is not to maximize feature count.
+It is to stabilize the core model so that future WOM extensions become stronger, cleaner, and easier to demonstrate.
+
+The practical priority is:
+
+- first stabilize the scenario schema
+- then make inbound visible
+- then standardize comparison
+- then stabilize the value model
+- then automate case generation
+- then scale hypothesis-driven simulation
