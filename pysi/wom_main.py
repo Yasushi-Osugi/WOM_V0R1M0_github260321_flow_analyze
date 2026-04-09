@@ -987,8 +987,14 @@ class WOMEnv:
         # 1) PSI器の初期確保（設定デフォルトで）
         plan_range   = int(getattr(self, "plan_range", 3) or 3)
         plan_year_st = int(getattr(self, "plan_year_st", 2024) or 2024)
+
         for _, root_ot in self.prod_tree_dict_OT.items():
             _alloc_psi_for_tree(root_ot, plan_range, plan_year_st)
+
+        for _, root_in in self.prod_tree_dict_IN.items():
+            _alloc_psi_for_tree(root_in, plan_range, plan_year_st)
+
+
         print("[INFO] PSI spaces allocated to all outbound nodes.")
         # 2) 月次CSV（sku_S_month_data.csv 優先）→ 正規化 → 週次化
         directory  = self.directory
@@ -1022,6 +1028,7 @@ class WOMEnv:
         df_weekly, plan_range, plan_year_st = convert_monthly_to_weekly_sku(df_month, _lot_size_lookup)
         # 3) 週次化後のレンジで再確保（完全リセット & 4レイヤー、リストで確保）
         weeks_count = 53 * plan_range
+
         for _, root_ot in self.prod_tree_dict_OT.items():
             if hasattr(root_ot, "set_plan_range_lot_counts"):
                 try:
@@ -1032,6 +1039,21 @@ class WOMEnv:
             for n in _traverse(root_ot):
                 n.psi4demand = [[[], [], [], []] for _ in range(weeks_count)]
                 n.psi4supply = [[[], [], [], []] for _ in range(weeks_count)]
+        
+        for _, root_in in self.prod_tree_dict_IN.items():
+            if hasattr(root_in, "set_plan_range_lot_counts"):
+                try:
+                    root_in.set_plan_range_lot_counts(plan_range, plan_year_st)
+                except Exception:
+                    pass
+            # 念のため自前でも完全リセット（0..weeks_count-1 でアクセス可能に）
+            for n in _traverse(root_in):
+                n.psi4demand = [[[], [], [], []] for _ in range(weeks_count)]
+                n.psi4supply = [[[], [], [], []] for _ in range(weeks_count)]
+        
+        
+        
+        
         # （任意）環境側のパラメータにも同期
         self.plan_range   = plan_range
         self.plan_year_st = plan_year_st

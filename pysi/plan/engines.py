@@ -58,7 +58,10 @@ def inbound_MOM_leveling_vs_capacity(out_root, in_root, mom_name="MOM"):
       2) 旧形式:          env.weekly_capability[mom_name][w]
       3) どちらも無い:    mom.nx_capacity
     """
-    mom = getattr(in_root, "children", {}).get(mom_name)
+    #@STOP
+    #mom = getattr(in_root, "children", {}).get(mom_name)
+    mom = _find(in_root, mom_name)
+    
     if mom is None:
         return out_root, in_root
 
@@ -139,10 +142,38 @@ def re_connect_suppy_dict2psi(node, node_psi_dict_In4Sp):
     for c in node.children:
         re_connect_suppy_dict2psi(c, node_psi_dict_In4Sp)
 
+#@CHANGE
+#def inbound_backward_MOM_to_leaf(out_root, in_root, layer="demand"):
+def inbound_backward_MOM_to_leaf(out_root, in_root, layer="demand", mom_policy=None):
 
-def inbound_backward_MOM_to_leaf(out_root, in_root, layer="demand"):
+    #@STOP
+    ##@ADD for debug
+    #print("[connect] len(out_root.psi4supply) =", len(out_root.psi4supply))
+    #print("[connect] len(in_root.psi4demand) =", len(in_root.psi4demand))
+    #
+    #for i, row in enumerate(in_root.psi4demand[:5]):
+    #    print(f"[connect] in_root.psi4demand[{i}] len =", len(row) if row is not None else None)
+    #
+    #for i, row in enumerate(out_root.psi4supply[:5]):
+    #    print(f"[connect] out_root.psi4supply[{i}] len =", len(row) if row is not None else None)
+
+
     # 1) OUT→IN の接続（root の demand/supply を一致コピー）
     connect_outbound2inbound(out_root, in_root)
+    
+
+    # 1.5) 生産配分ポリシー適用
+    if mom_policy:
+        out_root, in_root = allocate_markets_to_moms(
+            out_root,
+            in_root,
+            policy=mom_policy,
+            source_layer="outbound_supply",
+            debug=True,
+        )
+
+
+
     # 2) PRE-ORDER: inbound の S→P（親） & P→S（子）を伝播（Backward）
     calc_all_psiS2P2childS_preorder(in_root)  # ← 親P→子Sは demand レイヤに入る
     # 3) & 4)  "clone psi4demand to psi4supply"
@@ -158,6 +189,24 @@ def inbound_backward_MOM_to_leaf(out_root, in_root, layer="demand"):
     # 5) POST-ORDER: supply レイヤの P/S/CO から I を確定生成
     calc_all_psi2i4supply_post(in_root)
     return out_root, in_root
+
+
+def bridge_inbound_demand_to_supply(root):
+    stack = [root]
+    while stack:
+        n = stack.pop()
+        d = getattr(n, "psi4demand", None)
+        s = getattr(n, "psi4supply", None)
+
+        if isinstance(d, list) and isinstance(s, list):
+            weeks = min(len(d), len(s))
+            for w in range(weeks):
+                demand_s = list(d[w][0]) if len(d[w]) > 0 else []
+                # supply layer を clean seed
+                s[w] = [demand_s, [], [], []]
+
+        stack.extend(getattr(n, "children", []) or [])
+
 
 
 # =============================================================
@@ -306,7 +355,19 @@ def push_pull(out_root, in_root, decouple_nodes=None):
     names = _normalize_decouple_nodes(decouple_nodes)
     if not names:
         nodes_decouple_all = make_nodes_decouple_all(out_root)
+
+        #@ADD for debug
+        print(f"[push_pull] auto decouple candidates = {nodes_decouple_all}")
+
+        if not nodes_decouple_all:
+            print("[WARN] push_pull: no decouple candidates found")
+            return out_root, in_root
+
         names = nodes_decouple_all[-2] if len(nodes_decouple_all) >= 2 else nodes_decouple_all[-1]
+
+    #@ADD for debug
+    print(f"[push_pull] using decouple names = {names}")
+
     push_pull_all_psi2i_decouple4supply5(out_root, names)
     return out_root, in_root
 
@@ -419,3 +480,147 @@ def run_engine(out_root, in_root, decouple_nodes, mode: str, layer: str = "deman
         return outbound_backward_pull_buffer_to_leaf(out_root, in_root, layer="supply", **kw)
 
     raise ValueError(f"unknown mode={mode}")
+
+# ************
+# Production Allocation Policy
+# ************
+import re
+from collections import defaultdict
+
+
+def _traverse(root):
+    stack = [root]
+    while stack:
+        n = stack.pop()
+        yield n
+        stack.extend(getattr(n, "children", []) or [])
+
+
+def _find_nodes_by_prefix(root, prefix: str):
+    return [n for n in _traverse(root) if str(getattr(n, "name", "")).startswith(prefix)]
+
+
+def _find_node_by_name(root, name: str):
+    for n in _traverse(root):
+        if getattr(n, "name", None) == name:
+            return n
+    return None
+
+
+def _default_market_key_from_lot(lot_id: str) -> str:
+    """
+    lot_id から市場キーを抜く最小版。
+    まずは lot_id / anchor 情報に 'RT_CN_', 'RT_DE_' のような市場トークンが
+    含まれている前提で、そこから region を返す。
+
+    例:
+      RT_CN_ONLINES_CN_PREMIUM_2028010001 -> 'CN'
+      RT_DE_ONLINES_DE_PREMIUM_2028010001 -> 'DE'
+    """
+    s = str(lot_id or "")
+    m = re.search(r"RT_([A-Z]{2})_", s)
+    if m:
+        return m.group(1)
+    return "DEFAULT"
+
+
+def _choose_mom_name(market_key: str, policy: dict, mom_nodes: list[str]) -> str | None:
+    """
+    policy 例:
+    {
+        "CN": ["MOM_final_assy_ASIA", "MOM_final_assy_EURO"],
+        "JP": ["MOM_final_assy_ASIA", "MOM_final_assy_EURO"],
+        "DE": ["MOM_final_assy_EURO", "MOM_final_assy_ASIA"],
+        "UK": ["MOM_final_assy_EURO", "MOM_final_assy_ASIA"],
+        "DEFAULT": ["MOM_final_assy_ASIA"]
+    }
+    """
+    cands = policy.get(market_key) or policy.get("DEFAULT") or []
+    for nm in cands:
+        if nm in mom_nodes:
+            return nm
+    return mom_nodes[0] if mom_nodes else None
+
+
+def allocate_markets_to_moms(
+    out_root,
+    in_root,
+    policy: dict,
+    *,
+    source_layer: str = "outbound_supply",
+    weeks: int | None = None,
+    clear_existing_mom_demand: bool = True,
+    debug: bool = True,
+):
+    """
+    最小骨格:
+    1) source lots を集める
+    2) lot_id から market_key を抜く
+    3) policy で担当 MOM を決める
+    4) 担当 MOM の psi4demand[w][0] に lot を配る
+
+    想定用途:
+      connect_outbound2inbound() の直後に呼ぶ
+    """
+
+    mom_nodes = _find_nodes_by_prefix(in_root, "MOM_")
+    mom_name_list = [n.name for n in mom_nodes]
+
+    if not mom_nodes:
+        if debug:
+            print("[allocate_markets_to_moms] no MOM nodes found")
+        return out_root, in_root
+
+    # 週数
+    if source_layer == "outbound_supply":
+        base = getattr(out_root, "psi4supply", []) or []
+    elif source_layer == "inbound_root_demand":
+        base = getattr(in_root, "psi4demand", []) or []
+    else:
+        raise ValueError(f"unknown source_layer={source_layer}")
+
+    W = min(len(base), len(getattr(in_root, "psi4demand", []) or []))
+    if weeks is not None:
+        W = min(W, int(weeks))
+
+    # 既存の MOM demand を一旦クリア
+    if clear_existing_mom_demand:
+        for mom in mom_nodes:
+            psi = getattr(mom, "psi4demand", None)
+            if not isinstance(psi, list):
+                continue
+            for w in range(min(W, len(psi))):
+                psi[w][0] = []
+
+    allocation_log = defaultdict(int)
+
+    # lot ごとに primary MOM を決める
+    for w in range(W):
+        if source_layer == "outbound_supply":
+            lots = list(base[w][0]) if len(base[w]) > 0 else []
+        else:
+            lots = list(base[w][0]) if len(base[w]) > 0 else []
+
+        for lot in lots:
+            market_key = _default_market_key_from_lot(lot)
+            mom_name = _choose_mom_name(market_key, policy, mom_name_list)
+            if mom_name is None:
+                continue
+
+            mom = _find_node_by_name(in_root, mom_name)
+            if mom is None:
+                continue
+
+            mom.psi4demand[w][0].append(lot)
+            allocation_log[(w, mom_name)] += 1
+
+    if debug:
+        print("[allocate_markets_to_moms] policy =", policy)
+        print("[allocate_markets_to_moms] moms =", mom_name_list)
+
+        sample = defaultdict(int)
+        for (_, mom_name), cnt in allocation_log.items():
+            sample[mom_name] += cnt
+        print("[allocate_markets_to_moms] total allocated by MOM =", dict(sample))
+
+    return out_root, in_root

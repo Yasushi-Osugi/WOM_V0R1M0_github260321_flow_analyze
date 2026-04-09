@@ -129,6 +129,24 @@ class WOMIOAdapter:
         env.load_data_files()
         self._env = env
 
+        # *******************
+        #@ADD for debug
+        prod = "IPHONE_NM_2028_BASE"
+        print("[pipeline-check] OT len =", len(env.prod_tree_dict_OT[prod].psi4demand))
+        print("[pipeline-check] IN len =", len(env.prod_tree_dict_IN[prod].psi4demand))
+
+        import inspect
+
+        print("[TRACE] WOMEnv class module =", type(env).__module__)
+        print("[TRACE] WOMEnv class file   =", inspect.getsourcefile(type(env)))
+        print("[TRACE] load_data_files file =", inspect.getsourcefile(type(env).load_data_files))
+
+        #print("[TRACE] make_psi_space_dict file =", inspect.getsourcefile(make_psi_space_dict))
+        #print("[TRACE] set_dict2tree_psi file   =", inspect.getsourcefile(set_dict2tree_psi))
+        #print("[TRACE] set_df_Slots2psi4demand file =", inspect.getsourcefile(set_df_Slots2psi4demand))
+        # *******************
+
+
         # optionally pick a product
         if self.product:
             if hasattr(env, "product_name_list") and self.product in getattr(env, "product_name_list"):

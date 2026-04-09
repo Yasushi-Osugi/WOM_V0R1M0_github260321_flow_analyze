@@ -996,7 +996,8 @@ class WOMCockpit(tk.Tk):
         csv_path = os.path.join(os.getcwd(), "data", "consumer_experience_input.csv")
         initialize_consumer_experience_inputs(csv_path)
 
-
+        # decouple nodes list
+        self.decouple_node_selected = [] 
 
 
     def _build_header(self):
@@ -1027,6 +1028,8 @@ class WOMCockpit(tk.Tk):
         self.cb_direction.pack(side="left", padx=5)
 
         ttk.Button(frm, text="Run Step", command=self.run_step).pack(side="right")
+        ttk.Button(frm, text="Run Full Plan", command=self.run_full_plan).pack(side="right", padx=8)
+
         ttk.Button(frm, text="Animation Viewer", command=self.open_animation_viewer).pack(side="right", padx=8)
         ttk.Button(frm, text="PSI累計+利益率", command=self.open_psi_profit_animation).pack(side="right", padx=8)
         ttk.Button(frm, text="Business Animation", command=self.open_business_animation).pack(side="right", padx=8)
@@ -1037,6 +1040,11 @@ class WOMCockpit(tk.Tk):
         ttk.Button(frm, text="World Map", command=self.open_world_map).pack(side="right", padx=8)
         ttk.Button(frm, text="Network",   command=self.open_network).pack(side="right", padx=8)
         ttk.Button(frm, text="Select Node", command=self.open_node_selector).pack(side="right", padx=8)
+
+
+
+
+
 
     def _get_current_root_for_business_animation(self):
         root = getattr(self, "root_node_outbound", None)
@@ -1365,7 +1373,12 @@ class WOMCockpit(tk.Tk):
         self.cb_mom["values"] = self.moms
         if self.moms and self.var_mom.get() not in self.moms:
             self.var_mom.set(self.moms[0])
+
+        # decouple default 
+        self.decouple_node_selected = self._detect_default_decouple_nodes(prod) 
+
         self.refresh()
+
         try:
             if self.business_animation_panel is not None:
                 ctx = self.build_business_animation_context()
@@ -1373,6 +1386,8 @@ class WOMCockpit(tk.Tk):
                     self.business_animation_panel.set_context(ctx)
         except Exception:
             pass
+
+
 
     def run_and_refresh(self):
         """
@@ -1418,10 +1433,241 @@ class WOMCockpit(tk.Tk):
         self.refresh()
 
 # ********
+# planning engine
+# ********
+    #def run_full_plan(self):
+    #    """
+    #    GUI entry point for full integrated planning.
+    #    """
+    #    try:
+    #        self._run_planning_sequence(use_selected_decouples=True)
+    #        print("[full-plan] completed")
+    #    except Exception as e:
+    #        try:
+    #            messagebox.showerror("Run Full Plan", f"Full planning failed.\n\n{e}")
+    #        except Exception:
+    #            print("[ERROR] Run Full Plan:", e)
+
+
+    def run_full_plan(self):
+        try:
+            self._run_planning_sequence(use_selected_decouples=True)
+            print("[full-plan] completed")
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+
+            try:
+                messagebox.showerror(
+                    "Run Full Plan",
+                    f"Full planning failed.\n\n{e}"
+                )
+            except Exception:
+                print("[ERROR] Run Full Plan:", e)
+
+
+    def _run_planning_sequence(self, *, use_selected_decouples: bool = True):
+        import pysi.plan.engines as eng
+
+        prod = (self.var_product.get() or "").strip()
+
+        out_root = None
+        in_root = None
+
+        try:
+            out_root = (getattr(self.env, "prod_tree_dict_OT", {}) or {}).get(prod)
+        except Exception:
+            pass
+
+        try:
+            in_root = (getattr(self.env, "prod_tree_dict_IN", {}) or {}).get(prod)
+        except Exception:
+            pass
+
+        if out_root is None:
+            out_root = getattr(self.env, "root_node_outbound", None)
+
+        if in_root is None:
+            in_root = getattr(self.env, "root_node_inbound", None)
+
+        if not (out_root and in_root):
+            print(
+                f"[WARN] roots not ready for product={prod} "
+                f"(out_root={out_root is not None}, in_root={in_root is not None})"
+            )
+            return
+
+        #@ADD for debug
+        print("[root-check] prod =", prod)
+
+        print("[root-check] has self.prod_tree_dict_OT =", hasattr(self, "prod_tree_dict_OT"))
+        print("[root-check] has self.prod_tree_dict_IN =", hasattr(self, "prod_tree_dict_IN"))
+        print("[root-check] has self.env.prod_tree_dict_OT =", hasattr(self.env, "prod_tree_dict_OT"))
+        print("[root-check] has self.env.prod_tree_dict_IN =", hasattr(self.env, "prod_tree_dict_IN"))
+
+        print("[root-check] self root out id =", id(getattr(self, "root_node_outbound", None)))
+        print("[root-check] self root in  id =", id(getattr(self, "root_node_inbound", None)))
+        print("[root-check] env  root out id =", id(getattr(self.env, "root_node_outbound", None)))
+        print("[root-check] env  root in  id =", id(getattr(self.env, "root_node_inbound", None)))
+
+        sr_out = (getattr(self, "prod_tree_dict_OT", {}) or {}).get(prod)
+        sr_in  = (getattr(self, "prod_tree_dict_IN", {}) or {}).get(prod)
+        er_out = (getattr(self.env, "prod_tree_dict_OT", {}) or {}).get(prod)
+        er_in  = (getattr(self.env, "prod_tree_dict_IN", {}) or {}).get(prod)
+
+        print("[root-check] self prod out id =", id(sr_out) if sr_out else None)
+        print("[root-check] self prod in  id =", id(sr_in) if sr_in else None)
+        print("[root-check] env  prod out id =", id(er_out) if er_out else None)
+        print("[root-check] env  prod in  id =", id(er_in) if er_in else None)
+
+        print("[root-check] self prod out len =", len(sr_out.psi4supply) if sr_out and getattr(sr_out, "psi4supply", None) else None)
+        print("[root-check] self prod in  len =", len(sr_in.psi4demand) if sr_in and getattr(sr_in, "psi4demand", None) else None)
+        print("[root-check] env  prod out len =", len(er_out.psi4supply) if er_out and getattr(er_out, "psi4supply", None) else None)
+        print("[root-check] env  prod in  len =", len(er_in.psi4demand) if er_in and getattr(er_in, "psi4demand", None) else None)
+
+        print("[root-check] out_root name =", getattr(out_root, "name", None))
+        print("[root-check] in_root  name =", getattr(in_root, "name", None))
+
+
+
+
+        mom_name = (self.var_mom.get().strip() if hasattr(self, "var_mom") else "") or "MOM"
+        decouples = (getattr(self, "decouple_node_selected", []) or []) if use_selected_decouples else None
+
+        print(f"[full-plan] product={prod}")
+        print(f"[full-plan] mom_name={mom_name}")
+        print(f"[full-plan] decouples={decouples}")
+
+        print("[full-plan] step1 outbound_backward_leaf_to_MOM")
+        out_root, in_root = eng.outbound_backward_leaf_to_MOM(out_root, in_root, layer="demand")
+
+        print("[full-plan] step2 inbound_MOM_leveling_vs_capacity")
+        out_root, in_root = eng.inbound_MOM_leveling_vs_capacity(out_root, in_root, mom_name=mom_name)
+
+
+        # ********
+        # INBOUND Planning
+        # ********
+
+        #@STOP
+        #@ COPY demand 2 supply
+        #def _copy_slot0_demand_to_supply(root):
+        #    stack = [root]
+        #    while stack:
+        #        n = stack.pop()
+        #        d = getattr(n, "psi4demand", None)
+        #        s = getattr(n, "psi4supply", None)
+        #        if isinstance(d, list) and isinstance(s, list):
+        #            weeks = min(len(d), len(s))
+        #            for w in range(weeks):
+        #                if len(d[w]) > 0 and len(s[w]) > 0:
+        #                    s[w][0] = list(d[w][0])
+        #        stack.extend(getattr(n, "children", []) or [])
+
+        #@STOP
+        #print("[full-plan] step3 inbound_backward_MOM_to_leaf")
+        #out_root, in_root = eng.inbound_backward_MOM_to_leaf(out_root, in_root, layer="demand")
+
+        # ********
+        # Define Production Allocate Policy
+        # ********
+        MOM_POLICY_IPHONE = {
+            "CN": ["MOM_final_assy_ASIA", "MOM_final_assy_EURO"],
+            "JP": ["MOM_final_assy_ASIA", "MOM_final_assy_EURO"],
+            "US": ["MOM_final_assy_ASIA", "MOM_final_assy_EURO"],
+            "DE": ["MOM_final_assy_EURO", "MOM_final_assy_ASIA"],
+            "UK": ["MOM_final_assy_EURO", "MOM_final_assy_ASIA"],
+            "DEFAULT": ["MOM_final_assy_ASIA"],
+        }
+
+        print("[full-plan] step3 inbound_backward_MOM_to_leaf")
+        out_root, in_root = eng.inbound_backward_MOM_to_leaf(
+            out_root,
+            in_root,
+            layer="demand",
+            mom_policy=MOM_POLICY_IPHONE,
+        )
+
+
+        #print("[full-plan] step3.5 inbound demand->supply bridge")
+        #_copy_slot0_demand_to_supply(in_root)
+
+        print("[full-plan] step3.5 inbound_seed_supply_from_demand")
+        eng.bridge_inbound_demand_to_supply (in_root)
+
+
+
+        print("[full-plan] step4 inbound_forward_leaf_to_MOM")
+        out_root, in_root = eng.inbound_forward_leaf_to_MOM(out_root, in_root, layer="supply")
+
+
+        print("[full-plan] step5 push_pull")
+        out_root, in_root = eng.push_pull(out_root, in_root, decouple_nodes=decouples)
+
+        self.root_node_outbound = out_root
+        self.root_node_inbound = in_root
+
+        try:
+            self.env.root_node_outbound = out_root
+        except Exception:
+            pass
+
+        try:
+            self.env.root_node_inbound = in_root
+        except Exception:
+            pass
+
+        try:
+            self.update_evaluation_results4multi_product()
+            self._ensure_cost_df()
+        except Exception as e:
+            print("[WARN] evaluation:", e)
+
+        try:
+            self.refresh()
+        except Exception as e:
+            print("[WARN] refresh views:", e)
+
+
+# ********
 # helper
 # ********
+    def _detect_default_decouple_nodes(self, product_name=None):
+        """
+        decouple / buffer node candidates.
+        Priority:
+        1. stock_buffer / decouple_node flag
+        2. node name starts with 'DAD'
+        """
+        names = set()
+        root = None
 
+        try:
+            if product_name and getattr(self.env, "prod_tree_dict_OT", None):
+                root = self.env.prod_tree_dict_OT.get(product_name)
+        except Exception:
+            root = None
 
+        if root is None:
+            root = getattr(self, "root_node_outbound", None)
+
+        if root is None:
+            return []
+
+        stack = [root]
+
+        while stack:
+            n = stack.pop()
+
+            if getattr(n, "stock_buffer", False) or getattr(n, "decouple_node", False):
+                names.add(getattr(n, "name", ""))
+            elif str(getattr(n, "name", "")).startswith("DAD"):
+                names.add(getattr(n, "name", ""))
+
+            for c in getattr(n, "children", []) or []:
+                stack.append(c)
+
+        return sorted([x for x in names if x])
 
 
 
