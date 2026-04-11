@@ -712,22 +712,7 @@ def clear_frame(frame):
     for w in frame.winfo_children():
         w.destroy()
 
-#@STOP
-#def plot_mom_psi_cap(frame, env, product: str, mom_name: str, root_outbound):
-def plot_mom_psi_cap(
-    frame,
-    env,
-    product: str,
-    mom_name: str,
-    root_outbound,
-    *,
-    step_type="Supply",
-    direction="Outbound",
-    debug=True,
-):
-
-
-
+def plot_mom_psi_cap(frame, env, product: str, mom_name: str, root_outbound):
     clear_frame(frame)
 
     # NOTE:
@@ -1687,78 +1672,29 @@ class WOMCockpit(tk.Tk):
             "DEFAULT": ["MOM_final_assy_ASIA"],
         }
 
-
-        #@STOP
-        #print("[full-plan] step3 inbound_backward_MOM_to_leaf")
-        #out_root, in_root = eng.inbound_backward_MOM_to_leaf(
-        #    out_root,
-        #    in_root,
-        #    layer="demand",
-        #    mom_policy=MOM_POLICY_IPHONE,
-        #)
-
-        #@DEBUG
         print("[full-plan] step3 inbound_backward_MOM_to_leaf")
-        #out_root, in_root = eng.inbound_backward_MOM_to_leaf(out_root, in_root)
         out_root, in_root = eng.inbound_backward_MOM_to_leaf(
             out_root,
             in_root,
             layer="demand",
             mom_policy=MOM_POLICY_IPHONE,
         )
-        self._debug_dump_mom_lot_counts(
-            in_root,
-            label="after step3 inbound_backward_MOM_to_leaf",
-            focus_names=["MOM_final_assy_ASIA", "MOM_final_assy_EURO"],
-        )
 
 
         #print("[full-plan] step3.5 inbound demand->supply bridge")
         #_copy_slot0_demand_to_supply(in_root)
 
-        # *********************
-        # Plan Engine STOP
-        # *********************
-        #print("[full-plan] step3.5 inbound_seed_supply_from_demand")
-        #eng.bridge_inbound_demand_to_supply (in_root)\
-
-        #print("[full-plan] step4 inbound_forward_leaf_to_MOM")
-        #out_root, in_root = eng.inbound_forward_leaf_to_MOM(out_root, in_root, layer="supply")
-
-        #print("[full-plan] step5 push_pull")
-        #out_root, in_root = eng.push_pull(out_root, in_root, decouple_nodes=decouples)
-
-
-        # *********************
-        # Plan Engine DEBUG
-        # *********************
         print("[full-plan] step3.5 inbound_seed_supply_from_demand")
-        eng.bridge_inbound_demand_to_supply(in_root)
-        self._debug_dump_mom_lot_counts(
-            in_root,
-            label="after step3.5 bridge_inbound_demand_to_supply",
-            focus_names=["MOM_final_assy_ASIA", "MOM_final_assy_EURO"],
-        )
+        eng.bridge_inbound_demand_to_supply (in_root)
+
+
 
         print("[full-plan] step4 inbound_forward_leaf_to_MOM")
         out_root, in_root = eng.inbound_forward_leaf_to_MOM(out_root, in_root, layer="supply")
-        self._debug_dump_mom_lot_counts(
-            in_root,
-            label="after step4 inbound_forward_leaf_to_MOM",
-            focus_names=["MOM_final_assy_ASIA", "MOM_final_assy_EURO"],
-        )
+
 
         print("[full-plan] step5 push_pull")
         out_root, in_root = eng.push_pull(out_root, in_root, decouple_nodes=decouples)
-        self._debug_dump_mom_lot_counts(
-            in_root,
-            label="after step5 push_pull",
-            focus_names=["MOM_final_assy_ASIA", "MOM_final_assy_EURO"],
-        )
-
-
-
-
 
         self.root_node_outbound = out_root
         self.root_node_inbound = in_root
@@ -1788,125 +1724,6 @@ class WOMCockpit(tk.Tk):
 # ********
 # helper
 # ********
-    def _dbg_total_and_unique_lots(self, psi, slot_idx=0):
-        total = 0
-        uniq = set()
-
-        for week in (psi or []):
-            try:
-                lots = week[slot_idx] or []
-            except Exception:
-                lots = []
-
-            total += len(lots)
-            for lot in lots:
-                uniq.add(str(lot))
-
-        return total, len(uniq)
-
-    def _dbg_nonzero_weeks(self, psi, slot_idx=0, limit=8):
-        hits = []
-        for w, week in enumerate(psi or [], start=1):
-            try:
-                cnt = len(week[slot_idx] or [])
-            except Exception:
-                cnt = 0
-
-            if cnt:
-                hits.append((w, cnt))
-                if len(hits) >= limit:
-                    break
-        return hits
-
-    def _debug_dump_mom_lot_counts(self, in_root, label="", focus_names=None):
-        """
-        MOM別の demand/supply lot 状況を表示する。
-        total と unique を両方出すので、append重複の検出に使いやすい。
-        slot convention:
-          0 = S
-          2 = I
-          3 = P
-        """
-        if in_root is None:
-            print(f"[mom-debug] {label} : in_root is None")
-            return
-
-        names_filter = set(focus_names or [])
-
-        stack = [in_root]
-        moms = []
-        seen = set()
-
-        while stack:
-            n = stack.pop()
-            if n is None:
-                continue
-            if id(n) in seen:
-                continue
-            seen.add(id(n))
-
-            nm = str(getattr(n, "name", "") or "")
-            if nm.startswith("MOM"):
-                if not names_filter or nm in names_filter:
-                    moms.append(n)
-
-            for c in getattr(n, "children", []) or []:
-                stack.append(c)
-
-        moms = sorted(moms, key=lambda x: str(getattr(x, "name", "")))
-
-        print("=" * 110)
-        print(f"[mom-debug] {label}")
-        if not moms:
-            print("[mom-debug] no MOM nodes found under in_root")
-            print("=" * 110)
-            return
-
-        for mom in moms:
-            nm = str(getattr(mom, "name", "") or "")
-            psi_d = getattr(mom, "psi4demand", None) or []
-            psi_s = getattr(mom, "psi4supply", None) or []
-
-            dS_total, dS_unique = self._dbg_total_and_unique_lots(psi_d, 0)
-            dI_total, dI_unique = self._dbg_total_and_unique_lots(psi_d, 2)
-            dP_total, dP_unique = self._dbg_total_and_unique_lots(psi_d, 3)
-
-            sS_total, sS_unique = self._dbg_total_and_unique_lots(psi_s, 0)
-            sI_total, sI_unique = self._dbg_total_and_unique_lots(psi_s, 2)
-            sP_total, sP_unique = self._dbg_total_and_unique_lots(psi_s, 3)
-
-            dS_nz = self._dbg_nonzero_weeks(psi_d, 0, limit=8)
-            sS_nz = self._dbg_nonzero_weeks(psi_s, 0, limit=8)
-            dP_nz = self._dbg_nonzero_weeks(psi_d, 3, limit=8)
-            sP_nz = self._dbg_nonzero_weeks(psi_s, 3, limit=8)
-
-            print(
-                f"[mom-debug] {nm} | "
-                f"demand S total={dS_total} unique={dS_unique}, "
-                f"I total={dI_total} unique={dI_unique}, "
-                f"P total={dP_total} unique={dP_unique}"
-            )
-            print(
-                f"[mom-debug] {nm} | "
-                f"supply S total={sS_total} unique={sS_unique}, "
-                f"I total={sI_total} unique={sI_unique}, "
-                f"P total={sP_total} unique={sP_unique}"
-            )
-            print(
-                f"[mom-debug] {nm} | "
-                f"demand_nz_S={dS_nz} | supply_nz_S={sS_nz}"
-            )
-            print(
-                f"[mom-debug] {nm} | "
-                f"demand_nz_P={dP_nz} | supply_nz_P={sP_nz}"
-            )
-
-        print("=" * 110)
-
-
-
-
-
     def _detect_default_decouple_nodes(self, product_name=None):
         """
         decouple / buffer node candidates.

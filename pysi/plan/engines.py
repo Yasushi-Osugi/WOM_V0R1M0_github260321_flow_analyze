@@ -160,7 +160,6 @@ def inbound_backward_MOM_to_leaf(out_root, in_root, layer="demand", mom_policy=N
 
     # 1) OUT→IN の接続（root の demand/supply を一致コピー）
     connect_outbound2inbound(out_root, in_root)
-    
 
     # 1.5) 生産配分ポリシー適用
     if mom_policy:
@@ -172,11 +171,25 @@ def inbound_backward_MOM_to_leaf(out_root, in_root, layer="demand", mom_policy=N
             debug=True,
         )
 
+    # 1.7) MOM subtree を planning 起点にする
+    # NOTE:
+    #   connect_outbound2inbound() で in_root に outbound 全量が入った状態で
+    #   preorder(in_root) を回すと、root/supply_point 起点で全 MOM branch に
+    #   同じ demand が伝播する危険がある。
+    #   そのため、step3 は MOM 以下だけを対象に backward planning する。
+    mom_list = _find_nodes_by_prefix(in_root, "MOM_")
+    mom_list = sorted(mom_list, key=lambda n: getattr(n, "name", ""))
 
+    if not mom_list:
+        # fallback: 既存挙動
+        mom_list = [in_root]
 
     # 2) PRE-ORDER: inbound の S→P（親） & P→S（子）を伝播（Backward）
-    calc_all_psiS2P2childS_preorder(in_root)  # ← 親P→子Sは demand レイヤに入る
-    # 3) & 4)  "clone psi4demand to psi4supply"
+    #    root 全体ではなく、各 MOM subtree ごとに実行する
+    for a_mom in mom_list:
+        calc_all_psiS2P2childS_preorder(a_mom)
+
+    # 3) & 4) "clone psi4demand to psi4supply"
     def _clone_psi_layer(psi_layer):
         return [[slot[:] for slot in week] for week in psi_layer]
 
@@ -185,11 +198,14 @@ def inbound_backward_MOM_to_leaf(out_root, in_root, layer="demand", mom_policy=N
         for c in node.children:
             copy_demand_to_supply_rec(c)
 
-    copy_demand_to_supply_rec(in_root)
-    # 5) POST-ORDER: supply レイヤの P/S/CO から I を確定生成
-    calc_all_psi2i4supply_post(in_root)
-    return out_root, in_root
+    for a_mom in mom_list:
+        copy_demand_to_supply_rec(a_mom)
 
+    # 5) POST-ORDER: supply レイヤの P/S/CO から I を確定生成
+    for a_mom in mom_list:
+        calc_all_psi2i4supply_post(a_mom)
+
+    return out_root, in_root
 
 def bridge_inbound_demand_to_supply(root):
     stack = [root]
