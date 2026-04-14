@@ -1,0 +1,911 @@
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/pysi/cost/__init__.py b/pysi/cost/__init__.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..4ab803940651c51b5d4b2df99addb2281167b624
+--- /dev/null
++++ b/pysi/cost/__init__.py
+@@ -0,0 +1,15 @@
++"""Cost calculation helpers for WOM reporting MVP."""
++
++from .allocation_rule_engine import apply_allocation_rules
++from .cost_engine import run_cost_engine
++from .cost_to_kpi_adapter import build_kpi_rows
++from .load_cost_masters import load_cost_masters
++from .validate_cost_masters import validate_cost_masters
++
++__all__ = [
++    "apply_allocation_rules",
++    "run_cost_engine",
++    "build_kpi_rows",
++    "load_cost_masters",
++    "validate_cost_masters",
++]
+diff --git a/pysi/cost/allocation_rule_engine.py b/pysi/cost/allocation_rule_engine.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..e9a9e755aba8b0f78726c79e259e0b8eeab42046
+--- /dev/null
++++ b/pysi/cost/allocation_rule_engine.py
+@@ -0,0 +1,100 @@
++"""Allocation rule engine skeleton.
++
++Allocation is intentionally centralized here.
++"""
++
++from __future__ import annotations
++
++from collections import defaultdict
++from typing import Any
++
++
++def _group_sum(lines: list[dict[str, Any]], dim: str, key: str, categories: set[str]) -> float:
++    return sum(
++        float(line.get("amount", 0.0) or 0.0)
++        for line in lines
++        if line.get(dim) == key and line.get("cost_category") in categories
++    )
++
++
++def _driver_weights(report_input: dict[str, Any], to_dim: str, driver: str) -> dict[str, float]:
++    weights = defaultdict(float)
++    for rec in report_input.get("records", []):
++        bucket = rec.get(to_dim)
++        if bucket is None:
++            continue
++        weights[bucket] += float(rec.get(driver, 0.0) or 0.0)
++    total = sum(weights.values())
++    if total <= 0:
++        # fallback equal split across discovered keys
++        keys = list(weights.keys())
++        if not keys:
++            return {}
++        eq = 1.0 / len(keys)
++        return {k: eq for k in keys}
++    return {k: v / total for k, v in weights.items()}
++
++
++def apply_allocation_rules(
++    cost_result: dict[str, Any],
++    allocation_rules: list[dict[str, Any]],
++    report_input: dict[str, Any],
++) -> dict[str, Any]:
++    """Apply simple pool allocation and keep before/after trace."""
++    source_lines = list(cost_result.get("cost_lines", []))
++    allocated_lines = list(source_lines)
++    breakdown: list[dict[str, Any]] = []
++
++    for rule in allocation_rules:
++        from_dim = rule.get("from_dim", "node")
++        to_dim = rule.get("to_dim", "market")
++        from_key = rule.get("from_key")
++        driver = rule.get("driver", "sales_units")
++        categories = set(rule.get("pool_categories", []))
++
++        if from_key is None or not categories:
++            continue
++
++        pool_total = _group_sum(allocated_lines, from_dim, from_key, categories)
++        if pool_total <= 0:
++            continue
++
++        weights = _driver_weights(report_input=report_input, to_dim=to_dim, driver=driver)
++        if not weights:
++            continue
++
++        for target_key, weight in weights.items():
++            amount = pool_total * weight
++            allocated_lines.append(
++                {
++                    "product": "ALL",
++                    "node": from_key,
++                    "week": "ALL",
++                    "market": target_key if to_dim == "market" else None,
++                    "cost_type": "allocation",
++                    "cost_category": "allocated_pool",
++                    "amount": amount,
++                    "allocation_status": "allocated",
++                    "allocation_rule": rule.get("name", "unnamed_rule"),
++                    "from_dim": from_dim,
++                    "to_dim": to_dim,
++                    "driver": driver,
++                    "weight": weight,
++                }
++            )
++            breakdown.append(
++                {
++                    "rule_name": rule.get("name", "unnamed_rule"),
++                    "from_key": from_key,
++                    "to_key": target_key,
++                    "driver": driver,
++                    "weight": weight,
++                    "allocated_amount": amount,
++                }
++            )
++
++    return {
++        "cost_lines_before": source_lines,
++        "cost_lines_after": allocated_lines,
++        "allocation_breakdown": breakdown,
++    }
+diff --git a/pysi/cost/cost_engine.py b/pysi/cost/cost_engine.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..85514c8902c139f6b92f6fbf17120b13574fad34
+--- /dev/null
++++ b/pysi/cost/cost_engine.py
+@@ -0,0 +1,95 @@
++"""Cost calculation skeleton at product × node × week grain."""
++
++from __future__ import annotations
++
++from collections import defaultdict
++from typing import Any
++
++
++def _lane_key(row: dict[str, Any]) -> str | None:
++    from_node = row.get("from_node")
++    to_node = row.get("to_node")
++    if from_node and to_node:
++        return f"{from_node}->{to_node}"
++    return None
++
++
++def run_cost_engine(
++    report_input: dict[str, Any],
++    cost_masters: dict[str, Any],
++) -> dict[str, Any]:
++    """Compute base cost lines.
++
++    report_input expected keys:
++      - records: list[dict] with product/node/week/qty and optional lane+market fields
++    """
++    records = list(report_input.get("records", []))
++
++    node_rates = cost_masters.get("node_cost_rates", {})
++    lane_rates = cost_masters.get("lane_cost_rates", {})
++    market_rates = cost_masters.get("market_cost_rates", {})
++
++    cost_lines: list[dict[str, Any]] = []
++    totals = defaultdict(float)
++
++    for rec in records:
++        product = rec.get("product", "UNKNOWN")
++        node = rec.get("node", "UNKNOWN")
++        week = rec.get("week", "0000-W00")
++        qty = float(rec.get("qty", 0.0) or 0.0)
++        market = rec.get("market")
++
++        for category, rate in node_rates.get(node, {}).items():
++            amount = qty * float(rate)
++            line = {
++                "product": product,
++                "node": node,
++                "week": week,
++                "market": market,
++                "cost_type": "node",
++                "cost_category": category,
++                "amount": amount,
++                "allocation_status": "original",
++            }
++            cost_lines.append(line)
++            totals["total_cost"] += amount
++
++        lk = _lane_key(rec)
++        if lk:
++            for category, rate in lane_rates.get(lk, {}).items():
++                amount = qty * float(rate)
++                line = {
++                    "product": product,
++                    "node": rec.get("to_node") or node,
++                    "week": week,
++                    "market": market,
++                    "cost_type": "lane",
++                    "cost_category": category,
++                    "amount": amount,
++                    "allocation_status": "original",
++                    "lane": lk,
++                }
++                cost_lines.append(line)
++                totals["total_cost"] += amount
++
++        if market:
++            for category, rate in market_rates.get(market, {}).items():
++                amount = qty * float(rate)
++                line = {
++                    "product": product,
++                    "node": node,
++                    "week": week,
++                    "market": market,
++                    "cost_type": "market",
++                    "cost_category": category,
++                    "amount": amount,
++                    "allocation_status": "original",
++                }
++                cost_lines.append(line)
++                totals["total_cost"] += amount
++
++    return {
++        "cost_lines": cost_lines,
++        "totals": dict(totals),
++        "meta": {"record_count": len(records), "line_count": len(cost_lines)},
++    }
+diff --git a/pysi/cost/cost_to_kpi_adapter.py b/pysi/cost/cost_to_kpi_adapter.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..ef05511f39e591796263702b9394a7b76beb4438
+--- /dev/null
++++ b/pysi/cost/cost_to_kpi_adapter.py
+@@ -0,0 +1,37 @@
++"""Bridge cost lines to KPI rows for reporting."""
++
++from __future__ import annotations
++
++from collections import defaultdict
++from typing import Any
++
++
++def build_kpi_rows(cost_lines: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
++    by_product = defaultdict(float)
++    by_node = defaultdict(float)
++    by_market = defaultdict(float)
++
++    for line in cost_lines:
++        amount = float(line.get("amount", 0.0) or 0.0)
++        by_product[str(line.get("product", "UNKNOWN"))] += amount
++        by_node[str(line.get("node", "UNKNOWN"))] += amount
++        by_market[str(line.get("market", "UNASSIGNED"))] += amount
++
++    product_rows = [
++        {"product": key, "total_cost": value}
++        for key, value in sorted(by_product.items(), key=lambda kv: kv[0])
++    ]
++    node_rows = [
++        {"node": key, "total_cost": value}
++        for key, value in sorted(by_node.items(), key=lambda kv: kv[0])
++    ]
++    market_rows = [
++        {"market": key, "total_cost": value}
++        for key, value in sorted(by_market.items(), key=lambda kv: kv[0])
++    ]
++
++    return {
++        "product_report": product_rows,
++        "node_report": node_rows,
++        "market_report": market_rows,
++    }
+diff --git a/pysi/cost/load_cost_masters.py b/pysi/cost/load_cost_masters.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..d832fea5a0d258c2423ab7d4c924e53456882871
+--- /dev/null
++++ b/pysi/cost/load_cost_masters.py
+@@ -0,0 +1,71 @@
++"""Load cost master dictionaries for reporting MVP.
++
++This loader supports:
++- direct dictionary input (already-loaded masters)
++- a lightweight JSON file path
++- fallback sample masters for static runs
++"""
++
++from __future__ import annotations
++
++import json
++from pathlib import Path
++from typing import Any
++
++
++def _sample_cost_masters() -> dict[str, Any]:
++    return {
++        "node_cost_rates": {
++            "factory_a": {
++                "production": 12.0,
++                "inventory": 0.8,
++                "sga": 1.5,
++                "depreciation": 0.5,
++            },
++            "dc_japan": {
++                "production": 0.0,
++                "inventory": 0.9,
++                "sga": 1.2,
++                "depreciation": 0.3,
++            },
++        },
++        "lane_cost_rates": {
++            "factory_a->dc_japan": {
++                "logistics": 2.5,
++                "tariff": 0.3,
++                "insurance": 0.2,
++            }
++        },
++        "market_cost_rates": {
++            "jp": {"sales": 3.0, "promotion": 1.2, "rebate": 0.4},
++        },
++        "allocation_rules": [
++            {
++                "name": "factory_to_market_by_sales",
++                "driver": "sales_units",
++                "from_dim": "node",
++                "to_dim": "market",
++                "from_key": "factory_a",
++                "pool_categories": ["production", "sga", "depreciation"],
++            }
++        ],
++    }
++
++
++def load_cost_masters(source: str | Path | dict[str, Any] | None = None) -> dict[str, Any]:
++    """Return normalized cost master payload."""
++    if source is None:
++        return _sample_cost_masters()
++    if isinstance(source, dict):
++        return source
++
++    path = Path(source)
++    if not path.exists():
++        raise FileNotFoundError(f"Cost master file not found: {path}")
++
++    with path.open("r", encoding="utf-8") as fp:
++        payload = json.load(fp)
++
++    if not isinstance(payload, dict):
++        raise ValueError("Cost master file must contain a JSON object")
++    return payload
+diff --git a/pysi/cost/validate_cost_masters.py b/pysi/cost/validate_cost_masters.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..7c9523915bd6d16ac52377af61d8f3d26a567f2f
+--- /dev/null
++++ b/pysi/cost/validate_cost_masters.py
+@@ -0,0 +1,54 @@
++"""Validation for cost masters used by reporting MVP."""
++
++from __future__ import annotations
++
++from typing import Any
++
++
++REQUIRED_TOP_KEYS = (
++    "node_cost_rates",
++    "lane_cost_rates",
++    "market_cost_rates",
++    "allocation_rules",
++)
++
++
++def validate_cost_masters(cost_masters: dict[str, Any]) -> list[str]:
++    """Validate shape and return human-readable errors.
++
++    Empty list means validation passed.
++    """
++    errors: list[str] = []
++
++    for key in REQUIRED_TOP_KEYS:
++        if key not in cost_masters:
++            errors.append(f"missing top-level key: {key}")
++
++    for group in ("node_cost_rates", "lane_cost_rates", "market_cost_rates"):
++        table = cost_masters.get(group, {})
++        if table is None:
++            errors.append(f"{group} must be a mapping")
++            continue
++        if not isinstance(table, dict):
++            errors.append(f"{group} must be a mapping")
++            continue
++
++        for item_key, category_map in table.items():
++            if not isinstance(category_map, dict):
++                errors.append(f"{group}.{item_key} must be a mapping")
++                continue
++            for category, rate in category_map.items():
++                if not isinstance(rate, (int, float)):
++                    errors.append(
++                        f"{group}.{item_key}.{category} must be numeric (got {type(rate).__name__})"
++                    )
++
++    rules = cost_masters.get("allocation_rules", [])
++    if not isinstance(rules, list):
++        errors.append("allocation_rules must be a list")
++    else:
++        for idx, rule in enumerate(rules):
++            if not isinstance(rule, dict):
++                errors.append(f"allocation_rules[{idx}] must be an object")
++
++    return errors
+diff --git a/pysi/reporting/__init__.py b/pysi/reporting/__init__.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..af92338f8d58b8e018bdbe653b2f8b95f98904a0
+--- /dev/null
++++ b/pysi/reporting/__init__.py
+@@ -0,0 +1,11 @@
++"""Business reporting modules for WOM reporting MVP."""
++
++from .business_report_builder import build_business_report
++from .report_exporter import export_report_bundle
++from .report_runner import run_reporting_pipeline
++
++__all__ = [
++    "build_business_report",
++    "export_report_bundle",
++    "run_reporting_pipeline",
++]
+diff --git a/pysi/reporting/business_report_builder.py b/pysi/reporting/business_report_builder.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..0e3e62a90d53e1526fe81dbb6c7631c86a372e6c
+--- /dev/null
++++ b/pysi/reporting/business_report_builder.py
+@@ -0,0 +1,65 @@
++"""Build business-facing report artifacts from cost/KPI data."""
++
++from __future__ import annotations
++
++from collections import defaultdict
++from typing import Any
++
++from pysi.cost.cost_to_kpi_adapter import build_kpi_rows
++from pysi.reporting.monthly_period_mapper import week_to_month_label
++
++
++def _build_cost_waterfall(cost_lines: list[dict[str, Any]]) -> list[dict[str, Any]]:
++    agg = defaultdict(float)
++    for line in cost_lines:
++        key = f"{line.get('cost_type', 'unknown')}:{line.get('cost_category', 'unknown')}"
++        agg[key] += float(line.get("amount", 0.0) or 0.0)
++    return [{"step": key, "amount": value} for key, value in sorted(agg.items())]
++
++
++def _build_pain_points(node_report: list[dict[str, Any]], top_n: int = 5) -> list[dict[str, Any]]:
++    sorted_rows = sorted(node_report, key=lambda r: float(r.get("total_cost", 0.0)), reverse=True)
++    out: list[dict[str, Any]] = []
++    for row in sorted_rows[:top_n]:
++        out.append(
++            {
++                "pain_point": row.get("node", "UNKNOWN"),
++                "metric": "total_cost",
++                "value": float(row.get("total_cost", 0.0) or 0.0),
++            }
++        )
++    return out
++
++
++def build_business_report(
++    report_input: dict[str, Any],
++    cost_lines: list[dict[str, Any]],
++    allocation_breakdown: list[dict[str, Any]] | None = None,
++) -> dict[str, Any]:
++    kpi = build_kpi_rows(cost_lines)
++
++    monthly = defaultdict(float)
++    for line in cost_lines:
++        month_label = week_to_month_label(str(line.get("week", "UNKNOWN")))
++        monthly[month_label] += float(line.get("amount", 0.0) or 0.0)
++
++    monthly_cost_report = [
++        {"month": month, "total_cost": value} for month, value in sorted(monthly.items())
++    ]
++
++    cost_waterfall = _build_cost_waterfall(cost_lines)
++    pain_points = _build_pain_points(kpi["node_report"])
++
++    return {
++        "meta": {
++            "record_count": len(report_input.get("records", [])),
++            "cost_line_count": len(cost_lines),
++        },
++        "product_report": kpi["product_report"],
++        "node_report": kpi["node_report"],
++        "market_report": kpi["market_report"],
++        "monthly_cost_report": monthly_cost_report,
++        "cost_waterfall": cost_waterfall,
++        "pain_points": pain_points,
++        "allocation_breakdown": allocation_breakdown or [],
++    }
+diff --git a/pysi/reporting/env_allocation_reporting_run.py b/pysi/reporting/env_allocation_reporting_run.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..80d47e5da71fe1cf0828fc343376ede13240c31b
+--- /dev/null
++++ b/pysi/reporting/env_allocation_reporting_run.py
+@@ -0,0 +1,35 @@
++"""Environment-connected reporting runner with allocation enabled."""
++
++from __future__ import annotations
++
++from typing import Any
++
++from pysi.reporting.report_runner import run_reporting_pipeline
++
++
++def get_env() -> Any:
++    """Return planning env if available.
++
++    Stub by design: replace with concrete builder when env bootstrap is standardized.
++    """
++    return None
++
++
++def main() -> None:
++    env = get_env()
++    if env is None:
++        print("[env_allocation_reporting_run] get_env() is stub; using empty env input.")
++
++    result = run_reporting_pipeline(
++        env=env,
++        output_dir="outputs/reporting_mvp/env_allocation_reporting_run",
++        apply_allocation=True,
++    )
++
++    print("[env_allocation_reporting_run] report exported:")
++    for key, path in sorted(result["exported"].items()):
++        print(f"  - {key}: {path}")
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/pysi/reporting/monthly_period_mapper.py b/pysi/reporting/monthly_period_mapper.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..275772e206dc79cdebc705eaa2def833c35e5b2c
+--- /dev/null
++++ b/pysi/reporting/monthly_period_mapper.py
+@@ -0,0 +1,19 @@
++"""Isolated week->month mapping helper.
++
++Week logic may differ from ISO in future, so keep this mapper independent.
++"""
++
++from __future__ import annotations
++
++
++def week_to_month_label(week_label: str) -> str:
++    """Convert YYYY-Www -> YYYY-MM (proxy mapping: 4 weeks per month)."""
++    try:
++        year_text, week_text = week_label.split("-W", 1)
++        week_num = int(week_text)
++        month_num = ((week_num - 1) // 4) + 1
++        if month_num > 12:
++            month_num = 12
++        return f"{int(year_text):04d}-{month_num:02d}"
++    except Exception:
++        return "UNKNOWN"
+diff --git a/pysi/reporting/report_exporter.py b/pysi/reporting/report_exporter.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..dd8790eabd7dee2a51c4a5d883b4d713a2fd6eae
+--- /dev/null
++++ b/pysi/reporting/report_exporter.py
+@@ -0,0 +1,72 @@
++"""Export reporting artifacts as JSON/CSV/Markdown."""
++
++from __future__ import annotations
++
++import csv
++import json
++from pathlib import Path
++from typing import Any
++
++
++CSV_TABLES = [
++    "product_report",
++    "node_report",
++    "market_report",
++    "cost_waterfall",
++    "pain_points",
++    "allocation_breakdown",
++]
++
++
++def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
++    if not rows:
++        path.write_text("", encoding="utf-8")
++        return
++
++    fieldnames = sorted({key for row in rows for key in row.keys()})
++    with path.open("w", encoding="utf-8", newline="") as fp:
++        writer = csv.DictWriter(fp, fieldnames=fieldnames)
++        writer.writeheader()
++        writer.writerows(rows)
++
++
++def _write_summary_md(path: Path, report: dict[str, Any]) -> None:
++    lines = [
++        "# WOM Business Report Summary",
++        "",
++        f"- Records: {report.get('meta', {}).get('record_count', 0)}",
++        f"- Cost lines: {report.get('meta', {}).get('cost_line_count', 0)}",
++        f"- Product rows: {len(report.get('product_report', []))}",
++        f"- Node rows: {len(report.get('node_report', []))}",
++        f"- Market rows: {len(report.get('market_report', []))}",
++        f"- Allocation rows: {len(report.get('allocation_breakdown', []))}",
++        "",
++        "## Top Pain Points",
++    ]
++    for row in report.get("pain_points", [])[:5]:
++        lines.append(f"- {row.get('pain_point')}: {row.get('value')}")
++
++    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
++
++
++def export_report_bundle(report: dict[str, Any], output_dir: str | Path) -> dict[str, str]:
++    out = Path(output_dir)
++    out.mkdir(parents=True, exist_ok=True)
++
++    json_path = out / "business_report.json"
++    json_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
++
++    csv_paths: dict[str, str] = {}
++    for table_name in CSV_TABLES:
++        path = out / f"{table_name}.csv"
++        _write_csv(path=path, rows=list(report.get(table_name, [])))
++        csv_paths[table_name] = str(path)
++
++    md_path = out / "summary.md"
++    _write_summary_md(md_path, report)
++
++    return {
++        "json": str(json_path),
++        "markdown": str(md_path),
++        **csv_paths,
++    }
+diff --git a/pysi/reporting/report_input_builder.py b/pysi/reporting/report_input_builder.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..1f4b394401dd27fc6314de93790145f17b87223b
+--- /dev/null
++++ b/pysi/reporting/report_input_builder.py
+@@ -0,0 +1,52 @@
++"""Build reporting input from static payload or environment object."""
++
++from __future__ import annotations
++
++from typing import Any
++
++
++def _extract_qty_from_node(node: Any, week_index: int) -> float:
++    psi = getattr(node, "psi4demand", None)
++    if not isinstance(psi, list):
++        return 0.0
++    if week_index >= len(psi):
++        return 0.0
++    week_bucket = psi[week_index]
++    if not isinstance(week_bucket, list) or len(week_bucket) < 1:
++        return 0.0
++    sales_bucket = week_bucket[0] or []
++    return float(len(sales_bucket))
++
++
++def build_report_input(
++    planning_result: dict[str, Any] | None = None,
++    env: Any = None,
++) -> dict[str, Any]:
++    """Build normalized report input.
++
++    Returns {'records': [...]} where each record is product×node×week grain.
++    """
++    if planning_result and isinstance(planning_result.get("records"), list):
++        return {"records": list(planning_result["records"])}
++
++    records: list[dict[str, Any]] = []
++
++    if env is not None and isinstance(getattr(env, "node_dict", None), dict):
++        node_dict = env.node_dict
++        product = "ENV_PRODUCT"
++        for node_name, node in node_dict.items():
++            # minimal 4-week sample extraction for skeleton
++            for week_index in range(1, 5):
++                qty = _extract_qty_from_node(node, week_index)
++                records.append(
++                    {
++                        "product": product,
++                        "node": node_name,
++                        "week": f"2026-W{week_index:02d}",
++                        "qty": qty,
++                        "market": "env_market",
++                        "sales_units": qty,
++                    }
++                )
++
++    return {"records": records}
+diff --git a/pysi/reporting/report_runner.py b/pysi/reporting/report_runner.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..3feca1f35c807084a78fa2555259702f7cfac680
+--- /dev/null
++++ b/pysi/reporting/report_runner.py
+@@ -0,0 +1,57 @@
++"""Run end-to-end reporting pipeline for WOM cost/reporting MVP."""
++
++from __future__ import annotations
++
++from pathlib import Path
++from typing import Any
++
++from pysi.cost.allocation_rule_engine import apply_allocation_rules
++from pysi.cost.cost_engine import run_cost_engine
++from pysi.cost.load_cost_masters import load_cost_masters
++from pysi.cost.validate_cost_masters import validate_cost_masters
++from pysi.reporting.business_report_builder import build_business_report
++from pysi.reporting.report_exporter import export_report_bundle
++from pysi.reporting.report_input_builder import build_report_input
++
++
++def run_reporting_pipeline(
++    planning_result: dict[str, Any] | None = None,
++    env: Any = None,
++    cost_master_source: dict[str, Any] | str | None = None,
++    output_dir: str | Path = "outputs/reporting_mvp",
++    apply_allocation: bool = True,
++) -> dict[str, Any]:
++    report_input = build_report_input(planning_result=planning_result, env=env)
++
++    cost_masters = load_cost_masters(cost_master_source)
++    errors = validate_cost_masters(cost_masters)
++    if errors:
++        raise ValueError("Invalid cost masters: " + "; ".join(errors))
++
++    cost_result = run_cost_engine(report_input=report_input, cost_masters=cost_masters)
++
++    allocation_breakdown: list[dict[str, Any]] = []
++    final_cost_lines = cost_result["cost_lines"]
++
++    if apply_allocation:
++        allocation_result = apply_allocation_rules(
++            cost_result=cost_result,
++            allocation_rules=list(cost_masters.get("allocation_rules", [])),
++            report_input=report_input,
++        )
++        final_cost_lines = allocation_result["cost_lines_after"]
++        allocation_breakdown = allocation_result["allocation_breakdown"]
++
++    report = build_business_report(
++        report_input=report_input,
++        cost_lines=final_cost_lines,
++        allocation_breakdown=allocation_breakdown,
++    )
++    exported = export_report_bundle(report=report, output_dir=output_dir)
++
++    return {
++        "report": report,
++        "exported": exported,
++        "report_input": report_input,
++        "cost_masters": cost_masters,
++    }
+diff --git a/pysi/reporting/sample_allocation_reporting_run.py b/pysi/reporting/sample_allocation_reporting_run.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..644df06e5d50d965e1bc027f6beead0878dbde09
+--- /dev/null
++++ b/pysi/reporting/sample_allocation_reporting_run.py
+@@ -0,0 +1,49 @@
++"""Static sample run with allocation enabled."""
++
++from __future__ import annotations
++
++from pysi.reporting.report_runner import run_reporting_pipeline
++
++
++def main() -> None:
++    planning_result = {
++        "records": [
++            {
++                "product": "SKU_A",
++                "node": "factory_a",
++                "from_node": "factory_a",
++                "to_node": "dc_japan",
++                "week": "2026-W01",
++                "qty": 100,
++                "market": "jp",
++                "sales_units": 60,
++            },
++            {
++                "product": "SKU_A",
++                "node": "factory_a",
++                "week": "2026-W02",
++                "qty": 50,
++                "market": "us",
++                "sales_units": 40,
++            },
++        ]
++    }
++
++    result = run_reporting_pipeline(
++        planning_result=planning_result,
++        output_dir="outputs/reporting_mvp/sample_allocation_reporting_run",
++        apply_allocation=True,
++    )
++
++    print("[sample_allocation_reporting_run] report exported:")
++    for key, path in sorted(result["exported"].items()):
++        print(f"  - {key}: {path}")
++
++    print(
++        "[sample_allocation_reporting_run] allocation rows:",
++        len(result["report"].get("allocation_breakdown", [])),
++    )
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/pysi/reporting/sample_env_reporting_run.py b/pysi/reporting/sample_env_reporting_run.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..21eb7a638ebed9f1141d954950141d60957b3f4c
+--- /dev/null
++++ b/pysi/reporting/sample_env_reporting_run.py
+@@ -0,0 +1,35 @@
++"""Environment-connected sample reporting runner (minimal stub)."""
++
++from __future__ import annotations
++
++from typing import Any
++
++from pysi.reporting.report_runner import run_reporting_pipeline
++
++
++def get_env() -> Any:
++    """Return planning env if available.
++
++    Stub by design: replace with concrete builder when env bootstrap is standardized.
++    """
++    return None
++
++
++def main() -> None:
++    env = get_env()
++    if env is None:
++        print("[sample_env_reporting_run] get_env() is stub; using empty env input.")
++
++    result = run_reporting_pipeline(
++        env=env,
++        output_dir="outputs/reporting_mvp/sample_env_reporting_run",
++        apply_allocation=False,
++    )
++
++    print("[sample_env_reporting_run] report exported:")
++    for key, path in sorted(result["exported"].items()):
++        print(f"  - {key}: {path}")
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/pysi/reporting/sample_reporting_run.py b/pysi/reporting/sample_reporting_run.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..ddbf985549bcca57025da71dbc7a7888b11c6e0d
+--- /dev/null
++++ b/pysi/reporting/sample_reporting_run.py
+@@ -0,0 +1,44 @@
++"""Static sample run for reporting MVP."""
++
++from __future__ import annotations
++
++from pysi.reporting.report_runner import run_reporting_pipeline
++
++
++def main() -> None:
++    planning_result = {
++        "records": [
++            {
++                "product": "SKU_A",
++                "node": "factory_a",
++                "from_node": "factory_a",
++                "to_node": "dc_japan",
++                "week": "2026-W01",
++                "qty": 100,
++                "market": "jp",
++                "sales_units": 80,
++            },
++            {
++                "product": "SKU_B",
++                "node": "dc_japan",
++                "week": "2026-W02",
++                "qty": 70,
++                "market": "jp",
++                "sales_units": 70,
++            },
++        ]
++    }
++
++    result = run_reporting_pipeline(
++        planning_result=planning_result,
++        output_dir="outputs/reporting_mvp/sample_reporting_run",
++        apply_allocation=False,
++    )
++
++    print("[sample_reporting_run] report exported:")
++    for key, path in sorted(result["exported"].items()):
++        print(f"  - {key}: {path}")
++
++
++if __name__ == "__main__":
++    main()
+ 
+EOF
+)

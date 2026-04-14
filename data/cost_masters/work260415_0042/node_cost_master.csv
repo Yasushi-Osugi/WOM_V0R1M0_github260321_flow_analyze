@@ -1,0 +1,4 @@
+scenario_id,effective_from,effective_to,currency_code,version_no,remark,node_id,node_name,node_type,direct_labor_cost_rate,machine_cost_rate,utility_cost_rate,production_variable_cost_rate,inventory_holding_cost_rate,warehouse_handling_cost_rate,local_sga_fixed_cost,local_sga_variable_cost_rate,depreciation_cost_per_period,maintenance_fixed_cost,capacity_cost_basis,overtime_cost_rate,scrap_loss_cost_rate
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,MOM_JP,MOM Japan,factory,1500,800,200,18000,150,100,5000000,0.02,3000000,500000,unit,2500,0.01
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,DAD_EU,DAD Europe,warehouse,0,0,0,0,220,180,2000000,0.01,800000,120000,unit,0,0
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,MARKET_US,US Market,market,0,0,0,0,0,0,3500000,0.03,0,0,revenue,0,0

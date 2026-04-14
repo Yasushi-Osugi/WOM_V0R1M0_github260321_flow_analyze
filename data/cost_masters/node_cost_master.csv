@@ -1,0 +1,27 @@
+﻿scenario_id,effective_from,effective_to,currency_code,version_no,remark,node_id,node_name,node_type,direct_labor_cost_rate,machine_cost_rate,utility_cost_rate,production_variable_cost_rate,inventory_holding_cost_rate,warehouse_handling_cost_rate,local_sga_fixed_cost,local_sga_variable_cost_rate,depreciation_cost_per_period,maintenance_fixed_cost,capacity_cost_basis,overtime_cost_rate,scrap_loss_cost_rate
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,CS_CN_PREMIUM,CS_CN_PREMIUM,market,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,CS_DE_PREMIUM,CS_DE_PREMIUM,market,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,CS_IN_ASPIRER,CS_IN_ASPIRER,market,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,CS_JP_REPLACEMENT,CS_JP_REPLACEMENT,market,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,CS_UK_MAINSTREAM,CS_UK_MAINSTREAM,market,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,CS_US_MAINSTREAM,CS_US_MAINSTREAM,market,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,CS_US_PREMIUM,CS_US_PREMIUM,market,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,DAD_FAS_AMER,DAD_FAS_AMER,dc,0.0,0.0,0.0,0.0,21.38,12.828000000000001,0.0,32.07,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,DAD_FAS_APAC,DAD_FAS_APAC,dc,0.0,0.0,0.0,0.0,21.38,12.828000000000001,0.0,32.07,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,DAD_FAS_EURO,DAD_FAS_EURO,dc,0.0,0.0,0.0,0.0,21.38,12.828000000000001,0.0,32.07,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,MOM_final_assy_ASIA,MOM_final_assy_ASIA,factory,85.52,26.189999999999998,18.71,205.25,0.0,2.138,0.0,0.0,29.93,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,MOM_final_assy_EURO,MOM_final_assy_EURO,factory,85.52,26.189999999999998,18.71,205.25,0.0,2.138,0.0,0.0,29.93,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,PAD_final_assy_ASIA,PAD_final_assy_ASIA,factory,32.07,11.219999999999999,8.02,83.38,10.69,4.276,0.0,0.0,12.83,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,PAD_final_assy_EURO,PAD_final_assy_EURO,factory,32.07,11.219999999999999,8.02,83.38,10.69,4.276,0.0,0.0,12.83,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,RT_CN_ONLINE,RT_CN_ONLINE,retail,0.0,0.0,0.0,0.0,0.0,4.276,0.0,74.83,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,RT_DE_ONLINE,RT_DE_ONLINE,retail,0.0,0.0,0.0,0.0,0.0,4.276,0.0,74.83,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,RT_IN_ECOM,RT_IN_ECOM,retail,0.0,0.0,0.0,0.0,0.0,4.276,0.0,74.83,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,RT_JP_APPLE,RT_JP_APPLE,retail,0.0,0.0,0.0,0.0,0.0,4.276,0.0,74.83,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,RT_UK_CARRIER,RT_UK_CARRIER,retail,0.0,0.0,0.0,0.0,0.0,4.276,0.0,74.83,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,RT_US_CARRIER,RT_US_CARRIER,retail,0.0,0.0,0.0,0.0,0.0,4.276,0.0,74.83,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,RT_US_ONLINE,RT_US_ONLINE,retail,0.0,0.0,0.0,0.0,0.0,4.276,0.0,74.83,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,WS_APAC,WS_APAC,warehouse,0.0,0.0,0.0,0.0,42.76,10.690000000000001,0.0,21.38,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,WS_EU,WS_EU,warehouse,0.0,0.0,0.0,0.0,42.76,10.690000000000001,0.0,21.38,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,WS_NA,WS_NA,warehouse,0.0,0.0,0.0,0.0,42.76,10.690000000000001,0.0,21.38,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,root,root,root,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,unit,0.0,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_*,supply_point,supply_point,supply_point,85.52,18.71,13.36,171.04,0.0,2.138,0.0,10.69,21.38,0.0,unit,0.0,0.0

@@ -1,0 +1,3 @@
+allocated_amount,driver,from_key,rule_name,to_key,weight
+1260.0,sales_units,factory_a,factory_to_market_by_sales,jp,0.6
+840.0,sales_units,factory_a,factory_to_market_by_sales,us,0.4

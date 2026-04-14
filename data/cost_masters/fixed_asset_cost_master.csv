@@ -1,0 +1,3 @@
+scenario_id,effective_from,effective_to,currency_code,version_no,remark,asset_id,node_id,asset_category,acquisition_cost,depreciation_method,useful_life_periods,depreciation_per_period,maintenance_fixed_cost,residual_value,activation_date
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,ASSET_MOM_JP_LINE1,MOM_JP,PRODUCTION_LINE,120000000,STRAIGHT,60,2000000,300000,0,2026-01-01
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,ASSET_DAD_EU_WH1,DAD_EU,WAREHOUSE_EQUIPMENT,36000000,STRAIGHT,72,500000,120000,0,2026-01-01

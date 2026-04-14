@@ -1,0 +1,4 @@
+scenario_id,effective_from,effective_to,currency_code,version_no,remark,product_id,market_id,customer_segment,sales_price,rebate_rate,discount_rate,promotion_cost_rate,gross_to_net_adjustment,expected_return_rate,channel_cost_rate
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,IPHONE_STD,US,RETAIL,128000,0.02,0.03,0.01,0.00,0.01,0.02
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,IPHONE_PRO,US,RETAIL,188000,0.02,0.02,0.01,0.00,0.01,0.02
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,IPHONE_STD,EU,RETAIL,132000,0.01,0.04,0.015,0.00,0.01,0.025

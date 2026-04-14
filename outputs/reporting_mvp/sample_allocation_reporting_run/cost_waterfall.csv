@@ -1,0 +1,12 @@
+amount,step
+2100.0,allocation:allocated_pool
+20.0,lane:insurance
+250.0,lane:logistics
+30.0,lane:tariff
+120.0,market:promotion
+40.0,market:rebate
+300.0,market:sales
+75.0,node:depreciation
+120.0,node:inventory
+1800.0,node:production
+225.0,node:sga

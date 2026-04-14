@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "record_count": 2,
+    "cost_line_count": 17
+  },
+  "product_report": [
+    {
+      "product": "SKU_A",
+      "total_cost": 2240.0
+    },
+    {
+      "product": "SKU_B",
+      "total_cost": 490.0
+    }
+  ],
+  "node_report": [
+    {
+      "node": "dc_japan",
+      "total_cost": 790.0
+    },
+    {
+      "node": "factory_a",
+      "total_cost": 1940.0
+    }
+  ],
+  "market_report": [
+    {
+      "market": "jp",
+      "total_cost": 2730.0
+    }
+  ],
+  "monthly_cost_report": [
+    {
+      "month": "2026-01",
+      "total_cost": 2730.0
+    }
+  ],
+  "cost_waterfall": [
+    {
+      "step": "lane:insurance",
+      "amount": 20.0
+    },
+    {
+      "step": "lane:logistics",
+      "amount": 250.0
+    },
+    {
+      "step": "lane:tariff",
+      "amount": 30.0
+    },
+    {
+      "step": "market:promotion",
+      "amount": 204.0
+    },
+    {
+      "step": "market:rebate",
+      "amount": 68.0
+    },
+    {
+      "step": "market:sales",
+      "amount": 510.0
+    },
+    {
+      "step": "node:depreciation",
+      "amount": 71.0
+    },
+    {
+      "step": "node:inventory",
+      "amount": 143.0
+    },
+    {
+      "step": "node:production",
+      "amount": 1200.0
+    },
+    {
+      "step": "node:sga",
+      "amount": 234.0
+    }
+  ],
+  "pain_points": [
+    {
+      "pain_point": "factory_a",
+      "metric": "total_cost",
+      "value": 1940.0
+    },
+    {
+      "pain_point": "dc_japan",
+      "metric": "total_cost",
+      "value": 790.0
+    }
+  ],
+  "allocation_breakdown": []
+}

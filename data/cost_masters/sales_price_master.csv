@@ -1,0 +1,13 @@
+﻿scenario_id,effective_from,effective_to,currency_code,version_no,remark,product_id,market_id,customer_segment,sales_price,rebate_rate,discount_rate,promotion_cost_rate,gross_to_net_adjustment,expected_return_rate,channel_cost_rate
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_outbound.csv,IPHONE_NM_2028_BASE,US,RETAIL,969.0,0.0,0.0,0.0,0.0,0.0,0.07
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_outbound.csv,IPHONE_NM_2028_BASE,UK,RETAIL,969.0,0.0,0.0,0.0,0.0,0.0,0.07
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_outbound.csv,IPHONE_NM_2028_BASE,DE,RETAIL,969.0,0.0,0.0,0.0,0.0,0.0,0.07
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_outbound.csv,IPHONE_NM_2028_BASE,CN,RETAIL,969.0,0.0,0.0,0.0,0.0,0.0,0.07
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_outbound.csv,IPHONE_NM_2028_BASE,IN,RETAIL,969.0,0.0,0.0,0.0,0.0,0.0,0.07
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_outbound.csv,IPHONE_NM_2028_BASE,JP,RETAIL,969.0,0.0,0.0,0.0,0.0,0.0,0.07
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_outbound.csv,IPHONE_NM_2028_PRO,US,RETAIL,1169.0,0.0,0.0,0.0,0.0,0.0,0.07
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_outbound.csv,IPHONE_NM_2028_PRO,UK,RETAIL,1169.0,0.0,0.0,0.0,0.0,0.0,0.07
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_outbound.csv,IPHONE_NM_2028_PRO,DE,RETAIL,1169.0,0.0,0.0,0.0,0.0,0.0,0.07
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_outbound.csv,IPHONE_NM_2028_PRO,CN,RETAIL,1169.0,0.0,0.0,0.0,0.0,0.0,0.07
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_outbound.csv,IPHONE_NM_2028_PRO,IN,RETAIL,1169.0,0.0,0.0,0.0,0.0,0.0,0.07
+BASE,2026-01-01,2099-12-31,JPY,1,derived from sku_cost_table_outbound.csv,IPHONE_NM_2028_PRO,JP,RETAIL,1169.0,0.0,0.0,0.0,0.0,0.0,0.07

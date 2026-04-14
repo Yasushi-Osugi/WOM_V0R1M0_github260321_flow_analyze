@@ -1,0 +1,11 @@
+amount,step
+20.0,lane:insurance
+250.0,lane:logistics
+30.0,lane:tariff
+204.0,market:promotion
+68.0,market:rebate
+510.0,market:sales
+71.0,node:depreciation
+143.0,node:inventory
+1200.0,node:production
+234.0,node:sga

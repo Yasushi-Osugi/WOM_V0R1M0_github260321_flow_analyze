@@ -1,0 +1,5 @@
+scenario_id,effective_from,effective_to,currency_code,version_no,remark,scope_type,scope_id,sga_fixed_cost,sga_variable_cost_rate,marketing_fixed_cost,marketing_variable_cost_rate,corporate_tax_rate,local_tax_rate,import_tax_rate,sales_commission_rate
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,node,MOM_JP,2000000,0.005,0,0.000,0.30,0.00,0.00,0.000
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,node,DAD_EU,1500000,0.004,0,0.000,0.25,0.00,0.00,0.000
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,market,US,0,0.010,3000000,0.020,0.28,0.02,0.00,0.015
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,corporate,HQ,5000000,0.000,1000000,0.000,0.30,0.00,0.00,0.000

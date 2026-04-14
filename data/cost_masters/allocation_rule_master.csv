@@ -1,0 +1,4 @@
+﻿scenario_id,effective_from,effective_to,currency_code,version_no,remark,rule_id,target_cost_type,allocation_base,source_scope_type,source_scope_id,target_scope_type,target_scope_id,weighting_rule,fixed_or_variable
+BASE,2026-01-01,2099-12-31,JPY,1,initial derived allocation,ALLOC_ASIA_FACTORY_TO_MARKET,production,qty,node,MOM_final_assy_ASIA,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,JPY,1,initial derived allocation,ALLOC_EURO_FACTORY_TO_MARKET,production,qty,node,MOM_final_assy_EURO,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,JPY,1,initial derived allocation,ALLOC_SUPPLY_POINT_SGA_TO_MARKET,sga,qty,node,supply_point,market,,proportional,FIXED

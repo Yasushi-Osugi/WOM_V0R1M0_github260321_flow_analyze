@@ -1,0 +1,4 @@
+scenario_id,effective_from,effective_to,currency_code,version_no,remark,from_node_id,to_node_id,transport_mode,freight_cost_per_unit,insurance_cost_per_unit,tariff_rate,customs_cost_per_unit,lane_fixed_cost_per_period,special_risk_cost_rate,lead_time_days,carbon_cost_per_unit
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,MOM_JP,DAD_EU,SEA,1200,80,0.05,150,0,0.00,28,20
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,DAD_EU,MARKET_US,AIR,2500,120,0.00,80,0,0.00,7,40
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,MOM_JP,MARKET_US,AIR,3200,150,0.03,120,0,0.01,5,50

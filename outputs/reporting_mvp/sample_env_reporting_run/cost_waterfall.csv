@@ -1,0 +1,9 @@
+amount,step
+0.0,market:promotion
+0.0,market:rebate
+0.0,market:returns
+6469.539999999981,market:sales
+1975982.3600000008,node:depreciation
+5927947.079999996,node:inventory
+15807858.880000006,node:production
+12843885.34000002,node:sga

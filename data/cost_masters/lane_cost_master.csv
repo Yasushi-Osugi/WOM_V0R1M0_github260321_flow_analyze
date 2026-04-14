@@ -1,0 +1,26 @@
+﻿scenario_id,effective_from,effective_to,currency_code,version_no,remark,from_node_id,to_node_id,transport_mode,freight_cost_per_unit,insurance_cost_per_unit,tariff_rate,customs_cost_per_unit,lane_fixed_cost_per_period,special_risk_cost_rate,lead_time_days,carbon_cost_per_unit
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,root,supply_point,AIR,9.69,0.1938,0.0,0.0,0.0,0.0,7,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,supply_point,DAD_FAS_AMER,AIR,58.14,1.1628,0.0,0.0,0.0,0.0,7,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,supply_point,DAD_FAS_EURO,AIR,58.14,1.1628,0.0,0.0,0.0,0.0,7,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,supply_point,DAD_FAS_APAC,AIR,58.14,1.1628,0.0,0.0,0.0,0.0,7,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,DAD_FAS_AMER,WS_NA,SEA,48.45,0.969,0.08,0.0,0.0,0.0,35,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,DAD_FAS_EURO,WS_EU,SEA,48.45,0.969,0.04,0.0,0.0,0.0,42,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,DAD_FAS_APAC,WS_APAC,SEA,48.45,0.969,0.0,0.0,0.0,0.0,28,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,WS_NA,RT_US_ONLINE,AIR,19.38,0.3876,0.0,0.0,0.0,0.0,14,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,WS_NA,RT_US_CARRIER,AIR,19.38,0.3876,0.0,0.0,0.0,0.0,14,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,WS_EU,RT_DE_ONLINE,AIR,19.38,0.3876,0.0,0.0,0.0,0.0,14,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,WS_EU,RT_UK_CARRIER,AIR,19.38,0.3876,0.0,0.0,0.0,0.0,14,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,WS_APAC,RT_JP_APPLE,AIR,19.38,0.3876,0.0,0.0,0.0,0.0,14,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,WS_APAC,RT_IN_ECOM,AIR,19.38,0.3876,0.02,0.0,0.0,0.0,14,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,WS_APAC,RT_CN_ONLINE,AIR,19.38,0.3876,0.0,0.0,0.0,0.0,14,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,RT_US_ONLINE,CS_US_PREMIUM,AIR,0.0,0.0,0.0,0.0,0.0,0.0,7,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,RT_US_CARRIER,CS_US_MAINSTREAM,AIR,0.0,0.0,0.0,0.0,0.0,0.0,7,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,RT_DE_ONLINE,CS_DE_PREMIUM,AIR,0.0,0.0,0.0,0.0,0.0,0.0,7,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,RT_UK_CARRIER,CS_UK_MAINSTREAM,AIR,0.0,0.0,0.0,0.0,0.0,0.0,7,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,RT_JP_APPLE,CS_JP_REPLACEMENT,AIR,0.0,0.0,0.0,0.0,0.0,0.0,7,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,RT_IN_ECOM,CS_IN_ASPIRER,AIR,0.0,0.0,0.0,0.0,0.0,0.0,7,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,RT_CN_ONLINE,CS_CN_PREMIUM,AIR,0.0,0.0,0.0,0.0,0.0,0.0,7,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,supply_point,MOM_final_assy_ASIA,AIR,9.69,0.1938,0.0,0.0,0.0,0.0,7,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,supply_point,MOM_final_assy_EURO,AIR,9.69,0.1938,0.0,0.0,0.0,0.0,7,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,MOM_final_assy_ASIA,PAD_final_assy_ASIA,SEA,19.38,0.3876,0.0,0.0,0.0,0.0,42,0.0
+BASE,2026-01-01,2099-12-31,JPY,1,derived from product_tree_* and tariff_table.csv,MOM_final_assy_EURO,PAD_final_assy_EURO,SEA,19.38,0.3876,0.0,0.0,0.0,0.0,56,0.0

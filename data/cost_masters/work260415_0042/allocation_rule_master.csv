@@ -1,0 +1,5 @@
+scenario_id,effective_from,effective_to,currency_code,version_no,remark,rule_id,target_cost_type,allocation_base,source_scope_type,source_scope_id,target_scope_type,target_scope_id,weighting_rule,fixed_or_variable
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,RULE_PLANT_FIXED_TO_PRODUCT,plant_fixed_cost,qty,node,MOM_JP,product,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,RULE_WAREHOUSE_FIXED_TO_PRODUCT,warehouse_fixed_cost,inventory,node,DAD_EU,product,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,RULE_HQ_SGA_TO_MARKET,revenue_based_sga,revenue,corporate,HQ,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,RULE_MARKETING_TO_PRODUCT,revenue_based_marketing,revenue,market,US,product,,proportional,VARIABLE

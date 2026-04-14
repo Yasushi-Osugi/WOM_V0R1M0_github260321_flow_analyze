@@ -1,0 +1,196 @@
+{
+  "meta": {
+    "record_count": 2501,
+    "cost_line_count": 13336
+  },
+  "product_report": [
+    {
+      "product": "IPHONE_NM_2028_BASE",
+      "total_cost": 36562143.199999996
+    }
+  ],
+  "node_report": [
+    {
+      "node": "CS_CN_PREMIUM",
+      "total_cost": 1311.7299999999996
+    },
+    {
+      "node": "CS_DE_PREMIUM",
+      "total_cost": 492.6600000000001
+    },
+    {
+      "node": "CS_IN_ASPIRER",
+      "total_cost": 711.1299999999999
+    },
+    {
+      "node": "CS_JP_REPLACEMENT",
+      "total_cost": 476.2799999999999
+    },
+    {
+      "node": "CS_UK_MAINSTREAM",
+      "total_cost": 514.7800000000002
+    },
+    {
+      "node": "CS_US_MAINSTREAM",
+      "total_cost": 1647.7300000000016
+    },
+    {
+      "node": "CS_US_PREMIUM",
+      "total_cost": 1315.2299999999989
+    },
+    {
+      "node": "DAD_FAS_AMER",
+      "total_cost": 2262431.6
+    },
+    {
+      "node": "DAD_FAS_APAC",
+      "total_cost": 1908271.900000001
+    },
+    {
+      "node": "DAD_FAS_EURO",
+      "total_cost": 769252.399999999
+    },
+    {
+      "node": "RT_CN_ONLINE",
+      "total_cost": 1402239.3700000003
+    },
+    {
+      "node": "RT_DE_ONLINE",
+      "total_cost": 526653.5399999996
+    },
+    {
+      "node": "RT_IN_ECOM",
+      "total_cost": 760197.9700000004
+    },
+    {
+      "node": "RT_JP_APPLE",
+      "total_cost": 509143.3200000002
+    },
+    {
+      "node": "RT_UK_CARRIER",
+      "total_cost": 550299.8200000003
+    },
+    {
+      "node": "RT_US_CARRIER",
+      "total_cost": 1761423.37
+    },
+    {
+      "node": "RT_US_ONLINE",
+      "total_cost": 1405980.870000001
+    },
+    {
+      "node": "WS_APAC",
+      "total_cost": 2289926.280000001
+    },
+    {
+      "node": "WS_EU",
+      "total_cost": 923102.8799999995
+    },
+    {
+      "node": "WS_NA",
+      "total_cost": 2714917.920000001
+    },
+    {
+      "node": "supply_point",
+      "total_cost": 18771832.419999998
+    }
+  ],
+  "market_report": [
+    {
+      "market": "",
+      "total_cost": 36555673.66000001
+    },
+    {
+      "market": "CN",
+      "total_cost": 1311.7299999999996
+    },
+    {
+      "market": "DE",
+      "total_cost": 492.6600000000001
+    },
+    {
+      "market": "IN",
+      "total_cost": 711.1299999999999
+    },
+    {
+      "market": "JP",
+      "total_cost": 476.2799999999999
+    },
+    {
+      "market": "UK",
+      "total_cost": 514.7800000000002
+    },
+    {
+      "market": "US",
+      "total_cost": 2962.960000000001
+    }
+  ],
+  "monthly_cost_report": [
+    {
+      "month": "UNKNOWN",
+      "total_cost": 36562143.199999996
+    }
+  ],
+  "cost_waterfall": [
+    {
+      "step": "market:promotion",
+      "amount": 0.0
+    },
+    {
+      "step": "market:rebate",
+      "amount": 0.0
+    },
+    {
+      "step": "market:returns",
+      "amount": 0.0
+    },
+    {
+      "step": "market:sales",
+      "amount": 6469.539999999981
+    },
+    {
+      "step": "node:depreciation",
+      "amount": 1975982.3600000008
+    },
+    {
+      "step": "node:inventory",
+      "amount": 5927947.079999996
+    },
+    {
+      "step": "node:production",
+      "amount": 15807858.880000006
+    },
+    {
+      "step": "node:sga",
+      "amount": 12843885.34000002
+    }
+  ],
+  "pain_points": [
+    {
+      "pain_point": "supply_point",
+      "metric": "total_cost",
+      "value": 18771832.419999998
+    },
+    {
+      "pain_point": "WS_NA",
+      "metric": "total_cost",
+      "value": 2714917.920000001
+    },
+    {
+      "pain_point": "WS_APAC",
+      "metric": "total_cost",
+      "value": 2289926.280000001
+    },
+    {
+      "pain_point": "DAD_FAS_AMER",
+      "metric": "total_cost",
+      "value": 2262431.6
+    },
+    {
+      "pain_point": "DAD_FAS_APAC",
+      "metric": "total_cost",
+      "value": 1908271.900000001
+    }
+  ],
+  "allocation_breakdown": []
+}

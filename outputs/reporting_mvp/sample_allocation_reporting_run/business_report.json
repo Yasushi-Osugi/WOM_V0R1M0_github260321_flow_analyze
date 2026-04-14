@@ -1,0 +1,122 @@
+{
+  "meta": {
+    "record_count": 2,
+    "cost_line_count": 16
+  },
+  "product_report": [
+    {
+      "product": "ALL",
+      "total_cost": 2100.0
+    },
+    {
+      "product": "SKU_A",
+      "total_cost": 2980.0
+    }
+  ],
+  "node_report": [
+    {
+      "node": "dc_japan",
+      "total_cost": 300.0
+    },
+    {
+      "node": "factory_a",
+      "total_cost": 4780.0
+    }
+  ],
+  "market_report": [
+    {
+      "market": "jp",
+      "total_cost": 3500.0
+    },
+    {
+      "market": "us",
+      "total_cost": 1580.0
+    }
+  ],
+  "monthly_cost_report": [
+    {
+      "month": "2026-01",
+      "total_cost": 2980.0
+    },
+    {
+      "month": "UNKNOWN",
+      "total_cost": 2100.0
+    }
+  ],
+  "cost_waterfall": [
+    {
+      "step": "allocation:allocated_pool",
+      "amount": 2100.0
+    },
+    {
+      "step": "lane:insurance",
+      "amount": 20.0
+    },
+    {
+      "step": "lane:logistics",
+      "amount": 250.0
+    },
+    {
+      "step": "lane:tariff",
+      "amount": 30.0
+    },
+    {
+      "step": "market:promotion",
+      "amount": 120.0
+    },
+    {
+      "step": "market:rebate",
+      "amount": 40.0
+    },
+    {
+      "step": "market:sales",
+      "amount": 300.0
+    },
+    {
+      "step": "node:depreciation",
+      "amount": 75.0
+    },
+    {
+      "step": "node:inventory",
+      "amount": 120.0
+    },
+    {
+      "step": "node:production",
+      "amount": 1800.0
+    },
+    {
+      "step": "node:sga",
+      "amount": 225.0
+    }
+  ],
+  "pain_points": [
+    {
+      "pain_point": "factory_a",
+      "metric": "total_cost",
+      "value": 4780.0
+    },
+    {
+      "pain_point": "dc_japan",
+      "metric": "total_cost",
+      "value": 300.0
+    }
+  ],
+  "allocation_breakdown": [
+    {
+      "rule_name": "factory_to_market_by_sales",
+      "from_key": "factory_a",
+      "to_key": "jp",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 1260.0
+    },
+    {
+      "rule_name": "factory_to_market_by_sales",
+      "from_key": "factory_a",
+      "to_key": "us",
+      "driver": "sales_units",
+      "weight": 0.4,
+      "allocated_amount": 840.0
+    }
+  ]
+}

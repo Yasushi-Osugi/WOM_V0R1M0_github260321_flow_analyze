@@ -1,0 +1,3 @@
+scenario_id,effective_from,effective_to,currency_code,version_no,remark,product_id,product_name,product_family,base_sales_price,standard_material_cost,standard_production_cost,standard_purchase_cost,standard_weight,standard_volume,tax_category,lifecycle_stage,transfer_price,inventory_unit_value
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,IPHONE_STD,iPhone Standard,SMARTPHONE,120000,42000,18000,0,0.18,0.0004,NORMAL,GROWTH,0,60000
+BASE,2026-01-01,2099-12-31,JPY,1,initial setting,IPHONE_PRO,iPhone Pro,SMARTPHONE,180000,70000,26000,0,0.21,0.00045,NORMAL,GROWTH,0,96000
