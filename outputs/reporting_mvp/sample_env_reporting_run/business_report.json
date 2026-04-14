@@ -1,54 +1,58 @@
 {
   "meta": {
     "record_count": 2501,
-    "cost_line_count": 13336
+    "cost_line_count": 10124
   },
   "product_report": [
     {
+      "product": "ALL",
+      "total_cost": 29639735.399999995
+    },
+    {
       "product": "IPHONE_NM_2028_BASE",
-      "total_cost": 36562143.199999996
+      "total_cost": 36555673.66000001
     }
   ],
   "node_report": [
     {
       "node": "CS_CN_PREMIUM",
-      "total_cost": 1311.7299999999996
+      "total_cost": 0.0
     },
     {
       "node": "CS_DE_PREMIUM",
-      "total_cost": 492.6600000000001
+      "total_cost": 0.0
     },
     {
       "node": "CS_IN_ASPIRER",
-      "total_cost": 711.1299999999999
+      "total_cost": 0.0
     },
     {
       "node": "CS_JP_REPLACEMENT",
-      "total_cost": 476.2799999999999
+      "total_cost": 0.0
     },
     {
       "node": "CS_UK_MAINSTREAM",
-      "total_cost": 514.7800000000002
+      "total_cost": 0.0
     },
     {
       "node": "CS_US_MAINSTREAM",
-      "total_cost": 1647.7300000000016
+      "total_cost": 0.0
     },
     {
       "node": "CS_US_PREMIUM",
-      "total_cost": 1315.2299999999989
+      "total_cost": 0.0
     },
     {
       "node": "DAD_FAS_AMER",
-      "total_cost": 2262431.6
+      "total_cost": 4524863.199999998
     },
     {
       "node": "DAD_FAS_APAC",
-      "total_cost": 1908271.900000001
+      "total_cost": 3816543.800000001
     },
     {
       "node": "DAD_FAS_EURO",
-      "total_cost": 769252.399999999
+      "total_cost": 1538504.7999999986
     },
     {
       "node": "RT_CN_ONLINE",
@@ -80,73 +84,65 @@
     },
     {
       "node": "WS_APAC",
-      "total_cost": 2289926.280000001
+      "total_cost": 4579852.560000001
     },
     {
       "node": "WS_EU",
-      "total_cost": 923102.8799999995
+      "total_cost": 1846205.759999999
     },
     {
       "node": "WS_NA",
-      "total_cost": 2714917.920000001
+      "total_cost": 5429835.840000002
     },
     {
       "node": "supply_point",
-      "total_cost": 18771832.419999998
+      "total_cost": 37543664.839999996
     }
   ],
   "market_report": [
     {
       "market": "",
-      "total_cost": 36555673.66000001
+      "total_cost": 47423576.63999997
     },
     {
-      "market": "CN",
-      "total_cost": 1311.7299999999996
+      "market": "MKT_CN_PREMIUM",
+      "total_cost": 3806078.290000001
     },
     {
-      "market": "DE",
-      "total_cost": 492.6600000000001
+      "market": "MKT_DE_PREMIUM",
+      "total_cost": 1429488.1799999995
     },
     {
-      "market": "IN",
-      "total_cost": 711.1299999999999
+      "market": "MKT_IN_ASPIRER",
+      "total_cost": 2063394.4900000002
     },
     {
-      "market": "JP",
-      "total_cost": 476.2799999999999
+      "market": "MKT_JP_REPLACEMENT",
+      "total_cost": 1381960.4400000004
     },
     {
-      "market": "UK",
-      "total_cost": 514.7800000000002
+      "market": "MKT_UK_MAINSTREAM",
+      "total_cost": 1493670.9400000002
     },
     {
-      "market": "US",
-      "total_cost": 2962.960000000001
+      "market": "MKT_US_MAINSTREAM",
+      "total_cost": 4781006.289999999
+    },
+    {
+      "market": "MKT_US_PREMIUM",
+      "total_cost": 3816233.790000001
     }
   ],
   "monthly_cost_report": [
     {
       "month": "UNKNOWN",
-      "total_cost": 36562143.199999996
+      "total_cost": 66195409.06000002
     }
   ],
   "cost_waterfall": [
     {
-      "step": "market:promotion",
-      "amount": 0.0
-    },
-    {
-      "step": "market:rebate",
-      "amount": 0.0
-    },
-    {
-      "step": "market:returns",
-      "amount": 0.0
-    },
-    {
-      "step": "market:sales",
-      "amount": 6469.539999999981
+      "step": "allocation:allocated_pool",
+      "amount": 29639735.399999995
     },
     {
       "step": "node:depreciation",
@@ -169,28 +165,989 @@
     {
       "pain_point": "supply_point",
       "metric": "total_cost",
-      "value": 18771832.419999998
+      "value": 37543664.839999996
     },
     {
       "pain_point": "WS_NA",
       "metric": "total_cost",
-      "value": 2714917.920000001
+      "value": 5429835.840000002
     },
     {
       "pain_point": "WS_APAC",
       "metric": "total_cost",
-      "value": 2289926.280000001
+      "value": 4579852.560000001
     },
     {
       "pain_point": "DAD_FAS_AMER",
       "metric": "total_cost",
-      "value": 2262431.6
+      "value": 4524863.199999998
     },
     {
       "pain_point": "DAD_FAS_APAC",
       "metric": "total_cost",
-      "value": 1908271.900000001
+      "value": 3816543.800000001
     }
   ],
-  "allocation_breakdown": []
+  "allocation_breakdown": [
+    {
+      "rule_name": "RULE_SUPPLY_POINT_PRODUCTION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 9484715.328
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_PRODUCTION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_CN_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08110190214451105,
+      "allocated_amount": 1282047.4239999999
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_PRODUCTION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_IN_ASPIRER",
+      "driver": "sales_units",
+      "weight": 0.04396788643396594,
+      "allocated_amount": 695038.144
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_PRODUCTION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_JP_REPLACEMENT",
+      "driver": "sales_units",
+      "weight": 0.029447534136893813,
+      "allocated_amount": 465502.464
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_PRODUCTION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_UK_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.03182791975936465,
+      "allocated_amount": 503131.2639999999
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_PRODUCTION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_DE_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.030460280019908678,
+      "allocated_amount": 481511.80799999996
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_PRODUCTION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_US_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.10187617666789292,
+      "allocated_amount": 1610444.2239999997
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_PRODUCTION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_US_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08131830083746294,
+      "allocated_amount": 1285468.224
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_SGA_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 592794.708
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_SGA_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_CN_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08110190214451105,
+      "allocated_amount": 80127.96399999999
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_SGA_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_IN_ASPIRER",
+      "driver": "sales_units",
+      "weight": 0.04396788643396594,
+      "allocated_amount": 43439.884
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_SGA_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_JP_REPLACEMENT",
+      "driver": "sales_units",
+      "weight": 0.029447534136893813,
+      "allocated_amount": 29093.904
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_SGA_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_UK_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.03182791975936465,
+      "allocated_amount": 31445.703999999994
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_SGA_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_DE_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.030460280019908678,
+      "allocated_amount": 30094.487999999998
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_SGA_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_US_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.10187617666789292,
+      "allocated_amount": 100652.76399999998
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_SGA_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_US_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08131830083746294,
+      "allocated_amount": 80341.764
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_DEPRECIATION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 1185589.416
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_DEPRECIATION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_CN_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08110190214451105,
+      "allocated_amount": 160255.92799999999
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_DEPRECIATION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_IN_ASPIRER",
+      "driver": "sales_units",
+      "weight": 0.04396788643396594,
+      "allocated_amount": 86879.768
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_DEPRECIATION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_JP_REPLACEMENT",
+      "driver": "sales_units",
+      "weight": 0.029447534136893813,
+      "allocated_amount": 58187.808
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_DEPRECIATION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_UK_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.03182791975936465,
+      "allocated_amount": 62891.40799999999
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_DEPRECIATION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_DE_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.030460280019908678,
+      "allocated_amount": 60188.975999999995
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_DEPRECIATION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_US_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.10187617666789292,
+      "allocated_amount": 201305.52799999996
+    },
+    {
+      "rule_name": "RULE_SUPPLY_POINT_DEPRECIATION_TO_MARKET",
+      "from_key": "supply_point",
+      "to_key": "MKT_US_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08131830083746294,
+      "allocated_amount": 160683.528
+    },
+    {
+      "rule_name": "RULE_WS_NA_INVENTORY_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 1085967.1679999998
+    },
+    {
+      "rule_name": "RULE_WS_NA_INVENTORY_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "MKT_CN_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08110190214451105,
+      "allocated_amount": 146790.00498547964
+    },
+    {
+      "rule_name": "RULE_WS_NA_INVENTORY_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "MKT_IN_ASPIRER",
+      "driver": "sales_units",
+      "weight": 0.04396788643396594,
+      "allocated_amount": 79579.46852273267
+    },
+    {
+      "rule_name": "RULE_WS_NA_INVENTORY_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "MKT_JP_REPLACEMENT",
+      "driver": "sales_units",
+      "weight": 0.029447534136893813,
+      "allocated_amount": 53298.42541870983
+    },
+    {
+      "rule_name": "RULE_WS_NA_INVENTORY_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "MKT_UK_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.03182791975936465,
+      "allocated_amount": 57606.79314068078
+    },
+    {
+      "rule_name": "RULE_WS_NA_INVENTORY_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "MKT_DE_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.030460280019908678,
+      "allocated_amount": 55131.44004951201
+    },
+    {
+      "rule_name": "RULE_WS_NA_INVENTORY_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "MKT_US_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.10187617666789292,
+      "allocated_amount": 184390.3051044989
+    },
+    {
+      "rule_name": "RULE_WS_NA_INVENTORY_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "MKT_US_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08131830083746294,
+      "allocated_amount": 147181.67477838608
+    },
+    {
+      "rule_name": "RULE_WS_NA_SGA_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 542983.5839999999
+    },
+    {
+      "rule_name": "RULE_WS_NA_SGA_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "MKT_CN_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08110190214451105,
+      "allocated_amount": 73395.00249273982
+    },
+    {
+      "rule_name": "RULE_WS_NA_SGA_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "MKT_IN_ASPIRER",
+      "driver": "sales_units",
+      "weight": 0.04396788643396594,
+      "allocated_amount": 39789.734261366335
+    },
+    {
+      "rule_name": "RULE_WS_NA_SGA_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "MKT_JP_REPLACEMENT",
+      "driver": "sales_units",
+      "weight": 0.029447534136893813,
+      "allocated_amount": 26649.212709354913
+    },
+    {
+      "rule_name": "RULE_WS_NA_SGA_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "MKT_UK_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.03182791975936465,
+      "allocated_amount": 28803.39657034039
+    },
+    {
+      "rule_name": "RULE_WS_NA_SGA_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "MKT_DE_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.030460280019908678,
+      "allocated_amount": 27565.720024756007
+    },
+    {
+      "rule_name": "RULE_WS_NA_SGA_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "MKT_US_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.10187617666789292,
+      "allocated_amount": 92195.15255224945
+    },
+    {
+      "rule_name": "RULE_WS_NA_SGA_TO_MARKET",
+      "from_key": "WS_NA",
+      "to_key": "MKT_US_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08131830083746294,
+      "allocated_amount": 73590.83738919304
+    },
+    {
+      "rule_name": "RULE_WS_APAC_INVENTORY_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 915970.512
+    },
+    {
+      "rule_name": "RULE_WS_APAC_INVENTORY_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "MKT_CN_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08110190214451105,
+      "allocated_amount": 123811.58471913614
+    },
+    {
+      "rule_name": "RULE_WS_APAC_INVENTORY_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "MKT_IN_ASPIRER",
+      "driver": "sales_units",
+      "weight": 0.04396788643396594,
+      "allocated_amount": 67122.14574746272
+    },
+    {
+      "rule_name": "RULE_WS_APAC_INVENTORY_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "MKT_JP_REPLACEMENT",
+      "driver": "sales_units",
+      "weight": 0.029447534136893813,
+      "allocated_amount": 44955.12153418017
+    },
+    {
+      "rule_name": "RULE_WS_APAC_INVENTORY_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "MKT_UK_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.03182791975936465,
+      "allocated_amount": 48589.05992980026
+    },
+    {
+      "rule_name": "RULE_WS_APAC_INVENTORY_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "MKT_DE_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.030460280019908678,
+      "allocated_amount": 46501.19714249854
+    },
+    {
+      "rule_name": "RULE_WS_APAC_INVENTORY_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "MKT_US_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.10187617666789292,
+      "allocated_amount": 155525.95617182055
+    },
+    {
+      "rule_name": "RULE_WS_APAC_INVENTORY_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "MKT_US_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08131830083746294,
+      "allocated_amount": 124141.9427551016
+    },
+    {
+      "rule_name": "RULE_WS_APAC_SGA_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 457985.256
+    },
+    {
+      "rule_name": "RULE_WS_APAC_SGA_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "MKT_CN_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08110190214451105,
+      "allocated_amount": 61905.79235956807
+    },
+    {
+      "rule_name": "RULE_WS_APAC_SGA_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "MKT_IN_ASPIRER",
+      "driver": "sales_units",
+      "weight": 0.04396788643396594,
+      "allocated_amount": 33561.07287373136
+    },
+    {
+      "rule_name": "RULE_WS_APAC_SGA_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "MKT_JP_REPLACEMENT",
+      "driver": "sales_units",
+      "weight": 0.029447534136893813,
+      "allocated_amount": 22477.560767090086
+    },
+    {
+      "rule_name": "RULE_WS_APAC_SGA_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "MKT_UK_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.03182791975936465,
+      "allocated_amount": 24294.52996490013
+    },
+    {
+      "rule_name": "RULE_WS_APAC_SGA_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "MKT_DE_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.030460280019908678,
+      "allocated_amount": 23250.59857124927
+    },
+    {
+      "rule_name": "RULE_WS_APAC_SGA_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "MKT_US_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.10187617666789292,
+      "allocated_amount": 77762.97808591028
+    },
+    {
+      "rule_name": "RULE_WS_APAC_SGA_TO_MARKET",
+      "from_key": "WS_APAC",
+      "to_key": "MKT_US_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08131830083746294,
+      "allocated_amount": 62070.9713775508
+    },
+    {
+      "rule_name": "RULE_WS_EU_INVENTORY_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 369241.15199999994
+    },
+    {
+      "rule_name": "RULE_WS_EU_INVENTORY_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "MKT_CN_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08110190214451105,
+      "allocated_amount": 49910.26629538421
+    },
+    {
+      "rule_name": "RULE_WS_EU_INVENTORY_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "MKT_IN_ASPIRER",
+      "driver": "sales_units",
+      "weight": 0.04396788643396594,
+      "allocated_amount": 27057.921729804588
+    },
+    {
+      "rule_name": "RULE_WS_EU_INVENTORY_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "MKT_JP_REPLACEMENT",
+      "driver": "sales_units",
+      "weight": 0.029447534136893813,
+      "allocated_amount": 18122.06904710999
+    },
+    {
+      "rule_name": "RULE_WS_EU_INVENTORY_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "MKT_UK_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.03182791975936465,
+      "allocated_amount": 19586.96292951894
+    },
+    {
+      "rule_name": "RULE_WS_EU_INVENTORY_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "MKT_DE_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.030460280019908678,
+      "allocated_amount": 18745.314807989438
+    },
+    {
+      "rule_name": "RULE_WS_EU_INVENTORY_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "MKT_US_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.10187617666789292,
+      "allocated_amount": 62694.7947236805
+    },
+    {
+      "rule_name": "RULE_WS_EU_INVENTORY_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "MKT_US_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08131830083746294,
+      "allocated_amount": 50043.4384665123
+    },
+    {
+      "rule_name": "RULE_WS_EU_SGA_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 184620.57599999997
+    },
+    {
+      "rule_name": "RULE_WS_EU_SGA_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "MKT_CN_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08110190214451105,
+      "allocated_amount": 24955.133147692104
+    },
+    {
+      "rule_name": "RULE_WS_EU_SGA_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "MKT_IN_ASPIRER",
+      "driver": "sales_units",
+      "weight": 0.04396788643396594,
+      "allocated_amount": 13528.960864902294
+    },
+    {
+      "rule_name": "RULE_WS_EU_SGA_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "MKT_JP_REPLACEMENT",
+      "driver": "sales_units",
+      "weight": 0.029447534136893813,
+      "allocated_amount": 9061.034523554996
+    },
+    {
+      "rule_name": "RULE_WS_EU_SGA_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "MKT_UK_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.03182791975936465,
+      "allocated_amount": 9793.48146475947
+    },
+    {
+      "rule_name": "RULE_WS_EU_SGA_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "MKT_DE_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.030460280019908678,
+      "allocated_amount": 9372.657403994719
+    },
+    {
+      "rule_name": "RULE_WS_EU_SGA_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "MKT_US_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.10187617666789292,
+      "allocated_amount": 31347.39736184025
+    },
+    {
+      "rule_name": "RULE_WS_EU_SGA_TO_MARKET",
+      "from_key": "WS_EU",
+      "to_key": "MKT_US_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08131830083746294,
+      "allocated_amount": 25021.71923325615
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 542983.5839999999
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "MKT_CN_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08110190214451105,
+      "allocated_amount": 73395.00249273982
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "MKT_IN_ASPIRER",
+      "driver": "sales_units",
+      "weight": 0.04396788643396594,
+      "allocated_amount": 39789.734261366335
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "MKT_JP_REPLACEMENT",
+      "driver": "sales_units",
+      "weight": 0.029447534136893813,
+      "allocated_amount": 26649.212709354913
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "MKT_UK_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.03182791975936465,
+      "allocated_amount": 28803.39657034039
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "MKT_DE_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.030460280019908678,
+      "allocated_amount": 27565.720024756007
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "MKT_US_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.10187617666789292,
+      "allocated_amount": 92195.15255224945
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "MKT_US_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08131830083746294,
+      "allocated_amount": 73590.83738919304
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 814475.3759999999
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "MKT_CN_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08110190214451105,
+      "allocated_amount": 110092.50373910973
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "MKT_IN_ASPIRER",
+      "driver": "sales_units",
+      "weight": 0.04396788643396594,
+      "allocated_amount": 59684.60139204951
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "MKT_JP_REPLACEMENT",
+      "driver": "sales_units",
+      "weight": 0.029447534136893813,
+      "allocated_amount": 39973.819064032374
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "MKT_UK_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.03182791975936465,
+      "allocated_amount": 43205.094855510586
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "MKT_DE_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.030460280019908678,
+      "allocated_amount": 41348.580037134016
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "MKT_US_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.10187617666789292,
+      "allocated_amount": 138292.72882837418
+    },
+    {
+      "rule_name": "RULE_DAD_AMER_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_AMER",
+      "to_key": "MKT_US_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08131830083746294,
+      "allocated_amount": 110386.25608378957
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 457985.256
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "MKT_CN_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08110190214451105,
+      "allocated_amount": 61905.79235956807
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "MKT_IN_ASPIRER",
+      "driver": "sales_units",
+      "weight": 0.04396788643396594,
+      "allocated_amount": 33561.07287373136
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "MKT_JP_REPLACEMENT",
+      "driver": "sales_units",
+      "weight": 0.029447534136893813,
+      "allocated_amount": 22477.560767090086
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "MKT_UK_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.03182791975936465,
+      "allocated_amount": 24294.52996490013
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "MKT_DE_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.030460280019908678,
+      "allocated_amount": 23250.59857124927
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "MKT_US_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.10187617666789292,
+      "allocated_amount": 77762.97808591028
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "MKT_US_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08131830083746294,
+      "allocated_amount": 62070.9713775508
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 686977.8840000001
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "MKT_CN_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08110190214451105,
+      "allocated_amount": 92858.68853935211
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "MKT_IN_ASPIRER",
+      "driver": "sales_units",
+      "weight": 0.04396788643396594,
+      "allocated_amount": 50341.60931059705
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "MKT_JP_REPLACEMENT",
+      "driver": "sales_units",
+      "weight": 0.029447534136893813,
+      "allocated_amount": 33716.34115063513
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "MKT_UK_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.03182791975936465,
+      "allocated_amount": 36441.7949473502
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "MKT_DE_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.030460280019908678,
+      "allocated_amount": 34875.897856873904
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "MKT_US_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.10187617666789292,
+      "allocated_amount": 116644.46712886544
+    },
+    {
+      "rule_name": "RULE_DAD_APAC_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_APAC",
+      "to_key": "MKT_US_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08131830083746294,
+      "allocated_amount": 93106.45706632621
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 184620.57599999997
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "MKT_CN_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08110190214451105,
+      "allocated_amount": 24955.133147692104
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "MKT_IN_ASPIRER",
+      "driver": "sales_units",
+      "weight": 0.04396788643396594,
+      "allocated_amount": 13528.960864902294
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "MKT_JP_REPLACEMENT",
+      "driver": "sales_units",
+      "weight": 0.029447534136893813,
+      "allocated_amount": 9061.034523554996
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "MKT_UK_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.03182791975936465,
+      "allocated_amount": 9793.48146475947
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "MKT_DE_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.030460280019908678,
+      "allocated_amount": 9372.657403994719
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "MKT_US_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.10187617666789292,
+      "allocated_amount": 31347.39736184025
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_INVENTORY_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "MKT_US_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08131830083746294,
+      "allocated_amount": 25021.71923325615
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "",
+      "driver": "sales_units",
+      "weight": 0.6,
+      "allocated_amount": 276930.864
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "MKT_CN_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08110190214451105,
+      "allocated_amount": 37432.69972153816
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "MKT_IN_ASPIRER",
+      "driver": "sales_units",
+      "weight": 0.04396788643396594,
+      "allocated_amount": 20293.44129735344
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "MKT_JP_REPLACEMENT",
+      "driver": "sales_units",
+      "weight": 0.029447534136893813,
+      "allocated_amount": 13591.551785332496
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "MKT_UK_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.03182791975936465,
+      "allocated_amount": 14690.222197139208
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "MKT_DE_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.030460280019908678,
+      "allocated_amount": 14058.986105992079
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "MKT_US_MAINSTREAM",
+      "driver": "sales_units",
+      "weight": 0.10187617666789292,
+      "allocated_amount": 47021.09604276038
+    },
+    {
+      "rule_name": "RULE_DAD_EURO_SGA_TO_MARKET",
+      "from_key": "DAD_FAS_EURO",
+      "to_key": "MKT_US_PREMIUM",
+      "driver": "sales_units",
+      "weight": 0.08131830083746294,
+      "allocated_amount": 37532.57884988423
+    }
+  ]
 }

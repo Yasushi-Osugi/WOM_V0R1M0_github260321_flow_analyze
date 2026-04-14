@@ -1,4 +1,35 @@
-﻿scenario_id,effective_from,effective_to,currency_code,version_no,remark,rule_id,target_cost_type,allocation_base,source_scope_type,source_scope_id,target_scope_type,target_scope_id,weighting_rule,fixed_or_variable
-BASE,2026-01-01,2099-12-31,JPY,1,initial derived allocation,ALLOC_ASIA_FACTORY_TO_MARKET,production,qty,node,MOM_final_assy_ASIA,market,,proportional,FIXED
-BASE,2026-01-01,2099-12-31,JPY,1,initial derived allocation,ALLOC_EURO_FACTORY_TO_MARKET,production,qty,node,MOM_final_assy_EURO,market,,proportional,FIXED
-BASE,2026-01-01,2099-12-31,JPY,1,initial derived allocation,ALLOC_SUPPLY_POINT_SGA_TO_MARKET,sga,qty,node,supply_point,market,,proportional,FIXED
+scenario_id,effective_from,effective_to,currency_code,version_no,remark,rule_id,target_cost_type,allocation_base,source_scope_type,source_scope_id,target_scope_type,target_scope_id,weighting_rule,fixed_or_variable
+BASE,2026-01-01,2099-12-31,USD,1,upstream cost allocation from supply point to all markets,RULE_SUPPLY_POINT_PRODUCTION_TO_MARKET,production,qty,node,supply_point,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,upstream cost allocation from supply point to all markets,RULE_SUPPLY_POINT_INVENTORY_TO_MARKET,inventory,qty,node,supply_point,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,upstream cost allocation from supply point to all markets,RULE_SUPPLY_POINT_SGA_TO_MARKET,sga,qty,node,supply_point,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,upstream cost allocation from supply point to all markets,RULE_SUPPLY_POINT_DEPRECIATION_TO_MARKET,depreciation,qty,node,supply_point,market,,proportional,FIXED
+
+BASE,2026-01-01,2099-12-31,USD,1,allocate NA warehouse cost to downstream markets,RULE_WS_NA_PRODUCTION_TO_MARKET,production,qty,node,WS_NA,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate NA warehouse cost to downstream markets,RULE_WS_NA_INVENTORY_TO_MARKET,inventory,qty,node,WS_NA,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate NA warehouse cost to downstream markets,RULE_WS_NA_SGA_TO_MARKET,sga,qty,node,WS_NA,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate NA warehouse cost to downstream markets,RULE_WS_NA_DEPRECIATION_TO_MARKET,depreciation,qty,node,WS_NA,market,,proportional,FIXED
+
+BASE,2026-01-01,2099-12-31,USD,1,allocate APAC warehouse cost to downstream markets,RULE_WS_APAC_PRODUCTION_TO_MARKET,production,qty,node,WS_APAC,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate APAC warehouse cost to downstream markets,RULE_WS_APAC_INVENTORY_TO_MARKET,inventory,qty,node,WS_APAC,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate APAC warehouse cost to downstream markets,RULE_WS_APAC_SGA_TO_MARKET,sga,qty,node,WS_APAC,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate APAC warehouse cost to downstream markets,RULE_WS_APAC_DEPRECIATION_TO_MARKET,depreciation,qty,node,WS_APAC,market,,proportional,FIXED
+
+BASE,2026-01-01,2099-12-31,USD,1,allocate EU warehouse cost to downstream markets,RULE_WS_EU_PRODUCTION_TO_MARKET,production,qty,node,WS_EU,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate EU warehouse cost to downstream markets,RULE_WS_EU_INVENTORY_TO_MARKET,inventory,qty,node,WS_EU,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate EU warehouse cost to downstream markets,RULE_WS_EU_SGA_TO_MARKET,sga,qty,node,WS_EU,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate EU warehouse cost to downstream markets,RULE_WS_EU_DEPRECIATION_TO_MARKET,depreciation,qty,node,WS_EU,market,,proportional,FIXED
+
+BASE,2026-01-01,2099-12-31,USD,1,allocate NA DAD cost to downstream markets,RULE_DAD_AMER_PRODUCTION_TO_MARKET,production,qty,node,DAD_FAS_AMER,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate NA DAD cost to downstream markets,RULE_DAD_AMER_INVENTORY_TO_MARKET,inventory,qty,node,DAD_FAS_AMER,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate NA DAD cost to downstream markets,RULE_DAD_AMER_SGA_TO_MARKET,sga,qty,node,DAD_FAS_AMER,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate NA DAD cost to downstream markets,RULE_DAD_AMER_DEPRECIATION_TO_MARKET,depreciation,qty,node,DAD_FAS_AMER,market,,proportional,FIXED
+
+BASE,2026-01-01,2099-12-31,USD,1,allocate APAC DAD cost to downstream markets,RULE_DAD_APAC_PRODUCTION_TO_MARKET,production,qty,node,DAD_FAS_APAC,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate APAC DAD cost to downstream markets,RULE_DAD_APAC_INVENTORY_TO_MARKET,inventory,qty,node,DAD_FAS_APAC,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate APAC DAD cost to downstream markets,RULE_DAD_APAC_SGA_TO_MARKET,sga,qty,node,DAD_FAS_APAC,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate APAC DAD cost to downstream markets,RULE_DAD_APAC_DEPRECIATION_TO_MARKET,depreciation,qty,node,DAD_FAS_APAC,market,,proportional,FIXED
+
+BASE,2026-01-01,2099-12-31,USD,1,allocate EU DAD cost to downstream markets,RULE_DAD_EURO_PRODUCTION_TO_MARKET,production,qty,node,DAD_FAS_EURO,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate EU DAD cost to downstream markets,RULE_DAD_EURO_INVENTORY_TO_MARKET,inventory,qty,node,DAD_FAS_EURO,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate EU DAD cost to downstream markets,RULE_DAD_EURO_SGA_TO_MARKET,sga,qty,node,DAD_FAS_EURO,market,,proportional,FIXED
+BASE,2026-01-01,2099-12-31,USD,1,allocate EU DAD cost to downstream markets,RULE_DAD_EURO_DEPRECIATION_TO_MARKET,depreciation,qty,node,DAD_FAS_EURO,market,,proportional,FIXED

@@ -1,0 +1,2 @@
+python -m compileall pysi\reporting
+python -m pysi.reporting.sample_env_reporting_run

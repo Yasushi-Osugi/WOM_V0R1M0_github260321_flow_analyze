@@ -85,7 +85,6 @@ def _load_from_directory(base_dir: Path) -> dict[str, Any]:
         node_id = (row.get("node_id") or "").strip()
         if not node_id:
             continue
-
         node_cost_rates[node_id] = {
             "production": _to_float(row.get("production_variable_cost_rate")),
             "inventory": _to_float(row.get("inventory_holding_cost_rate")),
@@ -98,7 +97,6 @@ def _load_from_directory(base_dir: Path) -> dict[str, Any]:
         to_node = (row.get("to_node_id") or "").strip()
         if not from_node or not to_node:
             continue
-
         lane_key = f"{from_node}->{to_node}"
         lane_cost_rates[lane_key] = {
             "logistics": _to_float(row.get("freight_cost_per_unit")),
@@ -112,7 +110,6 @@ def _load_from_directory(base_dir: Path) -> dict[str, Any]:
         market_id = (row.get("market_id") or "").strip()
         if not market_id:
             continue
-
         market_cost_rates[market_id] = {
             "sales": _to_float(row.get("channel_cost_rate")),
             "promotion": _to_float(row.get("promotion_cost_rate")),
@@ -121,52 +118,29 @@ def _load_from_directory(base_dir: Path) -> dict[str, Any]:
         }
 
     for row in allocation_rows:
-        rule_name = (row.get("rule_id") or "unnamed_rule").strip()
-        target_cost_type = (row.get("target_cost_type") or "allocated_pool").strip().lower()
-        allocation_base = (row.get("allocation_base") or "").strip().lower()
-        source_scope_type = (row.get("source_scope_type") or "").strip().lower()
-        source_scope_id = (row.get("source_scope_id") or "").strip()
-        target_scope_type = (row.get("target_scope_type") or "").strip().lower()
-        target_scope_id = (row.get("target_scope_id") or "").strip()
-        weighting_rule = (row.get("weighting_rule") or "").strip().lower()
-        fixed_or_variable = (row.get("fixed_or_variable") or "").strip().upper()
-
-        if not source_scope_id:
-            continue
-
-        driver = {
-            "qty": "sales_units",
-            "revenue": "sales_units",   # revenue driver not yet explicitly present in report_input
-            "inventory": "qty",
-        }.get(allocation_base, "sales_units")
-
-        from_dim = {
-            "node": "node",
-            "market": "market",
-            "corporate": "node",  # treat corporate pool as node-like for now
-            "product": "product",
-            "total": "node",
-        }.get(source_scope_type, "node")
-
-        to_dim = {
-            "market": "market",
-            "product": "product",
-            "node": "node",
-            "total": "market",
-        }.get(target_scope_type, "market")
-
         allocation_rules.append(
             {
-                "name": rule_name,
-                "driver": driver,
-                "from_dim": from_dim,
-                "to_dim": to_dim,
-                "from_key": source_scope_id,
-                "to_key": target_scope_id,
-                "pool_categories": [target_cost_type],
-                "weighting_rule": weighting_rule or "proportional",
-                "fixed_or_variable": fixed_or_variable or "FIXED",
-                "raw_row": row,
+                "name": (row.get("rule_id") or "unnamed_rule").strip(),
+                "driver": {
+                    "qty": "sales_units",
+                    "revenue": "sales_units",
+                    "inventory": "qty",
+                }.get((row.get("allocation_base") or "").strip().lower(), "sales_units"),
+                "from_dim": {
+                    "node": "node",
+                    "market": "market",
+                    "corporate": "node",
+                }.get((row.get("source_scope_type") or "").strip().lower(), "node"),
+                "to_dim": {
+                    "market": "market",
+                    "product": "product",
+                    "node": "node",
+                    "total": "market",
+                }.get((row.get("target_scope_type") or "").strip().lower(), "market"),
+                "from_key": (row.get("source_scope_id") or "").strip(),
+                "pool_categories": [
+                    (row.get("target_cost_type") or "allocated_pool").strip().lower()
+                ],
             }
         )
 

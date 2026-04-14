@@ -87,7 +87,8 @@ def main() -> None:
     result = run_reporting_pipeline(
         env=env,
         output_dir="outputs/reporting_mvp/sample_env_reporting_run",
-        apply_allocation=False,
+        #@CHANGED
+        apply_allocation=True,
     )
 
     print("[sample_env_reporting_run] report exported:")
