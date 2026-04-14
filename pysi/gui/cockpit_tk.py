@@ -917,6 +917,7 @@ class WOMCockpit(tk.Tk):
         self.step_seq = 0
         self.last_step_context = None
         self.last_bridge_payload = {"events": [], "kernel_flow_events": [], "sidecar_events": []}
+        self.last_dad_handoff_result = None
 
         # trace on/off
         self.var_trace_enabled = tk.BooleanVar(value=False)
@@ -1016,6 +1017,9 @@ class WOMCockpit(tk.Tk):
 
         # decouple nodes list
         self.decouple_node_selected = [] 
+
+        # CAPACITY
+        self.last_capacity_result = None
 
 
     def _build_header(self):
@@ -1648,8 +1652,15 @@ class WOMCockpit(tk.Tk):
         print("[full-plan] step1 outbound_backward_leaf_to_MOM")
         out_root, in_root = eng.outbound_backward_leaf_to_MOM(out_root, in_root, layer="demand")
 
-        print("[full-plan] step2 inbound_MOM_leveling_vs_capacity")
-        out_root, in_root = eng.inbound_MOM_leveling_vs_capacity(out_root, in_root, mom_name=mom_name)
+        #@STOP
+        # 旧 capacity leveling。新しい flow では
+        # step2.4 allocate_markets_to_moms
+        # step2.5 level_mom_demand_with_capacity
+        # に置き換える。
+        #print("[full-plan] step2 inbound_MOM_leveling_vs_capacity")
+        #out_root, in_root = eng.inbound_MOM_leveling_vs_capacity(out_root, in_root, mom_name=mom_name)
+
+
 
 
         # ********
@@ -1687,6 +1698,19 @@ class WOMCockpit(tk.Tk):
             "DEFAULT": ["MOM_final_assy_ASIA"],
         }
 
+        # ********
+        # MOM ALLOCATION
+        # ********
+        print("[full-plan] step2.4 allocate_markets_to_moms")
+        out_root, in_root = eng.allocate_markets_to_moms(
+            out_root,
+            in_root,
+            policy=MOM_POLICY_IPHONE,
+            source_layer="outbound_supply",
+            debug=True,
+        )
+
+
 
         #@STOP
         #print("[full-plan] step3 inbound_backward_MOM_to_leaf")
@@ -1697,6 +1721,50 @@ class WOMCockpit(tk.Tk):
         #    mom_policy=MOM_POLICY_IPHONE,
         #)
 
+
+        # CAPACITY 
+        out_root, in_root, capacity_result = eng.level_mom_demand_with_capacity(
+            out_root,
+            in_root,
+            product=prod,
+            secondary_policy=MOM_POLICY_IPHONE,
+            debug=True,
+        )
+
+        self.last_capacity_result = capacity_result
+
+        assigned_map = capacity_result.get("week_mom_assigned", {}) if isinstance(capacity_result, dict) else {}
+        capacity_map = capacity_result.get("week_mom_capacity", {}) if isinstance(capacity_result, dict) else {}
+        overflow_map = capacity_result.get("week_mom_overflow", {}) if isinstance(capacity_result, dict) else {}
+        moved_secondary = capacity_result.get("lot_moves_secondary", []) if isinstance(capacity_result, dict) else []
+        backlogged = capacity_result.get("lot_backlogged", []) if isinstance(capacity_result, dict) else []
+
+        assigned_summary = {}
+        capacity_summary = {}
+        overflow_summary = {}
+
+        for (_, mom_name), cnt in assigned_map.items():
+            assigned_summary[mom_name] = assigned_summary.get(mom_name, 0) + cnt
+
+        for (_, mom_name), cnt in capacity_map.items():
+            capacity_summary[mom_name] = capacity_summary.get(mom_name, 0) + cnt
+
+        for (_, mom_name), cnt in overflow_map.items():
+            overflow_summary[mom_name] = overflow_summary.get(mom_name, 0) + cnt
+
+        print(
+            "[full-plan] step2.5 capacity summary:",
+            "assigned_total=", assigned_summary,
+            "capacity_total=", capacity_summary,
+            "overflow_total=", overflow_summary,
+            "moved_secondary=", len(moved_secondary),
+            "backlogged=", len(backlogged),
+        )
+
+
+
+
+
         #@DEBUG
         print("[full-plan] step3 inbound_backward_MOM_to_leaf")
         #out_root, in_root = eng.inbound_backward_MOM_to_leaf(out_root, in_root)
@@ -1704,7 +1772,10 @@ class WOMCockpit(tk.Tk):
             out_root,
             in_root,
             layer="demand",
-            mom_policy=MOM_POLICY_IPHONE,
+
+            #@STOP
+            #mom_policy=MOM_POLICY_IPHONE,
+            mom_policy=None,   # ここでは再配分しない
         )
         self._debug_dump_mom_lot_counts(
             in_root,
@@ -1748,8 +1819,43 @@ class WOMCockpit(tk.Tk):
             focus_names=["MOM_final_assy_ASIA", "MOM_final_assy_EURO"],
         )
 
+        print("[full-plan] step4.5 allocate_lots_to_dads")
+        out_root, in_root, handoff_result = eng.allocate_lots_to_dads(
+            out_root,
+            in_root,
+            source_moms=["MOM_final_assy_ASIA", "MOM_final_assy_EURO"],
+            source_slot=0,   # MOM.psi4supply[w][0:S]
+            seed_slot=3,     # DAD.psi4supply[w][3:P]
+            debug=True,
+        )
+        self.last_dad_handoff_result = handoff_result
+
+        dad_counts = handoff_result.get("week_dad_counts", {}) if isinstance(handoff_result, dict) else {}
+        dad_summary = {}
+        for (_, dad_name), cnt in dad_counts.items():
+            dad_summary[dad_name] = dad_summary.get(dad_name, 0) + cnt
+        print(
+            "[full-plan] step4.5 handoff summary:",
+            "dad_total=", dad_summary,
+            "unresolved_lots=", len(handoff_result.get("unresolved_lots", [])) if isinstance(handoff_result, dict) else -1,
+            "unresolved_leafs=", len(handoff_result.get("unresolved_leafs", [])) if isinstance(handoff_result, dict) else -1,
+        )
+
+
         print("[full-plan] step5 push_pull")
-        out_root, in_root = eng.push_pull(out_root, in_root, decouple_nodes=decouples)
+
+        #@STOP planning from root       
+        #out_root, in_root = eng.push_pull(out_root, in_root, decouple_nodes=decouples)
+
+        seeded_dads = sorted(dad_summary.keys())
+        print("[full-plan] step5 seeded_dads =", seeded_dads)
+        out_root, in_root = eng.push_pull(
+            out_root,
+            in_root,
+            decouple_nodes=decouples,
+            seeded_dads=seeded_dads,
+        )
+
         self._debug_dump_mom_lot_counts(
             in_root,
             label="after step5 push_pull",

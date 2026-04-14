@@ -94,15 +94,18 @@ def calc_all_psi2i4demand(node):
 def connect_out2in_dict_copy(node_psi_dict_Ot4Dm, node_psi_dict_In4Dm):
     node_psi_dict_In4Dm = node_psi_dict_Ot4Dm.copy()
     return node_psi_dict_In4Dm
+
 def psi_dict_copy(from_psi_dict, to_psi_dict):
     to_psi_dict = from_psi_dict.copy()
     return to_psi_dict
+
 def connect_out2in_psi_copy(root_node_outbound, root_node_inbound):
     # ***************************************
     # setting root node OUTBOUND to INBOUND
     # ***************************************
     plan_range = root_node_outbound.plan_range
     root_node_inbound.psi4demand = root_node_outbound.psi4supply.copy()
+
 def connect_outbound2inbound(root_node_outbound, root_node_inbound):
     # ***************************************
     # setting root node OUTBOUND to INBOUND
@@ -209,6 +212,8 @@ def calc_all_psiS2P2childS_preorder(node):
             #child.psi4supply = shift_P2childS_LV(node, child, safety_stock_week, lv_week)
     for child in node.children:
         calc_all_psiS2P2childS_preorder(child)
+
+        
 def calc_all_psi2i4supply_post(node):
     for child in node.children:
         calc_all_psi2i4supply_post(child)
