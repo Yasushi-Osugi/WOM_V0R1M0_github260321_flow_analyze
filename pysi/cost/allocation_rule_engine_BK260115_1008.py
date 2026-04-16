@@ -1,9 +1,6 @@
 """Allocation rule engine skeleton.
 
 Allocation is intentionally centralized here.
-This version supports:
-- blank market exclusion
-- region-scoped market allocation based on source node naming
 """
 
 from __future__ import annotations
@@ -24,98 +21,16 @@ def _is_blank_bucket(bucket: Any) -> bool:
     return bucket is None or str(bucket).strip() == ""
 
 
-def _infer_region_from_node(node_name: str) -> str:
-    """
-    Infer allocation region from current WOM node naming.
-
-    Examples:
-    - WS_NA, DAD_FAS_AMER -> AMER
-    - WS_APAC, DAD_FAS_APAC, supply_point -> APAC/GLOBAL
-    - WS_EU, DAD_FAS_EURO -> EURO
-    """
-    name = str(node_name or "").strip()
-
-    if name in {"WS_NA", "DAD_FAS_AMER"}:
-        return "AMER"
-    if name in {"WS_APAC", "DAD_FAS_APAC"}:
-        return "APAC"
-    if name in {"WS_EU", "DAD_FAS_EURO"}:
-        return "EURO"
-    if name == "supply_point":
-        return "GLOBAL"
-
-    if "AMER" in name or "_NA" in name or name.startswith("RT_US") or name.startswith("CS_US"):
-        return "AMER"
-    if "APAC" in name or name.startswith("RT_CN") or name.startswith("RT_IN") or name.startswith("RT_JP") \
-            or name.startswith("CS_CN") or name.startswith("CS_IN") or name.startswith("CS_JP"):
-        return "APAC"
-    if "EURO" in name or "_EU" in name or name.startswith("RT_DE") or name.startswith("RT_UK") \
-            or name.startswith("CS_DE") or name.startswith("CS_UK"):
-        return "EURO"
-
-    return "GLOBAL"
-
-
-def _infer_region_from_market(market_id: str) -> str:
-    """
-    Infer region from current MarketEntity naming.
-
-    Examples:
-    - MKT_US_* -> AMER
-    - MKT_CN_*, MKT_IN_*, MKT_JP_* -> APAC
-    - MKT_DE_*, MKT_UK_* -> EURO
-    """
-    m = str(market_id or "").strip()
-
-    if m.startswith("MKT_US_"):
-        return "AMER"
-    if m.startswith("MKT_CN_") or m.startswith("MKT_IN_") or m.startswith("MKT_JP_"):
-        return "APAC"
-    if m.startswith("MKT_DE_") or m.startswith("MKT_UK_"):
-        return "EURO"
-
-    return "GLOBAL"
-
-
-def _market_allowed_for_source(from_key: str, target_market: str) -> bool:
-    """
-    Region-limited allocation.
-
-    Rules:
-    - AMER source -> AMER markets only
-    - APAC source -> APAC markets only
-    - EURO source -> EURO markets only
-    - GLOBAL source -> all concrete markets
-    """
-    source_region = _infer_region_from_node(from_key)
-    market_region = _infer_region_from_market(target_market)
-
-    if _is_blank_bucket(target_market):
-        return False
-
-    if source_region == "GLOBAL":
-        return True
-
-    return source_region == market_region
-
-
-def _driver_weights(
-    report_input: dict[str, Any],
-    to_dim: str,
-    driver: str,
-    from_key: str | None = None,
-) -> dict[str, float]:
+def _driver_weights(report_input: dict[str, Any], to_dim: str, driver: str) -> dict[str, float]:
     weights = defaultdict(float)
 
     for rec in report_input.get("records", []):
         bucket = rec.get(to_dim)
 
-        if to_dim == "market":
-            if _is_blank_bucket(bucket):
-                continue
-
-            if from_key and not _market_allowed_for_source(from_key, str(bucket)):
-                continue
+        # IMPORTANT:
+        # when allocating to market, ignore blank market buckets
+        if to_dim == "market" and _is_blank_bucket(bucket):
+            continue
 
         if bucket is None:
             continue
@@ -157,12 +72,7 @@ def apply_allocation_rules(
         if pool_total <= 0:
             continue
 
-        weights = _driver_weights(
-            report_input=report_input,
-            to_dim=to_dim,
-            driver=driver,
-            from_key=from_key,
-        )
+        weights = _driver_weights(report_input=report_input, to_dim=to_dim, driver=driver)
         if not weights:
             continue
 

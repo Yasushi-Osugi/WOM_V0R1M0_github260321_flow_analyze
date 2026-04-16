@@ -1,0 +1,2 @@
+﻿scenario_id,effective_from,effective_to,version_no,remark,parent_product_id,parent_stage_id,component_item_id,component_role,qty_per_parent,usage_uom,yield_rate,scrap_rate,substitution_group,co_product_flag,cost_rollup_flag,equivalent_finished_unit_factor,usage_priority,economic_control_point_id,active_flag
+BASE,2026-01-01,2099-12-31,1,initial,IPHONE_NM_2028_BASE,FINAL_ASSY,OLED_PANEL_61,DISPLAY,1,pcs,0.98,0.02,DISPLAY_MAIN,0,1,1.0,1,supply_point,1

@@ -109,31 +109,6 @@ def _split_product_report(
     return filtered, total_row
 
 
-def _split_monthly_cost_report(
-    monthly_rows: list[dict[str, Any]],
-) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
-    """
-    Split month='ALL' out of the regular monthly report.
-
-    Returns:
-      (filtered_monthly_rows, monthly_total_row_or_none)
-    """
-    filtered: list[dict[str, Any]] = []
-    total_row: dict[str, Any] | None = None
-
-    for row in monthly_rows:
-        month = str(row.get("month", "")).strip().upper()
-        if month == "ALL":
-            total_row = {
-                "label": "ALL",
-                "total_cost": float(row.get("total_cost", 0.0) or 0.0),
-            }
-            continue
-        filtered.append(row)
-
-    return filtered, total_row
-
-
 def build_business_report(
     report_input: dict[str, Any],
     cost_lines: list[dict[str, Any]],
@@ -146,7 +121,7 @@ def build_business_report(
         month_label = _safe_week_to_month_label(line.get("week", "UNKNOWN"))
         monthly[month_label] += float(line.get("amount", 0.0) or 0.0)
 
-    monthly_cost_report_raw = [
+    monthly_cost_report = [
         {"month": month, "total_cost": value} for month, value in sorted(monthly.items())
     ]
 
@@ -159,9 +134,6 @@ def build_business_report(
     # product_report: split ALL into a dedicated total field
     product_report, product_total = _split_product_report(kpi["product_report"])
 
-    # monthly_cost_report: split ALL into a dedicated total field
-    monthly_cost_report, monthly_total = _split_monthly_cost_report(monthly_cost_report_raw)
-
     return {
         "meta": {
             "record_count": len(report_input.get("records", [])),
@@ -172,7 +144,6 @@ def build_business_report(
         "node_report": kpi["node_report"],
         "market_report": market_report,
         "monthly_cost_report": monthly_cost_report,
-        "monthly_total": monthly_total,
         "cost_waterfall": cost_waterfall,
         "pain_points": pain_points,
         "allocation_breakdown": allocation_breakdown or [],

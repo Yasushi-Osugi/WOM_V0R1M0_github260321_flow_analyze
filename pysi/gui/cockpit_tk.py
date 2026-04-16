@@ -24,6 +24,15 @@ from pysi.bridge.dump_rows import build_dump_rows_from_product_plan_tree
 from pysi.bridge.event_rules import initialize_consumer_experience_inputs
 
 
+# world map backend switch
+USE_TKMAP = True
+
+if USE_TKMAP:
+    from pysi.gui.world_map_view_tkmap import show_world_map_tkmap as _show_world_map
+else:
+    from pysi.gui.world_map_view import show_world_map as _show_world_map
+
+
 # business_animation
 try:
     from pysi.gui.business_animation.business_animation_panel import BusinessAnimationPanel
@@ -1348,13 +1357,34 @@ class WOMCockpit(tk.Tk):
 
         # Fallback: helper module
         try:
-            from pysi.gui.world_map_view import show_world_map  # type: ignore
-            self._world_map_view = show_world_map(
+            #@STOP
+            #from pysi.gui.world_map_view import show_world_map  # type: ignore
+            #self._world_map_view = show_world_map(
+            #    self.env,
+            #    product_name=prod,
+            #    on_select=self.set_selected_node,
+            #    parent_tk=parent,
+            #)
+
+            #@STOP2
+            #self._world_map_view = _show_world_map(
+            #    env,
+            #    product_name=prod,
+            #    on_select=cb,
+            #    parent_tk=root,
+            #    title="Global Supply Chain Map",
+            #)
+
+            self._world_map_view = _show_world_map(
                 self.env,
                 product_name=prod,
                 on_select=self.set_selected_node,
                 parent_tk=parent,
+                title="Global Supply Chain Map",
             )
+
+
+
             return self._world_map_view
         except Exception as e:
             self.l1_show_text(f"[World Map] not available: {e}")
