@@ -158,11 +158,6 @@ class WorldMapViewTk:
 
     _HUB_NAMES = {"sales_office", "procurement_office", "supply_point"}
 
-    # ---- UI 表示名置換 (内部IDはそのまま維持) ----
-    _DISPLAY_NAME_MAP = {
-        "supply_point": "Global Supply Chain Office",
-    }
-
     def __init__(
         self,
         env: Any,
@@ -454,9 +449,6 @@ class WorldMapViewTk:
                 pass
         self._markers.pop(node_name, None)
 
-    def _display_name(self, node_name: str) -> str:
-        return self._DISPLAY_NAME_MAP.get(node_name, node_name)
-
     def _create_marker(self, node_name: str, *, selected: bool = False) -> None:
         if node_name not in self._pos:
             return
@@ -467,7 +459,7 @@ class WorldMapViewTk:
         marker = self._map_widget.set_marker(
             lat,
             lon,
-            text=self._display_name(node_name),
+            text=node_name,
             marker_color_circle=color,
             marker_color_outside=color,
             command=self._make_marker_cb(node_name),
@@ -544,8 +536,7 @@ class WorldMapViewTk:
             return
 
         node = self._nodes.get(node_name)
-        shown_name = self._display_name(node_name)
-        lines = [f"▶ {shown_name}", f"lat: {lat:.3f}  lon: {lon:.3f}"]
+        lines = [f"▶ {node_name}", f"lat: {lat:.3f}  lon: {lon:.3f}"]
         if node is not None:
             for k in ("node_type", "capacity", "cost_coeff", "revenue_coeff"):
                 if hasattr(node, k):
