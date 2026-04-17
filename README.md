@@ -1,5 +1,7 @@
 # WOM — Weekly Operation Model
 
+At first, starter "phthon -m main" will show you WOM UI that will take some minutes for loading Supply Chain Model.
+
 WOM (Weekly Operation Model) is an experimental planning framework for modeling and simulating economic activity through supply chain flows.
 
 The project explores how **planning systems can evolve from static planning tools into dynamic simulation-based decision engines**.
@@ -234,6 +236,7 @@ Current priorities include:
 ---
 
 # Getting Started
+
 
 Recommended reading order:
 
