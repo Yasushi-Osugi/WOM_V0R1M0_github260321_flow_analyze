@@ -1,6 +1,6 @@
-metric,pain_point,value
-total_cost,supply_point,48609166.056
-total_cost,WS_NA,5882322.16
-total_cost,DAD_FAS_AMER,5067846.784000002
-total_cost,WS_APAC,4961506.940000004
-total_cost,DAD_FAS_APAC,4274529.056000002
+﻿pain_point,metric,value
+supply_point,total_cost,48609166.056
+WS_NA,total_cost,5882322.16
+DAD_FAS_AMER,total_cost,5067846.784000002
+WS_APAC,total_cost,4961506.940000004
+DAD_FAS_APAC,total_cost,4274529.056000002

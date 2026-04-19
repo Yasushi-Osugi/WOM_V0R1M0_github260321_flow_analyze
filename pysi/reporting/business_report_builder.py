@@ -9,50 +9,20 @@ from pysi.cost.cost_to_kpi_adapter import build_kpi_rows
 from pysi.reporting.monthly_period_mapper import week_to_month_label
 
 
-def _build_cost_waterfall(cost_lines: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    agg = defaultdict(float)
-    for line in cost_lines:
-        key = f"{line.get('cost_type', 'unknown')}:{line.get('cost_category', 'unknown')}"
-        agg[key] += float(line.get("amount", 0.0) or 0.0)
-    return [{"step": key, "amount": value} for key, value in sorted(agg.items())]
+def _safe_amount(line: dict[str, Any]) -> float:
+    try:
+        return float(line.get("amount", 0.0) or 0.0)
+    except Exception:
+        return 0.0
 
 
-def _build_pain_points(node_report: list[dict[str, Any]], top_n: int = 5) -> list[dict[str, Any]]:
-    sorted_rows = sorted(node_report, key=lambda r: float(r.get("total_cost", 0.0)), reverse=True)
-    out: list[dict[str, Any]] = []
-    for row in sorted_rows[:top_n]:
-        out.append(
-            {
-                "pain_point": row.get("node", "UNKNOWN"),
-                "metric": "total_cost",
-                "value": float(row.get("total_cost", 0.0) or 0.0),
-            }
-        )
-    return out
-
-
-def _is_blank_market(value: Any) -> bool:
+def _is_blank(value: Any) -> bool:
     return value is None or str(value).strip() == ""
 
 
-def _build_market_report_allocated_view(cost_lines: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """
-    Allocated-view market report.
-
-    Policy:
-    - exclude blank market buckets
-    - include any line that has a concrete market id
-    """
-    agg = defaultdict(float)
-
-    for line in cost_lines:
-        market = line.get("market")
-        if _is_blank_market(market):
-            continue
-
-        agg[str(market)] += float(line.get("amount", 0.0) or 0.0)
-
-    return [{"market": key, "total_cost": value} for key, value in sorted(agg.items())]
+def _is_total_label(value: Any) -> bool:
+    text = str(value or "").strip().upper()
+    return text in {"ALL", "TOTAL"}
 
 
 def _safe_week_to_month_label(week_value: Any) -> str:
@@ -81,57 +51,114 @@ def _safe_week_to_month_label(week_value: Any) -> str:
     if text.isdigit():
         return week_to_month_label(f"2026-W{int(text) + 1:02d}")
 
-    return week_to_month_label(text)
+    try:
+        return week_to_month_label(text)
+    except Exception:
+        return "UNKNOWN"
 
 
-def _split_product_report(
-    product_rows: list[dict[str, Any]],
-) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
-    """
-    Split product='ALL' out of the regular product report.
+def _build_cost_waterfall(cost_lines: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    agg = defaultdict(float)
+    for line in cost_lines:
+        key = f"{line.get('cost_type', 'unknown')}:{line.get('cost_category', 'unknown')}"
+        agg[key] += _safe_amount(line)
+    return [{"step": key, "amount": value} for key, value in sorted(agg.items(), key=lambda kv: kv[0])]
 
-    Returns:
-      (filtered_product_rows, product_total_row_or_none)
-    """
-    filtered: list[dict[str, Any]] = []
-    total_row: dict[str, Any] | None = None
 
-    for row in product_rows:
-        product = str(row.get("product", "")).strip()
-        if product == "ALL":
-            total_row = {
-                "label": "ALL",
-                "total_cost": float(row.get("total_cost", 0.0) or 0.0),
+def _build_pain_points(node_report: list[dict[str, Any]], top_n: int = 5) -> list[dict[str, Any]]:
+    ranked = sorted(node_report, key=lambda r: float(r.get("total_cost", 0.0) or 0.0), reverse=True)
+    out: list[dict[str, Any]] = []
+    for row in ranked[:top_n]:
+        out.append(
+            {
+                "pain_point": row.get("node", "UNKNOWN"),
+                "metric": "total_cost",
+                "value": float(row.get("total_cost", 0.0) or 0.0),
             }
-            continue
-        filtered.append(row)
-
-    return filtered, total_row
+        )
+    return out
 
 
-def _split_monthly_cost_report(
-    monthly_rows: list[dict[str, Any]],
-) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
+def _build_market_report_allocated_view(cost_lines: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
-    Split month='ALL' out of the regular monthly report.
+    Allocated-view market report.
 
-    Returns:
-      (filtered_monthly_rows, monthly_total_row_or_none)
+    Policy:
+    - exclude blank market buckets
+    - exclude synthetic market labels such as ALL
+    - include any line that has a concrete market id
+      (this includes both direct market-tagged lines and allocated lines)
     """
-    filtered: list[dict[str, Any]] = []
-    total_row: dict[str, Any] | None = None
+    agg = defaultdict(float)
 
-    for row in monthly_rows:
-        month = str(row.get("month", "")).strip().upper()
-        if month == "ALL":
-            total_row = {
-                "label": "ALL",
-                "total_cost": float(row.get("total_cost", 0.0) or 0.0),
-            }
+    for line in cost_lines:
+        market = line.get("market")
+        if _is_blank(market) or _is_total_label(market):
             continue
-        filtered.append(row)
 
-    return filtered, total_row
+        agg[str(market).strip()] += _safe_amount(line)
+
+    return [{"market": key, "total_cost": value} for key, value in sorted(agg.items(), key=lambda kv: kv[0])]
+
+
+def _build_monthly_cost_report(cost_lines: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    monthly = defaultdict(float)
+
+    for line in cost_lines:
+        month_label = _safe_week_to_month_label(line.get("week", "UNKNOWN"))
+
+        # monthly report is a period view only; synthetic ALL is handled separately
+        if month_label == "ALL":
+            continue
+
+        monthly[month_label] += _safe_amount(line)
+
+    return [{"month": month, "total_cost": value} for month, value in sorted(monthly.items(), key=lambda kv: kv[0])]
+
+
+def _build_product_report_from_cost_lines(cost_lines: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """
+    Build product report directly from cost_lines and exclude synthetic ALL rows.
+
+    Why direct build?
+    - some KPI adapters may still carry a synthetic product='ALL'
+    - total reconciliation should not depend on whether that synthetic row exists
+    """
+    agg = defaultdict(float)
+
+    for line in cost_lines:
+        product = line.get("product")
+
+        if _is_blank(product) or _is_total_label(product):
+            continue
+
+        agg[str(product).strip()] += _safe_amount(line)
+
+    return [{"product": key, "total_cost": value} for key, value in sorted(agg.items(), key=lambda kv: kv[0])]
+
+
+def _compute_grand_total_from_report_rows(
+    product_report: list[dict[str, Any]],
+    monthly_cost_report: list[dict[str, Any]],
+) -> float:
+    """
+    Compute one canonical report total from report-facing rows, not raw cost_lines.
+
+    Why?
+    - raw cost_lines may contain both original and allocated lines
+    - summing raw cost_lines can overcount after allocation
+    - report total should match what management sees in product/monthly views
+
+    Policy:
+    1. prefer concrete product_report sum
+    2. fallback to monthly_cost_report sum
+    """
+    product_total = sum(float(r.get("total_cost", 0.0) or 0.0) for r in product_report)
+    if product_total:
+        return product_total
+
+    monthly_total = sum(float(r.get("total_cost", 0.0) or 0.0) for r in monthly_cost_report)
+    return monthly_total
 
 
 def build_business_report(
@@ -139,28 +166,41 @@ def build_business_report(
     cost_lines: list[dict[str, Any]],
     allocation_breakdown: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
+    allocation_breakdown = allocation_breakdown or []
+
+    # Keep existing KPI adapter usage for node view compatibility
     kpi = build_kpi_rows(cost_lines)
 
-    monthly = defaultdict(float)
-    for line in cost_lines:
-        month_label = _safe_week_to_month_label(line.get("week", "UNKNOWN"))
-        monthly[month_label] += float(line.get("amount", 0.0) or 0.0)
+    # product report: concrete products only
+    product_report = _build_product_report_from_cost_lines(cost_lines)
 
-    monthly_cost_report_raw = [
-        {"month": month, "total_cost": value} for month, value in sorted(monthly.items())
-    ]
+    # node report: keep gross operational view
+    node_report = kpi.get("node_report", [])
 
-    cost_waterfall = _build_cost_waterfall(cost_lines)
-    pain_points = _build_pain_points(kpi["node_report"])
-
-    # market_report is shown as allocated view only
+    # market report: allocated view only
     market_report = _build_market_report_allocated_view(cost_lines)
 
-    # product_report: split ALL into a dedicated total field
-    product_report, product_total = _split_product_report(kpi["product_report"])
+    # monthly report: period rows only
+    monthly_cost_report = _build_monthly_cost_report(cost_lines)
 
-    # monthly_cost_report: split ALL into a dedicated total field
-    monthly_cost_report, monthly_total = _split_monthly_cost_report(monthly_cost_report_raw)
+    # canonical report-facing total
+    grand_total = _compute_grand_total_from_report_rows(
+        product_report=product_report,
+        monthly_cost_report=monthly_cost_report,
+    )
+
+    product_total = {
+        "label": "ALL",
+        "total_cost": grand_total,
+    }
+
+    monthly_total = {
+        "label": "ALL",
+        "total_cost": grand_total,
+    }
+
+    cost_waterfall = _build_cost_waterfall(cost_lines)
+    pain_points = _build_pain_points(node_report=node_report, top_n=5)
 
     return {
         "meta": {
@@ -169,11 +209,11 @@ def build_business_report(
         },
         "product_report": product_report,
         "product_total": product_total,
-        "node_report": kpi["node_report"],
+        "node_report": node_report,
         "market_report": market_report,
         "monthly_cost_report": monthly_cost_report,
         "monthly_total": monthly_total,
         "cost_waterfall": cost_waterfall,
         "pain_points": pain_points,
-        "allocation_breakdown": allocation_breakdown or [],
+        "allocation_breakdown": allocation_breakdown,
     }
