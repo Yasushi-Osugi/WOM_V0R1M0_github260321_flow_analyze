@@ -1,19 +1,132 @@
-"""Load cost master dictionaries for reporting MVP.
+"""Load cost masters for WOM reporting MVP and inbound extension.
 
-This loader supports:
-- direct dictionary input (already-loaded masters)
-- a lightweight JSON file path
-- a directory containing CSV masters under data/cost_masters
-- fallback sample masters for static runs
+Backward compatibility policy
+-----------------------------
+- Existing callers can keep using: load_cost_masters(source) -> dict
+- New callers may use:
+    * load_cost_masters(source, include_inbound=True)
+    * load_cost_masters(source, return_bundle=True)
+- CSV remains the source of truth; no SQL dependency is introduced.
+
+This module provides:
+- CostMasterBundle: lightweight container for raw rows + lookup dicts
+- load_inbound_cost_masters(): inbound extension loader
+- load_cost_masters(): main public loader
+- helper lookup functions for future cost / reporting code
 """
 
 from __future__ import annotations
 
 import csv
 import json
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
+
+# ============================================================
+# bundle
+# ============================================================
+
+@dataclass
+class CostMasterBundle:
+    # ----- raw outbound / reporting rows -----
+    product_rows: list[dict[str, Any]] = field(default_factory=list)
+    node_rows: list[dict[str, Any]] = field(default_factory=list)
+    lane_rows: list[dict[str, Any]] = field(default_factory=list)
+    sales_price_rows: list[dict[str, Any]] = field(default_factory=list)
+    allocation_rule_rows: list[dict[str, Any]] = field(default_factory=list)
+    market_rows: list[dict[str, Any]] = field(default_factory=list)
+    cs_node_to_market_rows: list[dict[str, Any]] = field(default_factory=list)
+    sga_rows: list[dict[str, Any]] = field(default_factory=list)
+    fixed_asset_rows: list[dict[str, Any]] = field(default_factory=list)
+
+    # ----- raw inbound rows -----
+    inbound_item_rows: list[dict[str, Any]] = field(default_factory=list)
+    inbound_bom_rows: list[dict[str, Any]] = field(default_factory=list)
+    inbound_price_decision_rows: list[dict[str, Any]] = field(default_factory=list)
+    inbound_adjustment_rows: list[dict[str, Any]] = field(default_factory=list)
+
+    # ----- current MVP direct lookups -----
+    node_cost_rates: dict[str, dict[str, float]] = field(default_factory=dict)
+    lane_cost_rates: dict[str, dict[str, float]] = field(default_factory=dict)
+    market_cost_rates: dict[str, dict[str, float]] = field(default_factory=dict)
+    allocation_rules: list[dict[str, Any]] = field(default_factory=list)
+
+    # ----- helper lookups for future reporting / costing -----
+    product_cost_lookup: dict[str, dict[str, Any]] = field(default_factory=dict)
+    node_lookup: dict[str, dict[str, Any]] = field(default_factory=dict)
+    lane_lookup: dict[tuple[str, str], dict[str, Any]] = field(default_factory=dict)
+    sales_price_lookup: dict[tuple[str, str], dict[str, Any]] = field(default_factory=dict)
+    market_entity_lookup: dict[str, dict[str, Any]] = field(default_factory=dict)
+    cs_node_to_market_lookup: dict[tuple[str, Optional[str]], str] = field(default_factory=dict)
+    sga_lookup: dict[tuple[str, str], dict[str, Any]] = field(default_factory=dict)
+    fixed_asset_lookup: dict[tuple[str, str], list[dict[str, Any]]] = field(default_factory=dict)
+
+    # ----- inbound helper lookups -----
+    inbound_item_lookup: dict[str, dict[str, Any]] = field(default_factory=dict)
+    inbound_bom_by_parent: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    inbound_price_decision_lookup: dict[tuple[str, str, str], list[dict[str, Any]]] = field(default_factory=dict)
+    inbound_adjustment_by_product: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    inbound_adjustment_by_item: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+
+    source_dir: str | None = None
+
+    def to_legacy_payload(self) -> dict[str, Any]:
+        """Return a dict payload compatible with the current reporting MVP."""
+        return {
+            # current MVP keys
+            "node_cost_rates": self.node_cost_rates,
+            "lane_cost_rates": self.lane_cost_rates,
+            "market_cost_rates": self.market_cost_rates,
+            "allocation_rules": self.allocation_rules,
+
+            # raw rows / helper lookups (non-breaking additions)
+            "product_rows": self.product_rows,
+            "node_rows": self.node_rows,
+            "lane_rows": self.lane_rows,
+            "sales_price_rows": self.sales_price_rows,
+            "allocation_rule_rows": self.allocation_rule_rows,
+            "market_rows": self.market_rows,
+            "cs_node_to_market_rows": self.cs_node_to_market_rows,
+            "sga_rows": self.sga_rows,
+            "fixed_asset_rows": self.fixed_asset_rows,
+
+            "product_cost_lookup": self.product_cost_lookup,
+            "node_lookup": self.node_lookup,
+            "lane_lookup": self.lane_lookup,
+            "sales_price_lookup": self.sales_price_lookup,
+            "market_entity_lookup": self.market_entity_lookup,
+            "cs_node_to_market_lookup": self.cs_node_to_market_lookup,
+            "sga_lookup": self.sga_lookup,
+            "fixed_asset_lookup": self.fixed_asset_lookup,
+
+            # inbound extension
+            "inbound_item_rows": self.inbound_item_rows,
+            "inbound_bom_rows": self.inbound_bom_rows,
+            "inbound_price_decision_rows": self.inbound_price_decision_rows,
+            "inbound_adjustment_rows": self.inbound_adjustment_rows,
+            "inbound_item_lookup": self.inbound_item_lookup,
+            "inbound_bom_by_parent": self.inbound_bom_by_parent,
+            "inbound_price_decision_lookup": self.inbound_price_decision_lookup,
+            "inbound_adjustment_by_product": self.inbound_adjustment_by_product,
+            "inbound_adjustment_by_item": self.inbound_adjustment_by_item,
+
+            "meta": {
+                "source_dir": self.source_dir,
+                "has_inbound": bool(
+                    self.inbound_item_rows
+                    or self.inbound_bom_rows
+                    or self.inbound_price_decision_rows
+                    or self.inbound_adjustment_rows
+                ),
+            },
+        }
+
+
+# ============================================================
+# helpers
+# ============================================================
 
 def _sample_cost_masters() -> dict[str, Any]:
     return {
@@ -70,80 +183,159 @@ def _to_float(value: Any) -> float:
         return 0.0
 
 
-def _load_from_directory(base_dir: Path) -> dict[str, Any]:
-    node_rows = _read_csv_rows(base_dir / "node_cost_master.csv")
-    lane_rows = _read_csv_rows(base_dir / "lane_cost_master.csv")
-    market_rows = _read_csv_rows(base_dir / "sales_price_master.csv")
-    allocation_rows = _read_csv_rows(base_dir / "allocation_rule_master.csv")
+def _safe_key(value: Any) -> str:
+    return str(value or "").strip()
 
-    node_cost_rates: dict[str, dict[str, float]] = {}
-    lane_cost_rates: dict[str, dict[str, float]] = {}
-    market_cost_rates: dict[str, dict[str, float]] = {}
-    allocation_rules: list[dict[str, Any]] = []
 
-    for row in node_rows:
-        node_id = (row.get("node_id") or "").strip()
+def _truthy(value: Any) -> bool:
+    return _safe_key(value).lower() in {"1", "true", "yes", "y", "on"}
+
+
+# ============================================================
+# outbound/current-model loader
+# ============================================================
+
+def _build_outbound_bundle(base_dir: Path) -> CostMasterBundle:
+    bundle = CostMasterBundle(source_dir=str(base_dir))
+
+    bundle.product_rows = _read_csv_rows(base_dir / "product_cost_master.csv")
+    bundle.node_rows = _read_csv_rows(base_dir / "node_cost_master.csv")
+    bundle.lane_rows = _read_csv_rows(base_dir / "lane_cost_master.csv")
+    bundle.sales_price_rows = _read_csv_rows(base_dir / "sales_price_master.csv")
+    bundle.allocation_rule_rows = _read_csv_rows(base_dir / "allocation_rule_master.csv")
+    bundle.market_rows = _read_csv_rows(base_dir / "market_master.csv")
+    bundle.cs_node_to_market_rows = _read_csv_rows(base_dir / "cs_node_to_market_map.csv")
+    bundle.sga_rows = _read_csv_rows(base_dir / "sga_marketing_tax_master.csv")
+    bundle.fixed_asset_rows = _read_csv_rows(base_dir / "fixed_asset_cost_master.csv")
+
+    # ----- product lookup -----
+    for row in bundle.product_rows:
+        product_id = _safe_key(row.get("product_id") or row.get("product_name"))
+        if product_id:
+            bundle.product_cost_lookup[product_id] = row
+
+    # ----- node lookup / current MVP node rates -----
+    for row in bundle.node_rows:
+        node_id = _safe_key(row.get("node_id") or row.get("node_name"))
         if not node_id:
             continue
 
-        node_cost_rates[node_id] = {
+        bundle.node_lookup[node_id] = row
+        bundle.node_cost_rates[node_id] = {
             "production": _to_float(row.get("production_variable_cost_rate")),
             "inventory": _to_float(row.get("inventory_holding_cost_rate")),
             "sga": _to_float(row.get("local_sga_variable_cost_rate")),
             "depreciation": _to_float(row.get("depreciation_cost_per_period")),
+
+            # extras kept for future cost model use
+            "warehouse_handling": _to_float(row.get("warehouse_handling_cost_rate")),
+            "direct_labor": _to_float(row.get("direct_labor_cost_rate")),
+            "machine": _to_float(row.get("machine_cost_rate")),
+            "utility": _to_float(row.get("utility_cost_rate")),
+            "maintenance": _to_float(row.get("maintenance_fixed_cost")),
+            "overtime": _to_float(row.get("overtime_cost_rate")),
+            "scrap_loss": _to_float(row.get("scrap_loss_cost_rate")),
+            "capacity_reservation": _to_float(row.get("capacity_reservation_cost_rate")),
+            "quality_inspection": _to_float(row.get("quality_inspection_cost_rate")),
+            "yield_loss": _to_float(row.get("yield_loss_cost_rate")),
         }
 
-    for row in lane_rows:
-        from_node = (row.get("from_node_id") or "").strip()
-        to_node = (row.get("to_node_id") or "").strip()
+    # ----- lane lookup / current MVP lane rates -----
+    for row in bundle.lane_rows:
+        from_node = _safe_key(row.get("from_node_id"))
+        to_node = _safe_key(row.get("to_node_id"))
         if not from_node or not to_node:
             continue
 
+        lane_tuple = (from_node, to_node)
         lane_key = f"{from_node}->{to_node}"
-        lane_cost_rates[lane_key] = {
+        bundle.lane_lookup[lane_tuple] = row
+        bundle.lane_cost_rates[lane_key] = {
             "logistics": _to_float(row.get("freight_cost_per_unit")),
             "tariff": _to_float(row.get("tariff_rate")),
             "insurance": _to_float(row.get("insurance_cost_per_unit")),
             "customs": _to_float(row.get("customs_cost_per_unit")),
             "carbon": _to_float(row.get("carbon_cost_per_unit")),
+
+            # extras kept for future cost model use
+            "lane_fixed": _to_float(row.get("lane_fixed_cost_per_period")),
+            "special_risk": _to_float(row.get("special_risk_cost_rate")),
+            "premium_freight": _to_float(row.get("premium_freight_cost_per_unit")),
+            "expedite": _to_float(row.get("expedite_cost_per_unit")),
         }
 
-    for row in market_rows:
-        market_id = (row.get("market_id") or "").strip()
+    # ----- sales price -> current MVP market rates + product/market lookup -----
+    for row in bundle.sales_price_rows:
+        product_id = _safe_key(row.get("product_id"))
+        market_id = _safe_key(row.get("market_id"))
         if not market_id:
             continue
 
-        market_cost_rates[market_id] = {
+        if product_id:
+            bundle.sales_price_lookup[(product_id, market_id)] = row
+
+        # Current reporting MVP uses market-only rates for market cost lines.
+        # Latest row wins if multiple products share the same market key.
+        bundle.market_cost_rates[market_id] = {
             "sales": _to_float(row.get("channel_cost_rate")),
             "promotion": _to_float(row.get("promotion_cost_rate")),
             "rebate": _to_float(row.get("rebate_rate")) + _to_float(row.get("discount_rate")),
             "returns": _to_float(row.get("expected_return_rate")),
+            "gross_to_net": _to_float(row.get("gross_to_net_adjustment")),
         }
 
-    for row in allocation_rows:
-        rule_name = (row.get("rule_id") or "unnamed_rule").strip()
-        target_cost_type = (row.get("target_cost_type") or "allocated_pool").strip().lower()
-        allocation_base = (row.get("allocation_base") or "").strip().lower()
-        source_scope_type = (row.get("source_scope_type") or "").strip().lower()
-        source_scope_id = (row.get("source_scope_id") or "").strip()
-        target_scope_type = (row.get("target_scope_type") or "").strip().lower()
-        target_scope_id = (row.get("target_scope_id") or "").strip()
-        weighting_rule = (row.get("weighting_rule") or "").strip().lower()
-        fixed_or_variable = (row.get("fixed_or_variable") or "").strip().upper()
+    # ----- market bridge -----
+    for row in bundle.market_rows:
+        market_id = _safe_key(row.get("market_id"))
+        if market_id:
+            bundle.market_entity_lookup[market_id] = row
+
+    for row in bundle.cs_node_to_market_rows:
+        cs_node = _safe_key(row.get("cs_node"))
+        product_name = _safe_key(row.get("product_name"))
+        market_id = _safe_key(row.get("market_id"))
+        if not cs_node or not market_id:
+            continue
+        bundle.cs_node_to_market_lookup[(cs_node, product_name or None)] = market_id
+
+    # ----- SGA / fixed asset helper lookups -----
+    for row in bundle.sga_rows:
+        scope_type = _safe_key(row.get("scope_type"))
+        scope_id = _safe_key(row.get("scope_id"))
+        if scope_type and scope_id:
+            bundle.sga_lookup[(scope_type, scope_id)] = row
+
+    for row in bundle.fixed_asset_rows:
+        node_id = _safe_key(row.get("node_id"))
+        asset_id = _safe_key(row.get("asset_id"))
+        if node_id and asset_id:
+            bundle.fixed_asset_lookup.setdefault((node_id, asset_id), []).append(row)
+
+    # ----- allocation rules: business CSV -> current engine rule dicts -----
+    for row in bundle.allocation_rule_rows:
+        rule_name = _safe_key(row.get("rule_id") or "unnamed_rule")
+        target_cost_type = _safe_key(row.get("target_cost_type") or "allocated_pool").lower()
+        allocation_base = _safe_key(row.get("allocation_base")).lower()
+        source_scope_type = _safe_key(row.get("source_scope_type")).lower()
+        source_scope_id = _safe_key(row.get("source_scope_id"))
+        target_scope_type = _safe_key(row.get("target_scope_type")).lower()
+        target_scope_id = _safe_key(row.get("target_scope_id"))
+        weighting_rule = _safe_key(row.get("weighting_rule")).lower()
+        fixed_or_variable = _safe_key(row.get("fixed_or_variable")).upper()
 
         if not source_scope_id:
             continue
 
         driver = {
             "qty": "sales_units",
-            "revenue": "sales_units",   # revenue driver not yet explicitly present in report_input
+            "revenue": "sales_units",   # revenue driver not yet explicit in current report_input
             "inventory": "qty",
         }.get(allocation_base, "sales_units")
 
         from_dim = {
             "node": "node",
             "market": "market",
-            "corporate": "node",  # treat corporate pool as node-like for now
+            "corporate": "node",
             "product": "product",
             "total": "node",
         }.get(source_scope_type, "node")
@@ -155,7 +347,7 @@ def _load_from_directory(base_dir: Path) -> dict[str, Any]:
             "total": "market",
         }.get(target_scope_type, "market")
 
-        allocation_rules.append(
+        bundle.allocation_rules.append(
             {
                 "name": rule_name,
                 "driver": driver,
@@ -170,23 +362,196 @@ def _load_from_directory(base_dir: Path) -> dict[str, Any]:
             }
         )
 
+    return bundle
+
+
+# ============================================================
+# inbound loader
+# ============================================================
+
+def load_inbound_cost_masters(base_dir: str | Path) -> dict[str, Any]:
+    """Load inbound extension masters from a CSV directory.
+
+    Optional files:
+    - inbound_item_master.csv
+    - inbound_bom_usage_master.csv
+    - inbound_price_decision_master.csv
+    - inbound_adjustment_master.csv
+    """
+    base_path = Path(base_dir)
+
+    item_rows = _read_csv_rows(base_path / "inbound_item_master.csv")
+    bom_rows = _read_csv_rows(base_path / "inbound_bom_usage_master.csv")
+    price_rows = _read_csv_rows(base_path / "inbound_price_decision_master.csv")
+    adjustment_rows = _read_csv_rows(base_path / "inbound_adjustment_master.csv")
+
+    inbound_item_lookup: dict[str, dict[str, Any]] = {}
+    inbound_bom_by_parent: dict[str, list[dict[str, Any]]] = {}
+    inbound_price_decision_lookup: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+    inbound_adjustment_by_product: dict[str, list[dict[str, Any]]] = {}
+    inbound_adjustment_by_item: dict[str, list[dict[str, Any]]] = {}
+
+    for row in item_rows:
+        item_id = _safe_key(row.get("item_id"))
+        if item_id:
+            inbound_item_lookup[item_id] = row
+
+    for row in bom_rows:
+        parent_product_id = _safe_key(row.get("parent_product_id"))
+        if parent_product_id:
+            inbound_bom_by_parent.setdefault(parent_product_id, []).append(row)
+
+    for row in price_rows:
+        supplier_id = _safe_key(row.get("supplier_id"))
+        item_id = _safe_key(row.get("item_id"))
+        decision_phase = _safe_key(row.get("decision_phase")).lower()
+        if supplier_id and item_id and decision_phase:
+            inbound_price_decision_lookup.setdefault(
+                (supplier_id, item_id, decision_phase), []
+            ).append(row)
+
+    for row in adjustment_rows:
+        product_id = _safe_key(row.get("product_id"))
+        item_id = _safe_key(row.get("item_id"))
+        if product_id:
+            inbound_adjustment_by_product.setdefault(product_id, []).append(row)
+        if item_id:
+            inbound_adjustment_by_item.setdefault(item_id, []).append(row)
+
     return {
-        "node_cost_rates": node_cost_rates,
-        "lane_cost_rates": lane_cost_rates,
-        "market_cost_rates": market_cost_rates,
-        "allocation_rules": allocation_rules,
+        "inbound_item_rows": item_rows,
+        "inbound_bom_rows": bom_rows,
+        "inbound_price_decision_rows": price_rows,
+        "inbound_adjustment_rows": adjustment_rows,
+        "inbound_item_lookup": inbound_item_lookup,
+        "inbound_bom_by_parent": inbound_bom_by_parent,
+        "inbound_price_decision_lookup": inbound_price_decision_lookup,
+        "inbound_adjustment_by_product": inbound_adjustment_by_product,
+        "inbound_adjustment_by_item": inbound_adjustment_by_item,
     }
 
 
-def load_cost_masters(source: str | Path | dict[str, Any] | None = None) -> dict[str, Any]:
-    """Return normalized cost master payload."""
+def _attach_inbound_to_bundle(bundle: CostMasterBundle, inbound_payload: dict[str, Any]) -> CostMasterBundle:
+    bundle.inbound_item_rows = list(inbound_payload.get("inbound_item_rows", []))
+    bundle.inbound_bom_rows = list(inbound_payload.get("inbound_bom_rows", []))
+    bundle.inbound_price_decision_rows = list(inbound_payload.get("inbound_price_decision_rows", []))
+    bundle.inbound_adjustment_rows = list(inbound_payload.get("inbound_adjustment_rows", []))
+
+    bundle.inbound_item_lookup = dict(inbound_payload.get("inbound_item_lookup", {}))
+    bundle.inbound_bom_by_parent = dict(inbound_payload.get("inbound_bom_by_parent", {}))
+    bundle.inbound_price_decision_lookup = dict(inbound_payload.get("inbound_price_decision_lookup", {}))
+    bundle.inbound_adjustment_by_product = dict(inbound_payload.get("inbound_adjustment_by_product", {}))
+    bundle.inbound_adjustment_by_item = dict(inbound_payload.get("inbound_adjustment_by_item", {}))
+    return bundle
+
+
+# ============================================================
+# helper lookup functions
+# ============================================================
+
+def find_product_master(bundle_or_payload: Any, product_id: str) -> dict[str, Any] | None:
+    payload = _coerce_payload(bundle_or_payload)
+    return payload.get("product_cost_lookup", {}).get(_safe_key(product_id))
+
+
+def find_node_master(bundle_or_payload: Any, node_id: str) -> dict[str, Any] | None:
+    payload = _coerce_payload(bundle_or_payload)
+    return payload.get("node_lookup", {}).get(_safe_key(node_id))
+
+
+def find_lane_master(bundle_or_payload: Any, from_node: str, to_node: str) -> dict[str, Any] | None:
+    payload = _coerce_payload(bundle_or_payload)
+    return payload.get("lane_lookup", {}).get((_safe_key(from_node), _safe_key(to_node)))
+
+
+def find_sales_price_master(bundle_or_payload: Any, product_id: str, market_id: str) -> dict[str, Any] | None:
+    payload = _coerce_payload(bundle_or_payload)
+    return payload.get("sales_price_lookup", {}).get((_safe_key(product_id), _safe_key(market_id)))
+
+
+def _coerce_payload(obj: Any) -> dict[str, Any]:
+    if isinstance(obj, dict):
+        return obj
+    to_legacy = getattr(obj, "to_legacy_payload", None)
+    if callable(to_legacy):
+        payload = to_legacy()
+        if isinstance(payload, dict):
+            return payload
+    return {}
+
+
+# ============================================================
+# public loader
+# ============================================================
+
+def load_cost_masters(
+    source: str | Path | dict[str, Any] | None = None,
+    *,
+    include_inbound: bool = False,
+    return_bundle: bool = False,
+) -> dict[str, Any] | CostMasterBundle:
+    """Return normalized cost master payload.
+
+    Parameters
+    ----------
+    source:
+        - None -> auto-load from ./data/cost_masters if present, else sample masters
+        - dict -> already-loaded payload
+        - directory -> CSV master directory
+        - file path -> JSON payload
+    include_inbound:
+        Also load inbound extension CSVs when source resolves to a directory.
+    return_bundle:
+        Return CostMasterBundle instead of a legacy dict payload.
+    """
     if source is None:
         default_dir = Path("data") / "cost_masters"
         if default_dir.exists() and default_dir.is_dir():
-            return _load_from_directory(default_dir)
-        return _sample_cost_masters()
+            bundle = _build_outbound_bundle(default_dir)
+            if include_inbound:
+                inbound_payload = load_inbound_cost_masters(default_dir)
+                bundle = _attach_inbound_to_bundle(bundle, inbound_payload)
+            return bundle if return_bundle else bundle.to_legacy_payload()
+
+        payload = _sample_cost_masters()
+        if return_bundle:
+            bundle = CostMasterBundle()
+            bundle.node_cost_rates = dict(payload.get("node_cost_rates", {}))
+            bundle.lane_cost_rates = dict(payload.get("lane_cost_rates", {}))
+            bundle.market_cost_rates = dict(payload.get("market_cost_rates", {}))
+            bundle.allocation_rules = list(payload.get("allocation_rules", []))
+            return bundle
+        return payload
 
     if isinstance(source, dict):
+        if return_bundle:
+            bundle = CostMasterBundle()
+            bundle.node_cost_rates = dict(source.get("node_cost_rates", {}))
+            bundle.lane_cost_rates = dict(source.get("lane_cost_rates", {}))
+            bundle.market_cost_rates = dict(source.get("market_cost_rates", {}))
+            bundle.allocation_rules = list(source.get("allocation_rules", []))
+
+            bundle.product_rows = list(source.get("product_rows", []))
+            bundle.node_rows = list(source.get("node_rows", []))
+            bundle.lane_rows = list(source.get("lane_rows", []))
+            bundle.sales_price_rows = list(source.get("sales_price_rows", []))
+            bundle.allocation_rule_rows = list(source.get("allocation_rule_rows", []))
+            bundle.market_rows = list(source.get("market_rows", []))
+            bundle.cs_node_to_market_rows = list(source.get("cs_node_to_market_rows", []))
+            bundle.sga_rows = list(source.get("sga_rows", []))
+            bundle.fixed_asset_rows = list(source.get("fixed_asset_rows", []))
+
+            bundle.product_cost_lookup = dict(source.get("product_cost_lookup", {}))
+            bundle.node_lookup = dict(source.get("node_lookup", {}))
+            bundle.lane_lookup = dict(source.get("lane_lookup", {}))
+            bundle.sales_price_lookup = dict(source.get("sales_price_lookup", {}))
+            bundle.market_entity_lookup = dict(source.get("market_entity_lookup", {}))
+            bundle.cs_node_to_market_lookup = dict(source.get("cs_node_to_market_lookup", {}))
+            bundle.sga_lookup = dict(source.get("sga_lookup", {}))
+            bundle.fixed_asset_lookup = dict(source.get("fixed_asset_lookup", {}))
+
+            bundle = _attach_inbound_to_bundle(bundle, source)
+            return bundle
         return source
 
     path = Path(source)
@@ -194,11 +559,19 @@ def load_cost_masters(source: str | Path | dict[str, Any] | None = None) -> dict
         raise FileNotFoundError(f"Cost master file not found: {path}")
 
     if path.is_dir():
-        return _load_from_directory(path)
+        bundle = _build_outbound_bundle(path)
+        if include_inbound:
+            inbound_payload = load_inbound_cost_masters(path)
+            bundle = _attach_inbound_to_bundle(bundle, inbound_payload)
+        return bundle if return_bundle else bundle.to_legacy_payload()
 
     with path.open("r", encoding="utf-8") as fp:
         payload = json.load(fp)
 
     if not isinstance(payload, dict):
         raise ValueError("Cost master file must contain a JSON object")
+
+    if return_bundle:
+        return load_cost_masters(payload, include_inbound=include_inbound, return_bundle=True)
+
     return payload
