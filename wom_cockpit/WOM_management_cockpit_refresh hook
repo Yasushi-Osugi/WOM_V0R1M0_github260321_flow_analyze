@@ -1,0 +1,25 @@
+diff --git a/pysi/gui/cockpit_tk.py b/pysi/gui/cockpit_tk.py
+index 2222222..3333333 100644
+--- a/pysi/gui/cockpit_tk.py
++++ b/pysi/gui/cockpit_tk.py
+@@ -300,6 +300,24 @@ class CockpitTkApp:
+     def recompute_plan(self):
+         # 既存の planning engine 実行
+         result = self.run_planning_engine()
++
++        # ------------------------------------------------------------
++        # WOM management cockpit refresh hook
++        # ------------------------------------------------------------
++        try:
++            baseline_snapshot = result.get("baseline_snapshot")
++            scenario_snapshot = result.get("scenario_snapshot")
++        except Exception:
++            baseline_snapshot = None
++            scenario_snapshot = None
++
++        self.on_after_recompute(
++            baseline_snapshot=baseline_snapshot,
++            scenario_snapshot=scenario_snapshot,
++        )
++
+         return result

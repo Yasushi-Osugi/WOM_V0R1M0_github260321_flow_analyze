@@ -1,16 +1,8 @@
-﻿step,amount
-allocation:allocated_pool,29639735.40000001
-node:capacity_reservation,0.0
-node:depreciation,1975982.3600000008
-node:direct_labor,7903929.440000003
-node:inventory,5927947.079999996
-node:machine,1729215.6200000008
-node:maintenance,0.0
-node:overtime,0.0
-node:production,15807858.880000006
-node:quality_inspection,0.0
-node:scrap_loss,0.0
-node:sga,12843885.34000002
-node:utility,1234757.9200000002
-node:warehouse_handling,2766375.3040000033
-node:yield_loss,0.0
+﻿step,step_name,amount,display_order,cost_behavior,block_label,source_steps
+purchase_cost,Purchase Cost,0.0,20,variable,variable_cost,node:purchase|node:material|node:direct_material
+production_cost,Production Cost,26675761.86000001,30,variable,variable_cost,node:production|node:direct_labor|node:machine|node:utility|node:quality_inspection|node:scrap_loss|node:yield_loss|node:overtime
+logistics_cost,Logistics Cost,2766375.3040000033,40,variable,variable_cost,lane:logistics|lane:freight|lane:insurance|lane:customs|lane:tariff|lane:carbon|lane:premium_freight|lane:expedite|node:warehouse_handling
+inventory_holding_cost,Inventory Holding Cost,5927947.079999996,50,semi_variable,variable_cost,node:inventory
+market_cost,Market / Channel Cost,0.0,60,semi_variable,variable_cost,market:sales|market:promotion|market:rebate|market:returns|market:gross_to_net
+fixed_node_cost,Fixed Node Cost,14819867.700000022,70,fixed,fixed_cost,node:depreciation|node:maintenance|node:capacity_reservation|node:sga
+allocated_fixed_cost,Allocated Fixed Cost,29639735.40000001,80,allocated,fixed_cost,allocation:*

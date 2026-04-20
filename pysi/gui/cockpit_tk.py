@@ -20,8 +20,40 @@ import numpy as np
 # for events dump
 from pysi.bridge.dump_rows import build_dump_rows_from_product_plan_tree
 
+# management cockpit
+try:
+    from wom_cockpit.services.delta_detector import compare_snapshots
+    from wom_cockpit.services.fact_extractor import extract_management_facts
+    from wom_cockpit.services.issue_engine import generate_issues
+    from wom_cockpit.ui.cockpit_view_model import build_cockpit_view_model
+    from wom_cockpit.ui.tk.cockpit_panel_adapter import CockpitPanelAdapter
+    _WOM_MANAGEMENT_COCKPIT_AVAILABLE = True
+except Exception as e:
+    print("[management_cockpit] import skipped:", e)
+    compare_snapshots = None
+    extract_management_facts = None
+    generate_issues = None
+    build_cockpit_view_model = None
+    CockpitPanelAdapter = None
+    _WOM_MANAGEMENT_COCKPIT_AVAILABLE = False
+
+# optional snapshot builder for management cockpit
+try:
+    from pysi.bridge.state_snapshot import SnapshotBuildContext, build_snapshot_from_v0r8
+except Exception:
+    SnapshotBuildContext = None
+    build_snapshot_from_v0r8 = None
+
 # consumer node CSV input
 from pysi.bridge.event_rules import initialize_consumer_experience_inputs
+
+# ISSUE MANAGEMENT
+try:
+    from wom_cockpit.adapters.bridge_snapshot_adapter import (
+        adapt_planning_snapshot_to_state_snapshot,
+    )
+except Exception:
+    adapt_planning_snapshot_to_state_snapshot = None
 
 
 # world map backend switch
@@ -928,6 +960,12 @@ class WOMCockpit(tk.Tk):
         self.last_bridge_payload = {"events": [], "kernel_flow_events": [], "sidecar_events": []}
         self.last_dad_handoff_result = None
 
+        # management cockpit state
+        self.management_cockpit_win = None
+        self.management_cockpit_panel = None
+        self.management_cockpit_status_var = tk.StringVar(value="Management cockpit: idle")
+        self._last_management_snapshot = None
+
         # trace on/off
         self.var_trace_enabled = tk.BooleanVar(value=False)
         self.trace_event_sink = []
@@ -1027,6 +1065,12 @@ class WOMCockpit(tk.Tk):
         # decouple nodes list
         self.decouple_node_selected = [] 
 
+        # seed initial management snapshot after first UI paint
+        try:
+            self.after(200, self._capture_initial_management_snapshot)
+        except Exception:
+            pass
+
         # CAPACITY
         self.last_capacity_result = None
 
@@ -1070,6 +1114,7 @@ class WOMCockpit(tk.Tk):
         ttk.Button(frm, text="Animation Viewer", command=self.open_animation_viewer).pack(side="right", padx=8)
         ttk.Button(frm, text="PSI累計+利益率", command=self.open_psi_profit_animation).pack(side="right", padx=8)
         ttk.Button(frm, text="Business Animation", command=self.open_business_animation).pack(side="right", padx=8)
+        ttk.Button(frm, text="Mgmt Cockpit", command=self.open_management_cockpit).pack(side="right", padx=8)
         ttk.Button(frm, text="Trace Viewer", command=self.open_trace_viewer).pack(side="right", padx=8)
         ttk.Checkbutton(frm, text="Trace", variable=self.var_trace_enabled).pack(side="right", padx=8)
         ttk.Button(frm, text="Refresh", command=self.refresh).pack(side="right", padx=8)
@@ -1521,7 +1566,14 @@ class WOMCockpit(tk.Tk):
         ★ rerun_fn があれば：pipeline を再実行して env を差し替え
         ★ なければ：従来フォールバック（軽量再計算）
         """
+        self.current_mode = "recompute"
         prod = self.var_product.get()
+
+        baseline_snapshot = None
+        try:
+            baseline_snapshot = self._build_management_snapshot()
+        except Exception as e:
+            print("[management_cockpit] baseline snapshot skipped:", e)
 
         if callable(self.rerun_fn):
             try:
@@ -1565,6 +1617,20 @@ class WOMCockpit(tk.Tk):
             if hasattr(self.env, "demand_leveling4multi_prod"):
                 self.env.demand_leveling4multi_prod()
 
+        scenario_snapshot = None
+        try:
+            scenario_snapshot = self._build_management_snapshot()
+        except Exception as e:
+            print("[management_cockpit] scenario snapshot skipped:", e)
+
+        try:
+            self.refresh_management_cockpit(
+                baseline_snapshot=baseline_snapshot,
+                scenario_snapshot=scenario_snapshot,
+            )
+        except Exception as e:
+            print("[management_cockpit] refresh after run_and_refresh skipped:", e)
+
         self.refresh()
 
 # ********
@@ -1585,8 +1651,31 @@ class WOMCockpit(tk.Tk):
 
 
     def run_full_plan(self):
+        self.current_mode = "full_plan"
+        baseline_snapshot = None
+        try:
+            baseline_snapshot = self._build_management_snapshot()
+        except Exception as e:
+            print("[management_cockpit] baseline snapshot skipped before full plan:", e)
+
         try:
             self._run_planning_sequence(use_selected_decouples=True)
+
+            scenario_snapshot = None
+            try:
+                scenario_snapshot = self._build_management_snapshot()
+            except Exception as e:
+                print("[management_cockpit] scenario snapshot skipped after full plan:", e)
+
+            try:
+                self.refresh_management_cockpit(
+                    baseline_snapshot=baseline_snapshot,
+                    scenario_snapshot=scenario_snapshot,
+                )
+            except Exception as e:
+                print("[management_cockpit] refresh after full plan skipped:", e)
+
+            self.refresh()
             print("[full-plan] completed")
         except Exception as e:
             import traceback
@@ -3481,6 +3570,245 @@ class WOMCockpit(tk.Tk):
                 print(f"[psi_profit_animation] open failed: {e}")
 
 
+
+    # ------------------------------------------------------------
+    # Management cockpit
+    # ------------------------------------------------------------
+    def _capture_initial_management_snapshot(self):
+        """
+        初回表示後の現状態を baseline 候補として保持する。
+        """
+        try:
+            snap = self._build_management_snapshot()
+            if snap is not None:
+                self._last_management_snapshot = snap
+                self.management_cockpit_status_var.set(
+                    f"Management cockpit: baseline ready ({getattr(snap, 'scenario_id', '-')})"
+                )
+        except Exception as e:
+            print("[management_cockpit] initial snapshot skipped:", e)
+
+    def _build_management_snapshot_OLD(self):
+        """
+        現在の env / product から StateSnapshot を構築する。
+        """
+        if build_snapshot_from_v0r8 is None or SnapshotBuildContext is None:
+            return None
+
+        product_id = None
+        try:
+            product_id = self.var_product.get().strip() if self.var_product.get() else None
+        except Exception:
+            product_id = getattr(self.env, "product_selected", None)
+
+        try:
+            time_bucket = str(getattr(self.env, "current_time_bucket", "202601"))
+        except Exception:
+            time_bucket = "202601"
+
+        snap = build_snapshot_from_v0r8(
+            env_or_root=self.env,
+            time_bucket=time_bucket,
+            ctx=SnapshotBuildContext(product_id=product_id),
+        )
+
+        try:
+            if not getattr(snap, "scenario_name", ""):
+                snap.scenario_name = str(getattr(self, "current_mode", "cockpit"))
+        except Exception:
+            pass
+
+        return snap
+
+    def _build_management_snapshot(self):
+        if build_snapshot_from_v0r8 is None or SnapshotBuildContext is None:
+            return None
+
+        product_id = None
+        try:
+            product_id = self.var_product.get().strip() if self.var_product.get() else None
+        except Exception:
+            product_id = getattr(self.env, "product_selected", None)
+
+        try:
+            time_bucket = str(getattr(self.env, "current_time_bucket", "202601"))
+        except Exception:
+            time_bucket = "202601"
+
+        planning_snapshot = build_snapshot_from_v0r8(
+            env_or_root=self.env,
+            time_bucket=time_bucket,
+            ctx=SnapshotBuildContext(product_id=product_id),
+        )
+
+        if planning_snapshot is None:
+            return None
+
+        if adapt_planning_snapshot_to_state_snapshot is None:
+            return planning_snapshot
+
+        scenario_id = str(getattr(self, "current_mode", "cockpit"))
+        snapshot_id = f"{scenario_id}::{product_id or 'UNKNOWN'}::{time_bucket}"
+
+        return adapt_planning_snapshot_to_state_snapshot(
+            planning_snapshot,
+            snapshot_id=snapshot_id,
+            scenario_id=scenario_id,
+            scenario_name=scenario_id,
+            env=self.env,
+        )
+
+
+
+    def _ensure_management_cockpit_window(self):
+        """
+        Toplevel 上に management cockpit panel を生成する。
+        """
+        if not _WOM_MANAGEMENT_COCKPIT_AVAILABLE:
+            messagebox.showwarning(
+                "Management Cockpit",
+                "wom_cockpit modules are not available.\nPlease place wom_cockpit package into repo first.",
+            )
+            return None
+
+        if self.management_cockpit_win is not None:
+            try:
+                if self.management_cockpit_win.winfo_exists():
+                    return self.management_cockpit_win
+            except Exception:
+                pass
+
+        win = tk.Toplevel(self)
+        win.title("WOM Management Cockpit")
+        win.geometry("1400x900")
+
+        top = ttk.Frame(win)
+        top.pack(fill="x", padx=6, pady=6)
+
+        ttk.Label(
+            top,
+            textvariable=self.management_cockpit_status_var,
+            anchor="w",
+        ).pack(side="left", fill="x", expand=True)
+
+        ttk.Button(
+            top,
+            text="Refresh from current state",
+            command=lambda: self.refresh_management_cockpit(
+                baseline_snapshot=self._last_management_snapshot,
+                scenario_snapshot=self._build_management_snapshot(),
+            ),
+        ).pack(side="right")
+
+        body = ttk.Frame(win)
+        body.pack(fill="both", expand=True, padx=6, pady=(0, 6))
+
+        self.management_cockpit_panel = CockpitPanelAdapter(body)
+        self.management_cockpit_panel.build()
+
+        self.management_cockpit_win = win
+        return win
+
+    def open_management_cockpit(self):
+        """
+        Management cockpit window を開く。
+        初回は baseline=current state で描画を試みる。
+        """
+        win = self._ensure_management_cockpit_window()
+        if win is None:
+            return
+
+        try:
+            current = self._build_management_snapshot()
+
+            #@STOP
+            #baseline = self._last_management_snapshot or current
+
+            baseline = self._last_management_snapshot
+
+            if baseline is None:
+                baseline = current
+                self._last_management_snapshot = baseline
+
+
+            self.refresh_management_cockpit(
+                baseline_snapshot=baseline,
+                scenario_snapshot=current,
+            )
+            win.lift()
+        except Exception as e:
+            print("[management_cockpit] open skipped:", e)
+
+    def refresh_management_cockpit_OLD(self, baseline_snapshot=None, scenario_snapshot=None):
+        """
+        baseline/scenario snapshot から management cockpit を更新する。
+        """
+        if not _WOM_MANAGEMENT_COCKPIT_AVAILABLE:
+            return
+
+        if baseline_snapshot is None and scenario_snapshot is None:
+            return
+
+        if scenario_snapshot is None:
+            scenario_snapshot = self._build_management_snapshot()
+        if baseline_snapshot is None:
+            baseline_snapshot = self._last_management_snapshot or scenario_snapshot
+
+        if baseline_snapshot is None or scenario_snapshot is None:
+            return
+
+        self._ensure_management_cockpit_window()
+        if self.management_cockpit_panel is None:
+            return
+
+        plan_delta = compare_snapshots(baseline_snapshot, scenario_snapshot)
+        facts = extract_management_facts(plan_delta)
+        issues = generate_issues(facts, group_similar_facts=False)
+        vm = build_cockpit_view_model(plan_delta, issues)
+
+        self.management_cockpit_panel.render(vm)
+        self.management_cockpit_status_var.set(
+            f"Management cockpit: {baseline_snapshot.scenario_id} -> {scenario_snapshot.scenario_id} / issues={len(issues)}"
+        )
+
+        # baseline は自動追随させない
+        #self._last_management_snapshot = scenario_snapshot
+
+
+    def refresh_management_cockpit(self, baseline_snapshot=None, scenario_snapshot=None):
+        if not _WOM_MANAGEMENT_COCKPIT_AVAILABLE:
+            return
+
+        self.management_cockpit_status_var.set("Management cockpit: refreshing...")
+        self.update_idletasks()
+
+        if baseline_snapshot is None and scenario_snapshot is None:
+            return
+
+        if scenario_snapshot is None:
+            scenario_snapshot = self._build_management_snapshot()
+        if baseline_snapshot is None:
+            baseline_snapshot = self._last_management_snapshot or scenario_snapshot
+
+        if baseline_snapshot is None or scenario_snapshot is None:
+            return
+
+        self._ensure_management_cockpit_window()
+        if self.management_cockpit_panel is None:
+            return
+
+        plan_delta = compare_snapshots(baseline_snapshot, scenario_snapshot)
+        facts = extract_management_facts(plan_delta)
+        issues = generate_issues(facts, group_similar_facts=False)
+        vm = build_cockpit_view_model(plan_delta, issues)
+
+        self.management_cockpit_panel.render(vm)
+
+        from datetime import datetime
+        ts = datetime.now().strftime("%H:%M:%S")
+        self.management_cockpit_status_var.set(
+            f"Management cockpit: {baseline_snapshot.scenario_id} -> {scenario_snapshot.scenario_id} / issues={len(issues)} / refreshed {ts}"
+        )
 
 
     def refresh(self):

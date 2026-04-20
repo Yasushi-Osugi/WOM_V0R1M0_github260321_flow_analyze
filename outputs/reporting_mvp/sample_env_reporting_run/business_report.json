@@ -161,64 +161,67 @@
   },
   "cost_waterfall": [
     {
-      "step": "allocation:allocated_pool",
-      "amount": 29639735.40000001
+      "step": "purchase_cost",
+      "step_name": "Purchase Cost",
+      "amount": 0.0,
+      "display_order": 20,
+      "cost_behavior": "variable",
+      "block_label": "variable_cost",
+      "source_steps": "node:purchase|node:material|node:direct_material"
     },
     {
-      "step": "node:capacity_reservation",
-      "amount": 0.0
+      "step": "production_cost",
+      "step_name": "Production Cost",
+      "amount": 26675761.86000001,
+      "display_order": 30,
+      "cost_behavior": "variable",
+      "block_label": "variable_cost",
+      "source_steps": "node:production|node:direct_labor|node:machine|node:utility|node:quality_inspection|node:scrap_loss|node:yield_loss|node:overtime"
     },
     {
-      "step": "node:depreciation",
-      "amount": 1975982.3600000008
+      "step": "logistics_cost",
+      "step_name": "Logistics Cost",
+      "amount": 2766375.3040000033,
+      "display_order": 40,
+      "cost_behavior": "variable",
+      "block_label": "variable_cost",
+      "source_steps": "lane:logistics|lane:freight|lane:insurance|lane:customs|lane:tariff|lane:carbon|lane:premium_freight|lane:expedite|node:warehouse_handling"
     },
     {
-      "step": "node:direct_labor",
-      "amount": 7903929.440000003
+      "step": "inventory_holding_cost",
+      "step_name": "Inventory Holding Cost",
+      "amount": 5927947.079999996,
+      "display_order": 50,
+      "cost_behavior": "semi_variable",
+      "block_label": "variable_cost",
+      "source_steps": "node:inventory"
     },
     {
-      "step": "node:inventory",
-      "amount": 5927947.079999996
+      "step": "market_cost",
+      "step_name": "Market / Channel Cost",
+      "amount": 0.0,
+      "display_order": 60,
+      "cost_behavior": "semi_variable",
+      "block_label": "variable_cost",
+      "source_steps": "market:sales|market:promotion|market:rebate|market:returns|market:gross_to_net"
     },
     {
-      "step": "node:machine",
-      "amount": 1729215.6200000008
+      "step": "fixed_node_cost",
+      "step_name": "Fixed Node Cost",
+      "amount": 14819867.700000022,
+      "display_order": 70,
+      "cost_behavior": "fixed",
+      "block_label": "fixed_cost",
+      "source_steps": "node:depreciation|node:maintenance|node:capacity_reservation|node:sga"
     },
     {
-      "step": "node:maintenance",
-      "amount": 0.0
-    },
-    {
-      "step": "node:overtime",
-      "amount": 0.0
-    },
-    {
-      "step": "node:production",
-      "amount": 15807858.880000006
-    },
-    {
-      "step": "node:quality_inspection",
-      "amount": 0.0
-    },
-    {
-      "step": "node:scrap_loss",
-      "amount": 0.0
-    },
-    {
-      "step": "node:sga",
-      "amount": 12843885.34000002
-    },
-    {
-      "step": "node:utility",
-      "amount": 1234757.9200000002
-    },
-    {
-      "step": "node:warehouse_handling",
-      "amount": 2766375.3040000033
-    },
-    {
-      "step": "node:yield_loss",
-      "amount": 0.0
+      "step": "allocated_fixed_cost",
+      "step_name": "Allocated Fixed Cost",
+      "amount": 29639735.40000001,
+      "display_order": 80,
+      "cost_behavior": "allocated",
+      "block_label": "fixed_cost",
+      "source_steps": "allocation:*"
     }
   ],
   "pain_points": [
