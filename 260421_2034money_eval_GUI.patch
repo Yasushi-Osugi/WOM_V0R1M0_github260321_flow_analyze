@@ -1,0 +1,243 @@
+diff --git a/pysi/gui/world_map_view_tkmap.py b/pysi/gui/world_map_view_tkmap.py
+index 7b74eabe0543f9ee015457b245f77240ff28e9d0..e852659a09a7d6bc91d37d1a5d106b8334a9d0be 100644
+--- a/pysi/gui/world_map_view_tkmap.py
++++ b/pysi/gui/world_map_view_tkmap.py
+@@ -165,95 +165,97 @@ class WorldMapViewTk:
+ 
+     def __init__(
+         self,
+         env: Any,
+         *,
+         product_name: str | None = None,
+         on_select: Optional[OnSelect] = None,
+         parent_tk: Any | None = None,
+         title: str = "Global Supply Chain Map",
+     ):
+         self.env = env
+         self.product_name = product_name
+         self._on_select_cb = on_select
+         self.parent_tk = parent_tk
+         self.title = title
+ 
+         self._pos: Dict[str, Tuple[float, float]] = {}   # node_name -> (lat, lon)
+         self._nodes: Dict[str, Any] = {}
+         self._markers: Dict[str, Any] = {}
+         self._paths: List[Any] = []
+ 
+         self._map_widget = None
+         self._top: Optional[tk.Toplevel] = None
+         self._selected_node: Optional[str] = None
+         self._info_var: Optional[tk.StringVar] = None
++        self._money_by_node: Dict[str, Dict[str, Any]] = {}
+ 
+     # ----------------------------------------------------------
+     # Public API
+     # ----------------------------------------------------------
+     def show(self) -> None:
+         try:
+             from tkintermapview import TkinterMapView
+         except ImportError:
+             self._fallback_error()
+             return
+ 
+         if self.parent_tk is not None:
+             self._top = tk.Toplevel(self.parent_tk)
+         else:
+             self._top = tk.Tk()
+ 
+         self._top.title(self.title)
+         self._top.geometry("1300x750")
+         self._top.configure(bg="#f0f0f0")
+ 
+         main_frame = tk.Frame(self._top, bg="#f0f0f0")
+         main_frame.pack(fill="both", expand=True, padx=4, pady=4)
+ 
+         map_frame = tk.Frame(main_frame, bg="#cccccc", relief="sunken", bd=1)
+         map_frame.pack(side="left", fill="both", expand=True)
+ 
+         right_frame = tk.Frame(main_frame, bg="#f0f0f0", width=220)
+         right_frame.pack(side="right", fill="y", padx=(4, 0))
+         right_frame.pack_propagate(False)
+ 
+         self._map_widget = TkinterMapView(map_frame, corner_radius=0)
+         self._map_widget.pack(fill="both", expand=True)
+ 
+         geo = self._load_geo()
+         nodes_all = self._collect_all_nodes()
+         all_edges = self._collect_all_edges()
+         ot_edges, in_edges, selected_names = self._collect_highlight_edges()
+ 
+         missing = self._build_pos(nodes_all, geo)
+         if missing:
+             print(f"[TKMAP] missing geo (first 20): {missing[:20]}")
+ 
+         self._set_initial_view(selected_names)
+         self._draw_edges(all_edges, ot_edges, in_edges)
+         self._draw_markers(nodes_all, selected_names)
++        self._money_by_node = self._build_money_by_node()
+         self._build_legend_panel(right_frame)
+ 
+         self._map_widget.add_right_click_menu_command(
+             label="Reset view",
+             command=lambda coords: self._reset_view(),
+             pass_coords=True,
+         )
+ 
+         print(f"[TKMAP] ready: {len(self._pos)} nodes, {len(self._paths)} paths")
+ 
+         if self.parent_tk is None:
+             self._top.mainloop()
+ 
+     def set_selected_node(self, node_name: str) -> None:
+         if not node_name or node_name not in self._pos:
+             return
+         self._highlight_node(node_name)
+ 
+     # ----------------------------------------------------------
+     # Data collection
+     # ----------------------------------------------------------
+     def _load_geo(self) -> Dict[str, Tuple[float, float]]:
+         geo: Dict[str, Tuple[float, float]] = {}
+         if hasattr(self.env, "geo_lookup") and callable(self.env.geo_lookup):
+             try:
+@@ -522,58 +524,110 @@ class WorldMapViewTk:
+         if self._selected_node and self._selected_node != node_name:
+             self._remove_marker(self._selected_node)
+             self._create_marker(self._selected_node, selected=False)
+ 
+         self._remove_marker(node_name)
+         self._create_marker(node_name, selected=True)
+         self._selected_node = node_name
+ 
+         lat, lon = self._pos[node_name]
+         self._map_widget.set_position(lat, lon)
+ 
+         try:
+             z = self._map_widget.zoom
+             if z < 4:
+                 self._map_widget.set_zoom(4)
+         except Exception:
+             pass
+ 
+         self._show_info_popup(node_name, lat, lon)
+ 
+     def _show_info_popup(self, node_name: str, lat: float, lon: float) -> None:
+         if self._info_var is None:
+             return
+ 
+         node = self._nodes.get(node_name)
++        money_row = self._money_by_node.get(node_name, {})
+         shown_name = self._display_name(node_name)
+-        lines = [f"▶ {shown_name}", f"lat: {lat:.3f}  lon: {lon:.3f}"]
++        lines = [f"▶ {shown_name}", f"node_name: {node_name}", f"lat: {lat:.3f}  lon: {lon:.3f}"]
++
++        node_character = money_row.get("node_character")
++        if not node_character:
++            bundle = getattr(self.env, "money_master_bundle", None)
++            if bundle is not None:
++                try:
++                    node_character = bundle.get_node_character(node_name)
++                except Exception:
++                    node_character = None
++        if node_character:
++            lines.append(f"node_character: {node_character}")
++
+         if node is not None:
+             for k in ("node_type", "capacity", "cost_coeff", "revenue_coeff"):
+                 if hasattr(node, k):
+                     lines.append(f"{k}: {getattr(node, k)}")
++
++        for k in ("revenue", "variable_cost", "fixed_cost", "inventory_value", "profit"):
++            v = money_row.get(k, None)
++            if v is None:
++                continue
++            try:
++                v = float(v)
++                lines.append(f"{k}: {v:,.2f}")
++            except Exception:
++                lines.append(f"{k}: {v}")
++
+         self._info_var.set("\n".join(lines))
+ 
++    def _build_money_by_node(self) -> Dict[str, Dict[str, Any]]:
++        """
++        Build index: node_name -> money row.
++        Prefer already-evaluated rows attached to env by pipeline.
++        """
++        candidates = [
++            getattr(self.env, "node_money_rows", None),
++            getattr(self.env, "money_node_rows", None),
++        ]
++        money_payload = getattr(self.env, "money_result", None)
++        if isinstance(money_payload, dict):
++            candidates.append(money_payload.get("node_money_rows"))
++
++        for rows in candidates:
++            if not isinstance(rows, list):
++                continue
++            out: Dict[str, Dict[str, Any]] = {}
++            for r in rows:
++                if not isinstance(r, dict):
++                    continue
++                node_name = (r.get("node_name") or "").strip()
++                if not node_name:
++                    continue
++                out[node_name] = r
++            if out:
++                return out
++        return {}
++
+     # ----------------------------------------------------------
+     # Legend / right panel
+     # ----------------------------------------------------------
+     def _build_legend_panel(self, parent: tk.Frame) -> None:
+         tk.Label(
+             parent,
+             text="Legend",
+             font=("Helvetica", 11, "bold"),
+             bg="#f0f0f0",
+             anchor="w",
+         ).pack(fill="x", padx=8, pady=(8, 2))
+ 
+         legend_items = [
+             (self._COLOR_EDGE_ALL, "All edges"),
+             (self._COLOR_EDGE_OT, "Outbound (product)"),
+             (self._COLOR_EDGE_IN, "Inbound (product)"),
+             ("#c0392b", "MOM / Factory"),
+             ("#8e44ad", "PAD / DAD Hub"),
+             ("#2980b9", "WS"),
+             ("#16a085", "RT"),
+             ("#f39c12", "CS"),
+             (self._COLOR_HUB, "Office / Supply Point"),
+             (self._COLOR_SELECTED, "Selected node"),
+         ]
+ 
+@@ -728,26 +782,26 @@ if __name__ == "__main__":
+     c6 = _N("CS_EURO")
+     c7 = _N("London_DC")
+     c8 = _N("NewYork_WH")
+     c9 = _N("Sydney_RT")
+     c10 = _N("Paris_MOM")
+     c11 = _N("Dubai_WH")
+ 
+     root_ot.children.extend([c1, c2])
+     c2.children.extend([c3, c7, c8, c9, c10, c11])
+     c3.children.append(c4)
+     c4.children.append(c5)
+     c5.children.append(c6)
+ 
+     env.prod_tree_dict_OT = {"DEMO_PRODUCT": root_ot}
+     env.prod_tree_dict_IN = {}
+ 
+     def _on_select(name, source=None):
+         print(f"[SELECT] {name}  source={source}")
+ 
+     show_world_map_tkmap(
+         env,
+         product_name="DEMO_PRODUCT",
+         on_select=_on_select,
+         parent_tk=None,
+         title="WOM Supply Chain Map (TkinterMapView版)",
+-    )
+\ No newline at end of file
++    )

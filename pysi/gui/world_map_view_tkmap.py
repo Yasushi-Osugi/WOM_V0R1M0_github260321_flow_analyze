@@ -35,6 +35,12 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
+try:
+    from pysi.evaluate.money_evaluator import evaluate_money_by_node
+except Exception:
+    evaluate_money_by_node = None
+
+
 OnSelect = Callable[[str], None]
 
 
@@ -187,6 +193,7 @@ class WorldMapViewTk:
         self._top: Optional[tk.Toplevel] = None
         self._selected_node: Optional[str] = None
         self._info_var: Optional[tk.StringVar] = None
+        self._money_by_node: Dict[str, Dict[str, Any]] = {}
 
     # ----------------------------------------------------------
     # Public API
@@ -232,6 +239,7 @@ class WorldMapViewTk:
         self._set_initial_view(selected_names)
         self._draw_edges(all_edges, ot_edges, in_edges)
         self._draw_markers(nodes_all, selected_names)
+        self._money_by_node = self._build_money_by_node()
         self._build_legend_panel(right_frame)
 
         self._map_widget.add_right_click_menu_command(
@@ -544,13 +552,89 @@ class WorldMapViewTk:
             return
 
         node = self._nodes.get(node_name)
+        money_row = self._money_by_node.get(node_name, {})
         shown_name = self._display_name(node_name)
-        lines = [f"▶ {shown_name}", f"lat: {lat:.3f}  lon: {lon:.3f}"]
+        lines = [f"▶ {shown_name}", f"node_name: {node_name}", f"lat: {lat:.3f}  lon: {lon:.3f}"]
+
+        node_character = money_row.get("node_character")
+        if not node_character:
+            bundle = getattr(self.env, "money_master_bundle", None)
+            if bundle is not None:
+                try:
+                    node_character = bundle.get_node_character(node_name)
+                except Exception:
+                    node_character = None
+        if node_character:
+            lines.append(f"node_character: {node_character}")
+
         if node is not None:
             for k in ("node_type", "capacity", "cost_coeff", "revenue_coeff"):
                 if hasattr(node, k):
                     lines.append(f"{k}: {getattr(node, k)}")
+
+        for k in ("revenue", "variable_cost", "fixed_cost", "inventory_value", "profit"):
+            v = money_row.get(k, None)
+            if v is None:
+                continue
+            try:
+                v = float(v)
+                lines.append(f"{k}: {v:,.2f}")
+            except Exception:
+                lines.append(f"{k}: {v}")
+
         self._info_var.set("\n".join(lines))
+
+    def _build_money_by_node(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Build index: node_name -> money row.
+        Prefer already-evaluated rows attached to env by pipeline.
+        """
+        candidates = [
+            getattr(self.env, "node_money_rows", None),
+            getattr(self.env, "money_node_rows", None),
+        ]
+        money_payload = getattr(self.env, "money_result", None)
+        if isinstance(money_payload, dict):
+            candidates.append(money_payload.get("node_money_rows"))
+
+        for rows in candidates:
+            if not isinstance(rows, list):
+                continue
+            out: Dict[str, Dict[str, Any]] = {}
+            for r in rows:
+                if not isinstance(r, dict):
+                    continue
+                node_name = (r.get("node_name") or "").strip()
+                if not node_name:
+                    continue
+                out[node_name] = r
+            if out:
+                return out
+            
+
+        # Fallback: evaluate on demand if pipeline did not attach money rows to env
+        if evaluate_money_by_node is not None:
+            try:
+                rows = evaluate_money_by_node(self.env)
+            except Exception as e:
+                print(f"[TKMAP] evaluate_money_by_node fallback skipped: {e}")
+                return {}
+
+            if isinstance(rows, list):
+                out: Dict[str, Dict[str, Any]] = {}
+                for r in rows:
+                    if not isinstance(r, dict):
+                        continue
+                    node_name = (r.get("node_name") or "").strip()
+                    product = (r.get("product") or "").strip()
+                    if not node_name:
+                        continue
+                    if self.product_name and product and product != self.product_name:
+                        continue
+                    out[node_name] = r
+                return out
+
+        return {}
 
     # ----------------------------------------------------------
     # Legend / right panel

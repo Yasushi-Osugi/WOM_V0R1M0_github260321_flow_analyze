@@ -1,0 +1,600 @@
+diff --git a/pysi/core/wom_pipeline.py b/pysi/core/wom_pipeline.py
+index 78ff61397333edae0b4c8f1d469c2ea0e04a8919..b7848d1324b249f1dfa1817d35751ba1b68b5ccb 100644
+--- a/pysi/core/wom_pipeline.py
++++ b/pysi/core/wom_pipeline.py
+@@ -16,68 +16,75 @@
+ 
+ 
+ 
+ 
+ 
+ """
+ WOM Pipeline runner that uses the project's HookBus and supports register(bus) plugins.
+ Save as pysi/core/wom_pipeline.py and run like:
+   python -m pysi.core.wom_pipeline --data_dir path/to/csv_dir
+ 
+ Features:
+  - set up HookBus and set it global (so @action/@filter still work)
+  - autoload plugins (import) and call register(bus) if present
+  - WOMIOAdapter wraps WOMEnv to provide build_tree/collect_result
+  - Pipeline runner triggers hooks at key points
+ """
+ from __future__ import annotations
+ import argparse
+ import importlib
+ import logging
+ import pkgutil
+ import sys
+ from typing import Any, Dict, Optional
+ 
+ import csv
++import os
+ 
+ # use project hook implementation if available
+ from pysi.core.hooks.core import HookBus, set_global, autoload_plugins, hooks as global_hooks
+ 
+ logger = logging.getLogger(__name__)
+ 
+ # Project classes (adjust path if necessary)
+ try:
+     from pysi.utils.config import Config
+ except Exception as e:
+     raise ImportError("Cannot import Config from pysi.utils.config — adjust path") from e
+ 
+ try:
+     # Adjust this import path if your WOMEnv lives elsewhere
+     from pysi.wom_main import WOMEnv
+ except Exception as e:
+     raise ImportError("Cannot import WOMEnv from pysi.wom_main; adjust import path.") from e
+ 
++from pysi.evaluate.money_evaluator import (
++    evaluate_money_by_node,
++    build_kpi_summary,
++    build_product_money_summary,
++)
++from pysi.evaluate.money_output_exporter import export_money_outputs
+ 
+ def call_register_if_present(package: str, bus: HookBus) -> None:
+     """
+     After importing plugin modules via autoload_plugins, call register(bus) on each module
+     if it defines it. This enforces the register(bus) convention.
+     """
+     try:
+         pkg = importlib.import_module(package)
+     except Exception:
+         logger.exception("call_register_if_present: cannot import plugin package %s", package)
+         return
+ 
+     for m in pkgutil.iter_modules(pkg.__path__):
+         full = f"{package}.{m.name}"
+         try:
+             mod = importlib.import_module(full)
+         except Exception:
+             # if autoload_plugins already imported, failures here are logged by autoload_plugins;
+             # still try to continue to other modules.
+             logger.exception("Failed to import plugin module %s", full)
+             continue
+ 
+         reg = getattr(mod, "register", None)
+         if callable(reg):
+             try:
+@@ -307,46 +314,71 @@ class WOMPipelineRunner:
+ 
+ 
+             else:
+                 self.logger.warning("env missing supply_planning4multi_product")
+ 
+             # optional pre-collect
+             self.bus.do_action("pipeline:before_collect", env=env, root=root)
+         except Exception:
+             logger.exception("Planning steps failed")
+             raise
+ 
+         # collect result and allow result filters (visualize/export etc.)
+         result = self.io.collect_result(root)
+ 
+         # bridge payload (v0.1 minimal handoff)
+         # plugin stores bridge artifacts on env; pipeline copies them into result["bridge"].
+         if isinstance(result, dict):
+             bridge_events = getattr(env, "_bridge_events", [])
+             bridge_flow_events = getattr(env, "_bridge_kernel_flow_events", [])
+             bridge_sidecar_events = getattr(env, "_bridge_sidecar_events", [])
+             result["bridge"] = {
+                 "events": bridge_events,
+                 "flow_events": bridge_flow_events,
+                 "sidecar_events": bridge_sidecar_events,
+             }
++            try:
++                node_money_rows = evaluate_money_by_node(env)
++                kpi_summary_rows = build_kpi_summary(node_money_rows)
++                product_money_summary_rows = build_product_money_summary(node_money_rows)
++                output_dir = getattr(env, "directory", None) or spec.get("data_dir") or os.getcwd()
++                output_files = export_money_outputs(
++                    output_dir=output_dir,
++                    node_money_rows=node_money_rows,
++                    kpi_summary_rows=kpi_summary_rows,
++                    product_money_summary_rows=product_money_summary_rows,
++                )
++                result["money"] = {
++                    "node_money_rows": node_money_rows,
++                    "kpi_summary_rows": kpi_summary_rows,
++                    "product_money_summary_rows": product_money_summary_rows,
++                    "output_files": output_files,
++                }
++            except Exception as e:
++                self.logger.warning("money evaluation skipped due to error: %s", e)
++                result["money"] = {
++                    "node_money_rows": [],
++                    "kpi_summary_rows": [],
++                    "product_money_summary_rows": [],
++                    "output_files": {},
++                }
+         result = self.bus.apply_filters("pipeline:result", result)
+         self.bus.do_action("pipeline:after_run", result=result)
+ 
+         return result
+ 
+ 
+ # CLI entrypoint
+ def main_cli():
+     logging.basicConfig(level=logging.INFO)
+     ap = argparse.ArgumentParser(description="Run WOM pipeline (Hook/Plugin style)")
+     ap.add_argument("--data_dir", "-d", required=True, help="data directory (CSV etc.)")
+     ap.add_argument("--product", "-p", required=False, help="product to plan (optional)")
+     ap.add_argument("--scenario", "-s", required=False, help="scenario id (optional)", default="default")
+     args = ap.parse_args()
+ 
+     runner = WOMPipelineRunner()
+     res = runner.run(data_dir=args.data_dir, product=args.product, scenario_id=args.scenario)
+     print("WOM pipeline finished. result keys:", list(res.keys()))
+ 
+ if __name__ == "__main__":
+     main_cli()
+diff --git a/pysi/evaluate/money_evaluator.py b/pysi/evaluate/money_evaluator.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..5d2d34ca3c80fe0f54abd449257e56bca104eed0
+--- /dev/null
++++ b/pysi/evaluate/money_evaluator.py
+@@ -0,0 +1,165 @@
++from __future__ import annotations
++
++from collections import defaultdict
++from typing import Any, Dict, Iterable, List
++
++
++def _safe_float(v: Any) -> float:
++    try:
++        return float(v)
++    except Exception:
++        return 0.0
++
++
++def _walk_nodes(root: Any) -> Iterable[Any]:
++    stack = [root]
++    seen = set()
++    while stack:
++        node = stack.pop()
++        if node is None:
++            continue
++        oid = id(node)
++        if oid in seen:
++            continue
++        seen.add(oid)
++        yield node
++        for c in getattr(node, "children", []) or []:
++            stack.append(c)
++
++
++def _legacy_node_character(node_name: str) -> str:
++    # backward-compatible fallback; future logic should use master lookup first
++    n = (node_name or "").strip().lower()
++    if n == "supply_point":
++        return "supply_point"
++    if n.startswith("market"):
++        return "market"
++    if n.startswith("dc"):
++        return "distribution_center"
++    if n.startswith("plant"):
++        return "factory"
++    return "unknown"
++
++
++def evaluate_money_by_node(env: Any) -> List[Dict[str, Any]]:
++    """
++    Build minimal node-level money rows after planning.
++    If accounting sources are missing, return safe zero placeholders.
++    """
++    ot = getattr(env, "prod_tree_dict_OT", {}) or {}
++    inn = getattr(env, "prod_tree_dict_IN", {}) or {}
++    products = sorted(set(ot.keys()) | set(inn.keys()))
++    bundle = getattr(env, "money_master_bundle", None)
++
++    rows: List[Dict[str, Any]] = []
++    uniq = set()
++    for product in products:
++        for root in (ot.get(product), inn.get(product)):
++            if root is None:
++                continue
++            for node in _walk_nodes(root):
++                node_name = (getattr(node, "name", "") or getattr(node, "id", "") or "").strip()
++                if not node_name:
++                    continue
++                key = (product, node_name)
++                if key in uniq:
++                    continue
++                uniq.add(key)
++
++                node_character = None
++                if bundle is not None:
++                    try:
++                        node_character = bundle.get_node_character(node_name)
++                    except Exception:
++                        node_character = None
++                if not node_character:
++                    node_character = _legacy_node_character(node_name)
++
++                money_master_found = 0
++                if bundle is not None:
++                    try:
++                        money_master_found = 1 if bundle.get_money_master_by_node_character(node_character) else 0
++                    except Exception:
++                        money_master_found = 0
++
++                revenue = 0.0
++                variable_cost = 0.0
++                fixed_cost = 0.0
++                inventory_value = 0.0
++                tax_base = revenue - variable_cost - fixed_cost
++                profit = tax_base
++
++                rows.append(
++                    {
++                        "product": product,
++                        "node_name": node_name,
++                        "node_character": node_character,
++                        "money_master_found": money_master_found,
++                        "revenue": _safe_float(revenue),
++                        "variable_cost": _safe_float(variable_cost),
++                        "fixed_cost": _safe_float(fixed_cost),
++                        "inventory_value": _safe_float(inventory_value),
++                        "tax_base": _safe_float(tax_base),
++                        "profit": _safe_float(profit),
++                    }
++                )
++    return rows
++
++
++def build_kpi_summary(node_money_rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
++    total_revenue = sum(_safe_float(r.get("revenue")) for r in node_money_rows)
++    total_variable_cost = sum(_safe_float(r.get("variable_cost")) for r in node_money_rows)
++    total_fixed_cost = sum(_safe_float(r.get("fixed_cost")) for r in node_money_rows)
++    total_inventory_value = sum(_safe_float(r.get("inventory_value")) for r in node_money_rows)
++    total_tax_base = sum(_safe_float(r.get("tax_base")) for r in node_money_rows)
++    total_profit = sum(_safe_float(r.get("profit")) for r in node_money_rows)
++    node_count = len({r.get("node_name") for r in node_money_rows})
++    product_count = len({r.get("product") for r in node_money_rows})
++
++    return [
++        {
++            "node_count": node_count,
++            "product_count": product_count,
++            "total_revenue": total_revenue,
++            "total_variable_cost": total_variable_cost,
++            "total_fixed_cost": total_fixed_cost,
++            "total_inventory_value": total_inventory_value,
++            "total_tax_base": total_tax_base,
++            "total_profit": total_profit,
++            "profit_ratio": (total_profit / total_revenue) if total_revenue else 0.0,
++        }
++    ]
++
++
++def build_product_money_summary(node_money_rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
++    agg = defaultdict(
++        lambda: {
++            "product": "",
++            "node_count": 0,
++            "total_revenue": 0.0,
++            "total_variable_cost": 0.0,
++            "total_fixed_cost": 0.0,
++            "total_inventory_value": 0.0,
++            "total_tax_base": 0.0,
++            "total_profit": 0.0,
++        }
++    )
++    nodes = defaultdict(set)
++    for r in node_money_rows:
++        p = (r.get("product") or "").strip()
++        d = agg[p]
++        d["product"] = p
++        d["total_revenue"] += _safe_float(r.get("revenue"))
++        d["total_variable_cost"] += _safe_float(r.get("variable_cost"))
++        d["total_fixed_cost"] += _safe_float(r.get("fixed_cost"))
++        d["total_inventory_value"] += _safe_float(r.get("inventory_value"))
++        d["total_tax_base"] += _safe_float(r.get("tax_base"))
++        d["total_profit"] += _safe_float(r.get("profit"))
++        nodes[p].add(r.get("node_name"))
++
++    out = []
++    for p, d in agg.items():
++        d["node_count"] = len(nodes[p])
++        d["profit_ratio"] = (d["total_profit"] / d["total_revenue"]) if d["total_revenue"] else 0.0
++        out.append(d)
++    return sorted(out, key=lambda x: x["product"])
+diff --git a/pysi/evaluate/money_output_exporter.py b/pysi/evaluate/money_output_exporter.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..68f395838023781549fe60df4f092a9f63c01a70
+--- /dev/null
++++ b/pysi/evaluate/money_output_exporter.py
+@@ -0,0 +1,41 @@
++from __future__ import annotations
++
++import csv
++import os
++from typing import Any, Dict, List
++
++
++def _write_csv(path: str, rows: List[Dict[str, Any]]) -> None:
++    os.makedirs(os.path.dirname(path), exist_ok=True)
++    if not rows:
++        with open(path, "w", newline="", encoding="utf-8") as f:
++            f.write("")
++        return
++
++    fieldnames = list(rows[0].keys())
++    with open(path, "w", newline="", encoding="utf-8") as f:
++        writer = csv.DictWriter(f, fieldnames=fieldnames)
++        writer.writeheader()
++        for row in rows:
++            writer.writerow(row)
++
++
++def export_money_outputs(
++    output_dir: str,
++    node_money_rows: List[Dict[str, Any]],
++    kpi_summary_rows: List[Dict[str, Any]],
++    product_money_summary_rows: List[Dict[str, Any]],
++) -> Dict[str, str]:
++    node_path = os.path.join(output_dir, "node_money_eval.csv")
++    kpi_path = os.path.join(output_dir, "kpi_summary.csv")
++    product_path = os.path.join(output_dir, "product_money_summary.csv")
++
++    _write_csv(node_path, node_money_rows)
++    _write_csv(kpi_path, kpi_summary_rows)
++    _write_csv(product_path, product_money_summary_rows)
++
++    return {
++        "node_money_eval_csv": node_path,
++        "kpi_summary_csv": kpi_path,
++        "product_money_summary_csv": product_path,
++    }
+diff --git a/pysi/wom_main.py b/pysi/wom_main.py
+index 1b7129baa3abe8681d00134c0e9da9357dafcb9b..aa3e98117113c8a58af351ccf0a6d4ea9b9199f2 100644
+--- a/pysi/wom_main.py
++++ b/pysi/wom_main.py
+@@ -35,50 +35,51 @@ from math import floor
+ import json
+ # ********************************
+ # PySI library import
+ # ********************************
+ from pysi.network.node_base import Node, PlanNode, GUINode, SKU
+ from pysi.utils.config import Config
+ from pysi.utils.file_io import *
+ from pysi.utils.calendar445 import Calendar445
+ #from pysi.plan.demand_generate import convert_monthly_to_weekly
+ from pysi.plan.demand_generate import (
+     _normalize_monthly_demand_df_sku,
+     convert_monthly_to_weekly_sku,
+     check_plan_range,
+ )
+ from pysi.plan.operations import *
+ # "plan.demand_processing" is merged in "plan.operations"
+ #from plan.demand_processing import *
+ from pysi.plan.operations import set_df_Slots2psi4demand
+ from pysi.network.node_base import Node, PlanNode, GUINode
+ 
+ from pysi.network.tree import calc_all_psi2i4demand, eval_supply_chain_cost
+ 
+ from pysi.psi_planner_mvp.init_load_plan_data import demand_leveling_on_ship, feedback_psi_lists, make_nodes_decouple_all, push_pull_all_psi2i_decouple4supply5
+ 
+ from pysi.evaluate.evaluate_cost_models_v2 import gui_run_initial_propagation, propagate_cost_to_plan_nodes, load_tobe_prices, assign_tobe_prices_to_leaf_nodes, load_asis_prices, assign_asis_prices_to_root_nodes
++from pysi.master_data.money_master_loader import load_money_master_bundle
+ # 既存の PlanNode を注入できるようにしておく（未指定なら内蔵の極小版を使う）
+ class _MiniPlanNode:
+     def __init__(self, name: str, node_type: str = "node"):
+         self.id = name              # 既存系が id と name を持つ想定に合わせる
+         self.name = name
+         self.node_type = node_type
+         self.children: List["_MiniPlanNode"] = []
+         self.parent: Optional["_MiniPlanNode"] = None
+         # 任意属性（必要に応じてエンジン橋渡し時に使う）
+         self.lot_size: Optional[int] = None
+         self.leadtime: Optional[int] = None
+         self.sku_name: Optional[str] = None     # 「SKUクラス不使用」前提で文字列だけ持つ
+     def add_child(self, c: "_MiniPlanNode"):
+         c.parent = self
+         self.children.append(c)
+ # ******************************
+ #@250811 chatGPT defined
+ # ******************************
+ class WOMEnv:
+ #class PlanEnv:
+     """GUIを剥がした最小の計画モデルホルダ
+        - prod_tree_dict_OT/IN に {product_name: PlanNode(root)} を持つ
+     """
+     def __init__(self, config: Optional):
+     #def __init__(self):
+@@ -124,50 +125,53 @@ class WOMEnv:
+         self.prod_tree_dict_OT = {}
+         # view
+         self.select_node = None
+         self.G = None
+         # Optimise
+         self.Gdm_structure = None
+         self.Gdm = None
+         self.Gsp = None
+         self.pos_E2E = None
+         self.flowDict_opt = {} #None
+         self.flowCost_opt = {} #None
+         self.total_supply_plan = 0
+ 
+         # loading files
+         #self.directory = None
+         
+         #@UPDATE this is current repository
+         self.data_dir = config.DATA_DIRECTORY
+ 
+         self.directory = config.DATA_DIRECTORY
+         self.load_directory = None
+         self.base_leaf_name = {} # { product_name: leaf_node_name, ,,,}
+         # supply_plan / decoupling / buffer stock
+         self.decouple_node_dic = {}
+         self.decouple_node_selected = []
++        # finance master (optional)
++        self.money_master_bundle = None
++        self._money_master_bundle_loaded = False
+ 
+     # ---- public helpers -------------------------------------------------
+     def geo_lookup(self):
+         """
+         Return dict: {node_name: (lat, lon)}
+         data_dir priority:
+         - self.data_dir
+         - self.cfg.DATA_DIRECTORY
+         """
+         import os, csv
+ 
+         print("reading node_geo.csv")
+ 
+         data_dir = getattr(self, "data_dir", None) or getattr(getattr(self, "cfg", None), "DATA_DIRECTORY", None)
+ 
+         if not data_dir:
+             return {}
+         print("setting data_dir", data_dir)
+ 
+         path = os.path.join(data_dir, "node_geo.csv")
+         if not os.path.exists(path):
+             return {}
+         print("setting path", path)
+ 
+         geo = {}
+@@ -261,83 +265,119 @@ class WOMEnv:
+         self.plan_range   = self.config.DEFAULT_PLAN_RANGE
+         self.pre_proc_LT  = self.config.DEFAULT_PRE_PROC_LT
+         # self.market_potential = 0 # initial setting from "demand_generate"
+         self.target_share = self.config.DEFAULT_TARGET_SHARE
+         self.total_supply = 0
+         #if not hasattr(self, 'gmp_entry') or not hasattr(self, 'ts_entry') or not hasattr(self, 'tsp_entry'):
+         #    raise AttributeError("Required UI components (gmp_entry, ts_entry, tsp_entry) have not been initialized.")
+         print("Setting market potential and share")
+         # Calculation and setting of Global Market Potential
+         #market_potential = getattr(self, 'market_potential', self.config.DEFAULT_MARKET_POTENTIAL)  # Including initial settings
+         self.market_potential = self.config.DEFAULT_MARKET_POTENTIAL  # Including initial settings
+         self.target_share             = 0.5 # target_share
+         target_share      =  self.target_share      # 0.5 #
+         market_potential  =  self.market_potential
+         total_supply_plan = round(market_potential * target_share)
+         # Calculation and setting of Total Supply Plan
+         self.market_potential         = market_potential
+         self.target_share             = target_share
+         self.total_supply_plan        = total_supply_plan
+         print(f"At initialization - market_potential: {self.market_potential}, target_share: {self.target_share}")  # Add log
+     #@250819 Refactoring
+     def load_data_files(self):
+         """
+         データファイルの読み込みと初期設定を実行
+         """
++        # optional finance master (load once, do not fail startup)
++        self._load_money_master_bundle_once()
++
+         # --- ディレクトリとパラメータ初期化 ---
+         self._init_data_directory()
+         self._init_plan_parameters()
+         # --- CSV 読み込み ---
+         self._load_tree_csvs()
+         # --- 製品リスト初期化 ---
+         self._extract_product_names()
+ 
+         # --- PlanNode ツリー構築 ---
+         self._build_plan_node_trees()
+ 
+         # --- GUIノードとPlanNodeのリンク ---
+         self._link_plan_nodes_to_gui()
+ 
+         # --- コストテーブル読み込み・反映 ---
+         self._load_cost_tables()
+ 
+         # --- 価格伝播の実行（TOBE/ASIS）---
+         self._run_price_propagation()
+         
+         # --- 需要生成とPSI初期化は pipeline plugin 側へ移管 ---
+         # (DemandProvider plugin が env.weekly_demand を作り、init_psi_spaces_and_demand() を呼ぶ)
+         
+         #@STOP
+         ## --- 月次需要 → 週次PSIスロットに変換（if exists）---
+         #self.init_psi_spaces_and_demand()
+         
+         # --- オファリング価格を出力 ---
+         self.export_offering_prices(os.path.join(self.directory, "offering_price_ASIS_TOBE.csv"))
+         
+         # --- 終了ログ ---
+         print("product_name_list", self.product_name_list)
+         print("End of load_data_files")
++
++    def _load_money_master_bundle_once(self):
++        """Load optional finance master once and attach it to env."""
++        if getattr(self, "_money_master_bundle_loaded", False):
++            return
++
++        self._money_master_bundle_loaded = True
++        self.money_master_bundle = None
++
++        try:
++            base_dir = os.path.dirname(__file__)
++            master_dir = os.path.join(base_dir, "master_data")
++            node_master_csv = os.path.join(master_dir, "node_master.csv")
++            node_character_money_master_csv = os.path.join(
++                master_dir, "node_character_money_master.csv"
++            )
++
++            if not (
++                os.path.exists(node_master_csv)
++                and os.path.exists(node_character_money_master_csv)
++            ):
++                print("[INFO] money master CSV not found. Skip loading.")
++                return
++
++            self.money_master_bundle = load_money_master_bundle(
++                node_master_csv=node_master_csv,
++                node_character_money_master_csv=node_character_money_master_csv,
++            )
++            print("[INFO] money master loaded.")
++
++        except Exception as e:
++            print(f"[WARN] money master loading failed: {e}")
++            self.money_master_bundle = None
+     # **************************************
+     # smoke chack
+     # **************************************
+     #1) PSI バッファ長さの確認（全ノード同一長）
+     ## どれか1製品を確認
+     #prod = next(iter(psi.prod_tree_dict_OT))
+     #root = psi.prod_tree_dict_OT[prod]
+     #
+     #def first_node(n):
+     #    return n if not getattr(n, "children", []) else n.children[0]
+     #
+     #n0 = first_node(root)  # 適当な子
+     #print("weeks(len psi4demand) =", len(n0.psi4demand), " plan_range=", psi.plan_r#ange)
+     #assert len(n0.psi4demand) == 53 * psi.plan_range
+     #
+     #2) 週次Sロットの整合チェック（leafの合計=DFの合計）
+     #
+     #init_psi_spaces_and_demand() 内でも検証していますが、任意に1葉で再確認：
+     #
+     #def leaves(n):
+     #    st=[n]; out=[]
+     #    while st:
+     #        x=st.pop()
+     #        cs = getattr(x, "children", []) or []
+     #        if not cs: out.append(x)

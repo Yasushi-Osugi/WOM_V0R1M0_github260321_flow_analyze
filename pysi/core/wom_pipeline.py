@@ -39,6 +39,7 @@ from typing import Any, Dict, Optional
 
 import csv
 
+
 # use project hook implementation if available
 from pysi.core.hooks.core import HookBus, set_global, autoload_plugins, hooks as global_hooks
 
@@ -331,6 +332,45 @@ class WOMPipelineRunner:
             }
         result = self.bus.apply_filters("pipeline:result", result)
         self.bus.do_action("pipeline:after_run", result=result)
+
+    #@ADD_260421_2006 for "money eveluator"
+        try:
+            from pysi.evaluate.money_evaluator import (
+                evaluate_money_by_node,
+                build_kpi_summary,
+                build_product_money_summary,
+            )
+            from pysi.evaluate.money_output_exporter import export_money_outputs
+
+            node_money_rows = evaluate_money_by_node(env)
+            kpi_summary_rows = build_kpi_summary(node_money_rows)
+            product_money_summary_rows = build_product_money_summary(node_money_rows)
+
+            out_dir = (
+                getattr(env, "directory", None)
+                or getattr(env, "data_dir", None)
+                or "."
+            )
+
+            exported = export_money_outputs(
+                out_dir,
+                node_money_rows=node_money_rows,
+                kpi_summary_rows=kpi_summary_rows,
+                product_money_summary_rows=product_money_summary_rows,
+            )
+
+            result["money"] = {
+                "node_money_rows": node_money_rows,
+                "kpi_summary_rows": kpi_summary_rows,
+                "product_money_summary_rows": product_money_summary_rows,
+                "exported_files": exported,
+            }
+
+        except Exception as e:
+            print(f"[WARN] money evaluation skipped: {e}")
+
+
+
 
         return result
 

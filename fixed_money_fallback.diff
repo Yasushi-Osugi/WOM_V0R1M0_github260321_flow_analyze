@@ -1,0 +1,38 @@
+--- a/pysi/gui/world_map_view_tkmap.py
++++ b/pysi/gui/world_map_view_tkmap.py
+@@ -34,4 +34,9 @@
+ from tkinter import ttk
+ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
+ 
++try:
++    from pysi.evaluate.money_evaluator import evaluate_money_by_node
++except Exception:
++    evaluate_money_by_node = None
++
+ OnSelect = Callable[[str], None]
+@@ -509,5 +514,25 @@
+             if out:
+                 return out
++
++        # Fallback: evaluate on demand if pipeline did not attach money rows to env
++        if evaluate_money_by_node is not None:
++            try:
++                rows = evaluate_money_by_node(self.env)
++            except Exception as e:
++                print(f"[TKMAP] evaluate_money_by_node fallback skipped: {e}")
++                return {}
++
++            if isinstance(rows, list):
++                out: Dict[str, Dict[str, Any]] = {}
++                for r in rows:
++                    if not isinstance(r, dict):
++                        continue
++                    node_name = (r.get("node_name") or "").strip()
++                    product = (r.get("product") or "").strip()
++                    if not node_name:
++                        continue
++                    if self.product_name and product and product != self.product_name:
++                        continue
++                    out[node_name] = r
++                return out
+         return {}

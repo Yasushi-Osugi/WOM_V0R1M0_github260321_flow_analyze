@@ -1,0 +1,286 @@
+diff --git a/pysi/core/wom_pipeline.py b/pysi/core/wom_pipeline.py
+index 78ff61397333edae0b4c8f1d469c2ea0e04a8919..58ab5132e57cefea8c008baf23e25af6b9672f78 100644
+--- a/pysi/core/wom_pipeline.py
++++ b/pysi/core/wom_pipeline.py
+@@ -34,51 +34,50 @@ import argparse
+ import importlib
+ import logging
+ import pkgutil
+ import sys
+ from typing import Any, Dict, Optional
+ 
+ import csv
+ 
+ # use project hook implementation if available
+ from pysi.core.hooks.core import HookBus, set_global, autoload_plugins, hooks as global_hooks
+ 
+ logger = logging.getLogger(__name__)
+ 
+ # Project classes (adjust path if necessary)
+ try:
+     from pysi.utils.config import Config
+ except Exception as e:
+     raise ImportError("Cannot import Config from pysi.utils.config — adjust path") from e
+ 
+ try:
+     # Adjust this import path if your WOMEnv lives elsewhere
+     from pysi.wom_main import WOMEnv
+ except Exception as e:
+     raise ImportError("Cannot import WOMEnv from pysi.wom_main; adjust import path.") from e
+ 
+-
+ def call_register_if_present(package: str, bus: HookBus) -> None:
+     """
+     After importing plugin modules via autoload_plugins, call register(bus) on each module
+     if it defines it. This enforces the register(bus) convention.
+     """
+     try:
+         pkg = importlib.import_module(package)
+     except Exception:
+         logger.exception("call_register_if_present: cannot import plugin package %s", package)
+         return
+ 
+     for m in pkgutil.iter_modules(pkg.__path__):
+         full = f"{package}.{m.name}"
+         try:
+             mod = importlib.import_module(full)
+         except Exception:
+             # if autoload_plugins already imported, failures here are logged by autoload_plugins;
+             # still try to continue to other modules.
+             logger.exception("Failed to import plugin module %s", full)
+             continue
+ 
+         reg = getattr(mod, "register", None)
+         if callable(reg):
+             try:
+                 reg(bus)
+diff --git a/pysi/wom_main.py b/pysi/wom_main.py
+index 1b7129baa3abe8681d00134c0e9da9357dafcb9b..aa3e98117113c8a58af351ccf0a6d4ea9b9199f2 100644
+--- a/pysi/wom_main.py
++++ b/pysi/wom_main.py
+@@ -35,50 +35,51 @@ from math import floor
+ import json
+ # ********************************
+ # PySI library import
+ # ********************************
+ from pysi.network.node_base import Node, PlanNode, GUINode, SKU
+ from pysi.utils.config import Config
+ from pysi.utils.file_io import *
+ from pysi.utils.calendar445 import Calendar445
+ #from pysi.plan.demand_generate import convert_monthly_to_weekly
+ from pysi.plan.demand_generate import (
+     _normalize_monthly_demand_df_sku,
+     convert_monthly_to_weekly_sku,
+     check_plan_range,
+ )
+ from pysi.plan.operations import *
+ # "plan.demand_processing" is merged in "plan.operations"
+ #from plan.demand_processing import *
+ from pysi.plan.operations import set_df_Slots2psi4demand
+ from pysi.network.node_base import Node, PlanNode, GUINode
+ 
+ from pysi.network.tree import calc_all_psi2i4demand, eval_supply_chain_cost
+ 
+ from pysi.psi_planner_mvp.init_load_plan_data import demand_leveling_on_ship, feedback_psi_lists, make_nodes_decouple_all, push_pull_all_psi2i_decouple4supply5
+ 
+ from pysi.evaluate.evaluate_cost_models_v2 import gui_run_initial_propagation, propagate_cost_to_plan_nodes, load_tobe_prices, assign_tobe_prices_to_leaf_nodes, load_asis_prices, assign_asis_prices_to_root_nodes
++from pysi.master_data.money_master_loader import load_money_master_bundle
+ # 既存の PlanNode を注入できるようにしておく（未指定なら内蔵の極小版を使う）
+ class _MiniPlanNode:
+     def __init__(self, name: str, node_type: str = "node"):
+         self.id = name              # 既存系が id と name を持つ想定に合わせる
+         self.name = name
+         self.node_type = node_type
+         self.children: List["_MiniPlanNode"] = []
+         self.parent: Optional["_MiniPlanNode"] = None
+         # 任意属性（必要に応じてエンジン橋渡し時に使う）
+         self.lot_size: Optional[int] = None
+         self.leadtime: Optional[int] = None
+         self.sku_name: Optional[str] = None     # 「SKUクラス不使用」前提で文字列だけ持つ
+     def add_child(self, c: "_MiniPlanNode"):
+         c.parent = self
+         self.children.append(c)
+ # ******************************
+ #@250811 chatGPT defined
+ # ******************************
+ class WOMEnv:
+ #class PlanEnv:
+     """GUIを剥がした最小の計画モデルホルダ
+        - prod_tree_dict_OT/IN に {product_name: PlanNode(root)} を持つ
+     """
+     def __init__(self, config: Optional):
+     #def __init__(self):
+@@ -124,50 +125,53 @@ class WOMEnv:
+         self.prod_tree_dict_OT = {}
+         # view
+         self.select_node = None
+         self.G = None
+         # Optimise
+         self.Gdm_structure = None
+         self.Gdm = None
+         self.Gsp = None
+         self.pos_E2E = None
+         self.flowDict_opt = {} #None
+         self.flowCost_opt = {} #None
+         self.total_supply_plan = 0
+ 
+         # loading files
+         #self.directory = None
+         
+         #@UPDATE this is current repository
+         self.data_dir = config.DATA_DIRECTORY
+ 
+         self.directory = config.DATA_DIRECTORY
+         self.load_directory = None
+         self.base_leaf_name = {} # { product_name: leaf_node_name, ,,,}
+         # supply_plan / decoupling / buffer stock
+         self.decouple_node_dic = {}
+         self.decouple_node_selected = []
++        # finance master (optional)
++        self.money_master_bundle = None
++        self._money_master_bundle_loaded = False
+ 
+     # ---- public helpers -------------------------------------------------
+     def geo_lookup(self):
+         """
+         Return dict: {node_name: (lat, lon)}
+         data_dir priority:
+         - self.data_dir
+         - self.cfg.DATA_DIRECTORY
+         """
+         import os, csv
+ 
+         print("reading node_geo.csv")
+ 
+         data_dir = getattr(self, "data_dir", None) or getattr(getattr(self, "cfg", None), "DATA_DIRECTORY", None)
+ 
+         if not data_dir:
+             return {}
+         print("setting data_dir", data_dir)
+ 
+         path = os.path.join(data_dir, "node_geo.csv")
+         if not os.path.exists(path):
+             return {}
+         print("setting path", path)
+ 
+         geo = {}
+@@ -261,83 +265,119 @@ class WOMEnv:
+         self.plan_range   = self.config.DEFAULT_PLAN_RANGE
+         self.pre_proc_LT  = self.config.DEFAULT_PRE_PROC_LT
+         # self.market_potential = 0 # initial setting from "demand_generate"
+         self.target_share = self.config.DEFAULT_TARGET_SHARE
+         self.total_supply = 0
+         #if not hasattr(self, 'gmp_entry') or not hasattr(self, 'ts_entry') or not hasattr(self, 'tsp_entry'):
+         #    raise AttributeError("Required UI components (gmp_entry, ts_entry, tsp_entry) have not been initialized.")
+         print("Setting market potential and share")
+         # Calculation and setting of Global Market Potential
+         #market_potential = getattr(self, 'market_potential', self.config.DEFAULT_MARKET_POTENTIAL)  # Including initial settings
+         self.market_potential = self.config.DEFAULT_MARKET_POTENTIAL  # Including initial settings
+         self.target_share             = 0.5 # target_share
+         target_share      =  self.target_share      # 0.5 #
+         market_potential  =  self.market_potential
+         total_supply_plan = round(market_potential * target_share)
+         # Calculation and setting of Total Supply Plan
+         self.market_potential         = market_potential
+         self.target_share             = target_share
+         self.total_supply_plan        = total_supply_plan
+         print(f"At initialization - market_potential: {self.market_potential}, target_share: {self.target_share}")  # Add log
+     #@250819 Refactoring
+     def load_data_files(self):
+         """
+         データファイルの読み込みと初期設定を実行
+         """
++        # optional finance master (load once, do not fail startup)
++        self._load_money_master_bundle_once()
++
+         # --- ディレクトリとパラメータ初期化 ---
+         self._init_data_directory()
+         self._init_plan_parameters()
+         # --- CSV 読み込み ---
+         self._load_tree_csvs()
+         # --- 製品リスト初期化 ---
+         self._extract_product_names()
+ 
+         # --- PlanNode ツリー構築 ---
+         self._build_plan_node_trees()
+ 
+         # --- GUIノードとPlanNodeのリンク ---
+         self._link_plan_nodes_to_gui()
+ 
+         # --- コストテーブル読み込み・反映 ---
+         self._load_cost_tables()
+ 
+         # --- 価格伝播の実行（TOBE/ASIS）---
+         self._run_price_propagation()
+         
+         # --- 需要生成とPSI初期化は pipeline plugin 側へ移管 ---
+         # (DemandProvider plugin が env.weekly_demand を作り、init_psi_spaces_and_demand() を呼ぶ)
+         
+         #@STOP
+         ## --- 月次需要 → 週次PSIスロットに変換（if exists）---
+         #self.init_psi_spaces_and_demand()
+         
+         # --- オファリング価格を出力 ---
+         self.export_offering_prices(os.path.join(self.directory, "offering_price_ASIS_TOBE.csv"))
+         
+         # --- 終了ログ ---
+         print("product_name_list", self.product_name_list)
+         print("End of load_data_files")
++
++    def _load_money_master_bundle_once(self):
++        """Load optional finance master once and attach it to env."""
++        if getattr(self, "_money_master_bundle_loaded", False):
++            return
++
++        self._money_master_bundle_loaded = True
++        self.money_master_bundle = None
++
++        try:
++            base_dir = os.path.dirname(__file__)
++            master_dir = os.path.join(base_dir, "master_data")
++            node_master_csv = os.path.join(master_dir, "node_master.csv")
++            node_character_money_master_csv = os.path.join(
++                master_dir, "node_character_money_master.csv"
++            )
++
++            if not (
++                os.path.exists(node_master_csv)
++                and os.path.exists(node_character_money_master_csv)
++            ):
++                print("[INFO] money master CSV not found. Skip loading.")
++                return
++
++            self.money_master_bundle = load_money_master_bundle(
++                node_master_csv=node_master_csv,
++                node_character_money_master_csv=node_character_money_master_csv,
++            )
++            print("[INFO] money master loaded.")
++
++        except Exception as e:
++            print(f"[WARN] money master loading failed: {e}")
++            self.money_master_bundle = None
+     # **************************************
+     # smoke chack
+     # **************************************
+     #1) PSI バッファ長さの確認（全ノード同一長）
+     ## どれか1製品を確認
+     #prod = next(iter(psi.prod_tree_dict_OT))
+     #root = psi.prod_tree_dict_OT[prod]
+     #
+     #def first_node(n):
+     #    return n if not getattr(n, "children", []) else n.children[0]
+     #
+     #n0 = first_node(root)  # 適当な子
+     #print("weeks(len psi4demand) =", len(n0.psi4demand), " plan_range=", psi.plan_r#ange)
+     #assert len(n0.psi4demand) == 53 * psi.plan_range
+     #
+     #2) 週次Sロットの整合チェック（leafの合計=DFの合計）
+     #
+     #init_psi_spaces_and_demand() 内でも検証していますが、任意に1葉で再確認：
+     #
+     #def leaves(n):
+     #    st=[n]; out=[]
+     #    while st:
+     #        x=st.pop()
+     #        cs = getattr(x, "children", []) or []
+     #        if not cs: out.append(x)
