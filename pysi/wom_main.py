@@ -57,6 +57,7 @@ from pysi.network.tree import calc_all_psi2i4demand, eval_supply_chain_cost
 from pysi.psi_planner_mvp.init_load_plan_data import demand_leveling_on_ship, feedback_psi_lists, make_nodes_decouple_all, push_pull_all_psi2i_decouple4supply5
 
 from pysi.evaluate.evaluate_cost_models_v2 import gui_run_initial_propagation, propagate_cost_to_plan_nodes, load_tobe_prices, assign_tobe_prices_to_leaf_nodes, load_asis_prices, assign_asis_prices_to_root_nodes
+from pysi.master_data.money_master_loader import load_money_master_bundle
 # 既存の PlanNode を注入できるようにしておく（未指定なら内蔵の極小版を使う）
 class _MiniPlanNode:
     def __init__(self, name: str, node_type: str = "node"):
@@ -146,6 +147,9 @@ class WOMEnv:
         # supply_plan / decoupling / buffer stock
         self.decouple_node_dic = {}
         self.decouple_node_selected = []
+        # finance master (optional)
+        self.money_master_bundle = None
+        self._money_master_bundle_loaded = False
 
     # ---- public helpers -------------------------------------------------
     def geo_lookup(self):
@@ -283,6 +287,9 @@ class WOMEnv:
         """
         データファイルの読み込みと初期設定を実行
         """
+        # optional finance master (load once, do not fail startup)
+        self._load_money_master_bundle_once()
+
         # --- ディレクトリとパラメータ初期化 ---
         self._init_data_directory()
         self._init_plan_parameters()
@@ -316,6 +323,39 @@ class WOMEnv:
         # --- 終了ログ ---
         print("product_name_list", self.product_name_list)
         print("End of load_data_files")
+
+    def _load_money_master_bundle_once(self):
+        """Load optional finance master once and attach it to env."""
+        if getattr(self, "_money_master_bundle_loaded", False):
+            return
+
+        self._money_master_bundle_loaded = True
+        self.money_master_bundle = None
+
+        try:
+            base_dir = os.path.dirname(__file__)
+            master_dir = os.path.join(base_dir, "master_data")
+            node_master_csv = os.path.join(master_dir, "node_master.csv")
+            node_character_money_master_csv = os.path.join(
+                master_dir, "node_character_money_master.csv"
+            )
+
+            if not (
+                os.path.exists(node_master_csv)
+                and os.path.exists(node_character_money_master_csv)
+            ):
+                print("[INFO] money master CSV not found. Skip loading.")
+                return
+
+            self.money_master_bundle = load_money_master_bundle(
+                node_master_csv=node_master_csv,
+                node_character_money_master_csv=node_character_money_master_csv,
+            )
+            print("[INFO] money master loaded.")
+
+        except Exception as e:
+            print(f"[WARN] money master loading failed: {e}")
+            self.money_master_bundle = None
     # **************************************
     # smoke chack
     # **************************************
