@@ -366,6 +366,12 @@ class WOMPipelineRunner:
                 "exported_files": exported,
             }
 
+            #@ADD for stable 
+            #pipeline の評価結果を、GUI が見に行ける場所へ写しておく
+            #result["money"] をセットした直後、return result の前
+            env.money_result = result["money"]
+            env.node_money_rows = result["money"].get("node_money_rows", [])
+
         except Exception as e:
             print(f"[WARN] money evaluation skipped: {e}")
 

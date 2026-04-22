@@ -1,0 +1,3579 @@
+Initializing parameters
+Setting market potential and share
+At initialization - market_potential: 10000, target_share: 0.5
+[INFO] money master loaded.
+[TREE] supply_point  parent= root
+[TREE] DADCAL  parent= supply_point
+[TREE] WS1CAL  parent= DADCAL
+[TREE] WS2CAL  parent= WS1CAL
+[TREE] RT_CAL  parent= WS2CAL
+[TREE] CS_CAL  parent= RT_CAL
+[TREE] DADGSJP  parent= supply_point
+[TREE] GR_JPN  parent= DADGSJP
+[TREE] GRxRT_JPN  parent= GR_JPN
+[TREE] GRxCS_JPN  parent= GRxRT_JPN
+[TREE] GR_WS2JPN  parent= GR_JPN
+[TREE] GR_RT_JPN  parent= GR_WS2JPN
+[TREE] GR_CS_JPN  parent= GR_RT_JPN
+[TREE] DADJPN  parent= supply_point
+[TREE] WS1JPN  parent= DADJPN
+[TREE] WS2JPN  parent= WS1JPN
+[TREE] RT_JPN  parent= WS2JPN
+[TREE] CS_JPN  parent= RT_JPN
+[TREE] DADKosihikari  parent= supply_point
+[TREE] WS1Kosihikari  parent= DADKosihikari
+[TREE] supply_point  parent= root
+[TREE] MOMCAL  parent= supply_point
+[TREE] PADCAL  parent= MOMCAL
+[TREE] MOMGSJP  parent= supply_point
+[TREE] PADGSJP  parent= MOMGSJP
+[TREE] MOMJPN  parent= supply_point
+[TREE] PADJPN  parent= MOMJPN
+[TREE] MOMKosihikari  parent= supply_point
+[TREE] PADKosihikari  parent= MOMKosihikari
+[DEBUG] products detected: ['CAL_RICE_1', 'JPN_Koshihikari', 'JPN_RICE_1', 'Reserv_Rice']
+[Assign TOBE] CS_CAL - CAL_RICE_1 = 36000.0
+[Assign TOBE] CS_JPN - JPN_Koshihikari = 48000.0
+[Assign TOBE] CS_JPN - JPN_RICE_1 = 42000.0
+[Assign TOBE] GR_CS_JPN - Reserv_Rice = 24000.0
+[Assign TOBE] GRxCS_JPN - Reserv_Rice = 24000.0
+[Assign ASIS] supply_point - CAL_RICE_1 = 18000.0
+[Assign ASIS] supply_point - JPN_Koshihikari = 23000.0
+[Assign ASIS] supply_point - JPN_RICE_1 = 20000.0
+[Assign ASIS] supply_point - Reserv_Rice = 20000.0
+[TOBE Init] Leaf CS_CAL offering_price = 36000.00
+[TOBE] RT_CAL -> CS_CAL : offering_price = 36000.00
+[TOBE] WS2CAL -> RT_CAL : offering_price = 32400.00
+[TOBE] WS1CAL -> WS2CAL : offering_price = 30618.00
+[TOBE] DADCAL -> WS1CAL : offering_price = 27066.31
+[TOBE] supply_point -> DADCAL : offering_price = 19887.86
+[TOBE] root -> supply_point : offering_price = 19390.66
+[ASIS Init] Root supply_point offering_price = 18000.00
+[ASIS] supply_point -> DADCAL : offering_price = 18450.00
+[ASIS] DADCAL -> WS1CAL : offering_price = 24077.25
+[ASIS] WS1CAL -> WS2CAL : offering_price = 26870.21
+[ASIS] WS2CAL -> RT_CAL : offering_price = 28348.07
+[ASIS] RT_CAL -> CS_CAL : offering_price = 31182.88
+[TOBE Init] Leaf CS_JPN offering_price = 48000.00
+[TOBE] RT_JPN -> CS_JPN : offering_price = 48000.00
+[TOBE] WS2JPN -> RT_JPN : offering_price = 43200.00
+[TOBE] WS1Kosihikari -> WS2JPN : offering_price = 40824.00
+[TOBE] DADKosihikari -> WS1Kosihikari : offering_price = 36088.42
+[TOBE] supply_point -> DADKosihikari : offering_price = 30494.71
+[TOBE] root -> supply_point : offering_price = 29732.34
+[ASIS Init] Root supply_point offering_price = 23000.00
+[ASIS] supply_point -> DADKosihikari : offering_price = 23575.00
+[ASIS] DADKosihikari -> WS1Kosihikari : offering_price = 27229.12
+[ASIS] WS1Kosihikari -> WS2JPN : offering_price = 30387.70
+[ASIS] WS2JPN -> RT_JPN : offering_price = 32059.03
+[ASIS] RT_JPN -> CS_JPN : offering_price = 35264.93
+[TOBE Init] Leaf CS_JPN offering_price = 42000.00
+[TOBE] RT_JPN -> CS_JPN : offering_price = 42000.00
+[TOBE] WS2JPN -> RT_JPN : offering_price = 37800.00
+[TOBE] WS1JPN -> WS2JPN : offering_price = 35721.00
+[TOBE] DADJPN -> WS1JPN : offering_price = 31577.36
+[TOBE] supply_point -> DADJPN : offering_price = 26682.87
+[TOBE] root -> supply_point : offering_price = 26015.80
+[ASIS Init] Root supply_point offering_price = 20000.00
+[ASIS] supply_point -> DADJPN : offering_price = 20500.00
+[ASIS] DADJPN -> WS1JPN : offering_price = 23677.50
+[ASIS] WS1JPN -> WS2JPN : offering_price = 26424.09
+[ASIS] WS2JPN -> RT_JPN : offering_price = 27877.41
+[ASIS] RT_JPN -> CS_JPN : offering_price = 30665.16
+[TOBE Init] Leaf GR_CS_JPN offering_price = 24000.00
+[TOBE] GR_RT_JPN -> GR_CS_JPN : offering_price = 24000.00
+[TOBE] GR_WS2JPN -> GR_RT_JPN : offering_price = 21600.00
+[TOBE] GR_JPN -> GR_WS2JPN : offering_price = 20412.00
+[TOBE] DADGSJP -> GR_JPN : offering_price = 18044.21
+[TOBE] supply_point -> DADGSJP : offering_price = 17448.75
+[TOBE] root -> supply_point : offering_price = 17012.53
+[TOBE Init] Leaf GRxCS_JPN offering_price = 24000.00
+[TOBE] GRxRT_JPN -> GRxCS_JPN : offering_price = 24000.00
+[TOBE] GR_JPN -> GRxRT_JPN : offering_price = 21600.00
+[TOBE] DADGSJP -> GR_JPN : offering_price = 20412.00
+[TOBE] supply_point -> DADGSJP : offering_price = 19738.40
+[TOBE] root -> supply_point : offering_price = 19244.94
+[ASIS Init] Root supply_point offering_price = 20000.00
+[ASIS] supply_point -> DADGSJP : offering_price = 20500.00
+[ASIS] DADGSJP -> GR_JPN : offering_price = 21176.50
+[ASIS] GR_JPN -> GR_WS2JPN : offering_price = 23632.97
+[ASIS] GR_JPN -> GRxRT_JPN : offering_price = 22341.21
+[ASIS] GR_WS2JPN -> GR_RT_JPN : offering_price = 24932.79
+[ASIS] GRxRT_JPN -> GRxCS_JPN : offering_price = 24575.33
+[ASIS] GR_RT_JPN -> GR_CS_JPN : offering_price = 27426.07
+[Info] 初期コスト伝播完了
+[INFO] offering price CSV exported: C:\Users\ohsug\PySI_V0R8\_data_parameters\data_PySI_V0R8_bridge\offering_price_ASIS_TOBE.csv
+product_name_list ['CAL_RICE_1', 'JPN_Koshihikari', 'JPN_RICE_1', 'Reserv_Rice']
+End of load_data_files
+demand_planning4multi_product planning executed.
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             99.0
+self.cs_profit                 1.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       1.5
+self.cs_SGA_total              1.5
+self.cs_logistics_costs        1.5
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 94.5
+self.name supply_point
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             99.0
+self.cs_profit                 1.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       1.5
+self.cs_SGA_total              1.5
+self.cs_logistics_costs        1.5
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 94.5
+self.name DADCAL
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             97.5
+self.cs_profit                 2.5
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       4.0
+self.cs_SGA_total              4.0
+self.cs_logistics_costs        5.0
+self.cs_warehouse_cost         8.0
+self.cs_direct_materials_costs 74.5
+self.name WS1CAL
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             93.4
+self.cs_profit                 6.6
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       8.0
+self.cs_SGA_total              8.0
+self.cs_logistics_costs        5.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 63.4
+self.name WS2CAL
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             99.5
+self.cs_profit                 5.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       1.0
+self.cs_SGA_total              1.0
+self.cs_logistics_costs        0.5
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 97.2
+self.name RT_CAL
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             100.0
+self.cs_profit                 0.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        10.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 90.0
+self.name CS_CAL
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+total_revenue 0
+total_profit 0
+profit_ratio 0
+Demand Leveling4multi_prod executed.
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             99.0
+self.cs_profit                 1.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       1.5
+self.cs_SGA_total              1.5
+self.cs_logistics_costs        1.5
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 94.5
+self.name supply_point
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             99.0
+self.cs_profit                 1.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       1.5
+self.cs_SGA_total              1.5
+self.cs_logistics_costs        1.5
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 94.5
+self.name DADCAL
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             97.5
+self.cs_profit                 2.5
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       4.0
+self.cs_SGA_total              4.0
+self.cs_logistics_costs        5.0
+self.cs_warehouse_cost         8.0
+self.cs_direct_materials_costs 74.5
+self.name WS1CAL
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             93.4
+self.cs_profit                 6.6
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       8.0
+self.cs_SGA_total              8.0
+self.cs_logistics_costs        5.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 63.4
+self.name WS2CAL
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             99.5
+self.cs_profit                 5.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       1.0
+self.cs_SGA_total              1.0
+self.cs_logistics_costs        0.5
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 97.2
+self.name RT_CAL
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             100.0
+self.cs_profit                 0.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        10.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 90.0
+self.name CS_CAL
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+total_revenue 0
+total_profit 0
+profit_ratio 0
+Supply planning with Decoupling points
+nodes_decouple_all by_product CAL_RICE_1 [['CS_CAL'], ['RT_CAL'], ['WS2CAL'], ['WS1CAL'], ['DADCAL'], ['supply_point'], ['root']]
+decouple_node_names = nodes_decouple_all[-3]  CAL_RICE_1 ['DADCAL']
+push_pull_all_psi2i_decouple4supply5
+self.root_node_outbound_byprod.name supply_point
+decouple_node_names ['DADCAL']
+node in supply_proc supply_point
+push_pull_all_psi2i_decouple4supply5
+node.name & decouple_nodes supply_point ['DADCAL']
+PUSH_process applied to supply_point
+node in supply_proc DADCAL
+push_pull_all_psi2i_decouple4supply5
+node.name & decouple_nodes DADCAL ['DADCAL']
+PUSH_process applied to DADCAL
+PULL_process applied to WS1CAL
+PULL_process applied to WS2CAL
+PULL_process applied to RT_CAL
+PULL_process applied to CS_CAL
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             99.0
+self.cs_profit                 1.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       1.5
+self.cs_SGA_total              1.5
+self.cs_logistics_costs        1.5
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 94.5
+self.name supply_point
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             99.0
+self.cs_profit                 1.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       1.5
+self.cs_SGA_total              1.5
+self.cs_logistics_costs        1.5
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 94.5
+self.name DADCAL
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             97.5
+self.cs_profit                 2.5
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       4.0
+self.cs_SGA_total              4.0
+self.cs_logistics_costs        5.0
+self.cs_warehouse_cost         8.0
+self.cs_direct_materials_costs 74.5
+self.name WS1CAL
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             93.4
+self.cs_profit                 6.6
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       8.0
+self.cs_SGA_total              8.0
+self.cs_logistics_costs        5.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 63.4
+self.name WS2CAL
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             99.5
+self.cs_profit                 5.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       1.0
+self.cs_SGA_total              1.0
+self.cs_logistics_costs        0.5
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 97.2
+self.name RT_CAL
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    100.0
+self.cs_cost_total             100.0
+self.cs_profit                 0.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        10.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 90.0
+self.name CS_CAL
+I_total_qty_planned 0
+I_total_qty_init 0
+I_cost_coeff 0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+total_revenue 0
+total_profit 0
+profit_ratio 0
+[hooks] loaded plugin: pysi.plugins.alloc_supply_to_demand.plugin
+[hooks] loaded plugin: pysi.plugins.capacity_allocator.plugin
+[hooks] loaded plugin: pysi.plugins.capacity_allocator.plugin_OLD
+[hooks] loaded plugin: pysi.plugins.capacity_clip.plugin
+[hooks] loaded plugin: pysi.plugins.capacity_clip.plugin_251020_SHIP_OK
+[hooks] loaded plugin: pysi.plugins.capacity_clip.plugin_BK251019
+[hooks] loaded plugin: pysi.plugins.capacity_clip.plugin_BK251020_1123
+[hooks] loaded plugin: pysi.plugins.capacity_provider_monthly_csv.plugin
+[hooks] loaded plugin: pysi.plugins.demand_provider_monthly_csv.plugin
+[hooks] loaded plugin: pysi.plugins.diagnostics.plugin
+[hooks] loaded plugin: pysi.plugins.educ_pack.plugin
+[hooks] loaded plugin: pysi.plugins.educ_pack.plugin_BK251014_1835
+[hooks] loaded plugin: pysi.plugins.event_extractor.plugin
+[hooks] loaded plugin: pysi.plugins.log_moves_csv.plugin
+[hooks] loaded plugin: pysi.plugins.optimize_capacity.plugin
+[hooks] loaded plugin: pysi.plugins.psi_lot_glue.plugin
+[hooks] loaded plugin: pysi.plugins.urgency_tickets.plugin
+[hooks] loaded plugin: pysi.plugins.urgency_tickets.plugin_BK251020
+[main] wom_pipeline module file: C:\Users\ohsug\WOM_V0R2M0_base\pysi\core\wom_pipeline.py
+[main] about to call WOMPipelineRunner.run()
+[hooks] loaded plugin: pysi.plugins.alloc_supply_to_demand.plugin
+[hooks] loaded plugin: pysi.plugins.capacity_allocator.plugin
+[hooks] loaded plugin: pysi.plugins.capacity_allocator.plugin_OLD
+[hooks] loaded plugin: pysi.plugins.capacity_clip.plugin
+[hooks] loaded plugin: pysi.plugins.capacity_clip.plugin_251020_SHIP_OK
+[hooks] loaded plugin: pysi.plugins.capacity_clip.plugin_BK251019
+[hooks] loaded plugin: pysi.plugins.capacity_clip.plugin_BK251020_1123
+[hooks] loaded plugin: pysi.plugins.capacity_provider_monthly_csv.plugin
+[hooks] loaded plugin: pysi.plugins.demand_provider_monthly_csv.plugin
+[hooks] loaded plugin: pysi.plugins.diagnostics.plugin
+[hooks] loaded plugin: pysi.plugins.educ_pack.plugin
+[hooks] loaded plugin: pysi.plugins.educ_pack.plugin_BK251014_1835
+[hooks] loaded plugin: pysi.plugins.event_extractor.plugin
+[hooks] loaded plugin: pysi.plugins.log_moves_csv.plugin
+[hooks] loaded plugin: pysi.plugins.optimize_capacity.plugin
+[hooks] loaded plugin: pysi.plugins.psi_lot_glue.plugin
+[hooks] loaded plugin: pysi.plugins.urgency_tickets.plugin
+[hooks] loaded plugin: pysi.plugins.urgency_tickets.plugin_BK251020
+[pipeline] WOMPipelineRunner.run entered
+Initializing parameters
+Setting market potential and share
+At initialization - market_potential: 10000, target_share: 0.5
+[INFO] money master loaded.
+[TREE] supply_point  parent= root
+[TREE] DAD_FAS_APAC  parent= supply_point
+[TREE] WS_APAC  parent= DAD_FAS_APAC
+[TREE] RT_CN_ONLINE  parent= WS_APAC
+[TREE] CS_CN_PREMIUM  parent= RT_CN_ONLINE
+[TREE] RT_IN_ECOM  parent= WS_APAC
+[TREE] CS_IN_ASPIRER  parent= RT_IN_ECOM
+[TREE] RT_JP_APPLE  parent= WS_APAC
+[TREE] CS_JP_REPLACEMENT  parent= RT_JP_APPLE
+[TREE] DAD_FAS_EURO  parent= supply_point
+[TREE] WS_EU  parent= DAD_FAS_EURO
+[TREE] RT_UK_CARRIER  parent= WS_EU
+[TREE] CS_UK_MAINSTREAM  parent= RT_UK_CARRIER
+[TREE] RT_DE_ONLINE  parent= WS_EU
+[TREE] CS_DE_PREMIUM  parent= RT_DE_ONLINE
+[TREE] DAD_FAS_AMER  parent= supply_point
+[TREE] WS_NA  parent= DAD_FAS_AMER
+[TREE] RT_US_CARRIER  parent= WS_NA
+[TREE] CS_US_MAINSTREAM  parent= RT_US_CARRIER
+[TREE] RT_US_ONLINE  parent= WS_NA
+[TREE] CS_US_PREMIUM  parent= RT_US_ONLINE
+[TREE] supply_point  parent= root
+[TREE] MOM_final_assy_EURO  parent= supply_point
+[TREE] PAD_final_assy_EURO  parent= MOM_final_assy_EURO
+[TREE] MOM_final_assy_ASIA  parent= supply_point
+[TREE] PAD_final_assy_ASIA  parent= MOM_final_assy_ASIA
+[DEBUG] products detected: ['IPHONE_NM_2028_BASE', 'IPHONE_NM_2028_PRO']
+[TOBE Init] Leaf CS_US_PREMIUM offering_price = 0.00
+[TOBE] RT_US_ONLINE -> CS_US_PREMIUM : offering_price = 0.00
+[TOBE] WS_NA -> RT_US_ONLINE : offering_price = -0.00
+[TOBE] DAD_FAS_AMER -> WS_NA : offering_price = 0.00
+[TOBE] supply_point -> DAD_FAS_AMER : offering_price = -0.00
+[TOBE] root -> supply_point : offering_price = 0.00
+[TOBE Init] Leaf CS_US_MAINSTREAM offering_price = 0.00
+[TOBE] RT_US_CARRIER -> CS_US_MAINSTREAM : offering_price = 0.00
+[TOBE] WS_NA -> RT_US_CARRIER : offering_price = 0.00
+[TOBE] DAD_FAS_AMER -> WS_NA : offering_price = -0.00
+[TOBE] supply_point -> DAD_FAS_AMER : offering_price = 0.00
+[TOBE] root -> supply_point : offering_price = -0.00
+[TOBE Init] Leaf CS_DE_PREMIUM offering_price = 0.00
+[TOBE] RT_DE_ONLINE -> CS_DE_PREMIUM : offering_price = 0.00
+[TOBE] WS_EU -> RT_DE_ONLINE : offering_price = -0.00
+[TOBE] DAD_FAS_EURO -> WS_EU : offering_price = 0.00
+[TOBE] supply_point -> DAD_FAS_EURO : offering_price = -0.00
+[TOBE] root -> supply_point : offering_price = 0.00
+[TOBE Init] Leaf CS_UK_MAINSTREAM offering_price = 0.00
+[TOBE] RT_UK_CARRIER -> CS_UK_MAINSTREAM : offering_price = 0.00
+[TOBE] WS_EU -> RT_UK_CARRIER : offering_price = -0.00
+[TOBE] DAD_FAS_EURO -> WS_EU : offering_price = 0.00
+[TOBE] supply_point -> DAD_FAS_EURO : offering_price = -0.00
+[TOBE] root -> supply_point : offering_price = 0.00
+[TOBE Init] Leaf CS_JP_REPLACEMENT offering_price = 0.00
+[TOBE] RT_JP_APPLE -> CS_JP_REPLACEMENT : offering_price = 0.00
+[TOBE] WS_APAC -> RT_JP_APPLE : offering_price = -0.00
+[TOBE] DAD_FAS_APAC -> WS_APAC : offering_price = 0.00
+[TOBE] supply_point -> DAD_FAS_APAC : offering_price = -0.00
+[TOBE] root -> supply_point : offering_price = 0.00
+[TOBE Init] Leaf CS_IN_ASPIRER offering_price = 0.00
+[TOBE] RT_IN_ECOM -> CS_IN_ASPIRER : offering_price = 0.00
+[TOBE] WS_APAC -> RT_IN_ECOM : offering_price = -0.00
+[TOBE] DAD_FAS_APAC -> WS_APAC : offering_price = 0.00
+[TOBE] supply_point -> DAD_FAS_APAC : offering_price = -0.00
+[TOBE] root -> supply_point : offering_price = 0.00
+[TOBE Init] Leaf CS_CN_PREMIUM offering_price = 0.00
+[TOBE] RT_CN_ONLINE -> CS_CN_PREMIUM : offering_price = 0.00
+[TOBE] WS_APAC -> RT_CN_ONLINE : offering_price = -0.00
+[TOBE] DAD_FAS_APAC -> WS_APAC : offering_price = 0.00
+[TOBE] supply_point -> DAD_FAS_APAC : offering_price = -0.00
+[TOBE] root -> supply_point : offering_price = 0.00
+[ASIS Init] Root supply_point offering_price = 0.00
+[ASIS] supply_point -> DAD_FAS_AMER : offering_price = 0.00
+[ASIS] supply_point -> DAD_FAS_EURO : offering_price = 0.00
+[ASIS] supply_point -> DAD_FAS_APAC : offering_price = 0.00
+[ASIS] DAD_FAS_AMER -> WS_NA : offering_price = 0.00
+[ASIS] DAD_FAS_EURO -> WS_EU : offering_price = 0.00
+[ASIS] DAD_FAS_APAC -> WS_APAC : offering_price = 0.00
+[ASIS] WS_NA -> RT_US_ONLINE : offering_price = 0.00
+[ASIS] WS_NA -> RT_US_CARRIER : offering_price = 0.00
+[ASIS] WS_EU -> RT_DE_ONLINE : offering_price = 0.00
+[ASIS] WS_EU -> RT_UK_CARRIER : offering_price = 0.00
+[ASIS] WS_APAC -> RT_JP_APPLE : offering_price = 0.00
+[ASIS] WS_APAC -> RT_IN_ECOM : offering_price = 0.00
+[ASIS] WS_APAC -> RT_CN_ONLINE : offering_price = 0.00
+[ASIS] RT_US_ONLINE -> CS_US_PREMIUM : offering_price = 0.00
+[ASIS] RT_US_CARRIER -> CS_US_MAINSTREAM : offering_price = 0.00
+[ASIS] RT_DE_ONLINE -> CS_DE_PREMIUM : offering_price = 0.00
+[ASIS] RT_UK_CARRIER -> CS_UK_MAINSTREAM : offering_price = 0.00
+[ASIS] RT_JP_APPLE -> CS_JP_REPLACEMENT : offering_price = 0.00
+[ASIS] RT_IN_ECOM -> CS_IN_ASPIRER : offering_price = 0.00
+[ASIS] RT_CN_ONLINE -> CS_CN_PREMIUM : offering_price = 0.00
+[TOBE Init] Leaf CS_US_PREMIUM offering_price = 0.00
+[TOBE] RT_US_ONLINE -> CS_US_PREMIUM : offering_price = 0.00
+[TOBE] WS_NA -> RT_US_ONLINE : offering_price = -0.00
+[TOBE] DAD_FAS_AMER -> WS_NA : offering_price = 0.00
+[TOBE] supply_point -> DAD_FAS_AMER : offering_price = -0.00
+[TOBE] root -> supply_point : offering_price = 0.00
+[TOBE Init] Leaf CS_US_MAINSTREAM offering_price = 0.00
+[TOBE] RT_US_CARRIER -> CS_US_MAINSTREAM : offering_price = 0.00
+[TOBE] WS_NA -> RT_US_CARRIER : offering_price = 0.00
+[TOBE] DAD_FAS_AMER -> WS_NA : offering_price = -0.00
+[TOBE] supply_point -> DAD_FAS_AMER : offering_price = 0.00
+[TOBE] root -> supply_point : offering_price = -0.00
+[TOBE Init] Leaf CS_DE_PREMIUM offering_price = 0.00
+[TOBE] RT_DE_ONLINE -> CS_DE_PREMIUM : offering_price = 0.00
+[TOBE] WS_EU -> RT_DE_ONLINE : offering_price = -0.00
+[TOBE] DAD_FAS_EURO -> WS_EU : offering_price = 0.00
+[TOBE] supply_point -> DAD_FAS_EURO : offering_price = -0.00
+[TOBE] root -> supply_point : offering_price = 0.00
+[TOBE Init] Leaf CS_UK_MAINSTREAM offering_price = 0.00
+[TOBE] RT_UK_CARRIER -> CS_UK_MAINSTREAM : offering_price = 0.00
+[TOBE] WS_EU -> RT_UK_CARRIER : offering_price = -0.00
+[TOBE] DAD_FAS_EURO -> WS_EU : offering_price = 0.00
+[TOBE] supply_point -> DAD_FAS_EURO : offering_price = -0.00
+[TOBE] root -> supply_point : offering_price = 0.00
+[TOBE Init] Leaf CS_JP_REPLACEMENT offering_price = 0.00
+[TOBE] RT_JP_APPLE -> CS_JP_REPLACEMENT : offering_price = 0.00
+[TOBE] WS_APAC -> RT_JP_APPLE : offering_price = -0.00
+[TOBE] DAD_FAS_APAC -> WS_APAC : offering_price = 0.00
+[TOBE] supply_point -> DAD_FAS_APAC : offering_price = -0.00
+[TOBE] root -> supply_point : offering_price = 0.00
+[TOBE Init] Leaf CS_IN_ASPIRER offering_price = 0.00
+[TOBE] RT_IN_ECOM -> CS_IN_ASPIRER : offering_price = 0.00
+[TOBE] WS_APAC -> RT_IN_ECOM : offering_price = -0.00
+[TOBE] DAD_FAS_APAC -> WS_APAC : offering_price = 0.00
+[TOBE] supply_point -> DAD_FAS_APAC : offering_price = -0.00
+[TOBE] root -> supply_point : offering_price = 0.00
+[TOBE Init] Leaf CS_CN_PREMIUM offering_price = 0.00
+[TOBE] RT_CN_ONLINE -> CS_CN_PREMIUM : offering_price = 0.00
+[TOBE] WS_APAC -> RT_CN_ONLINE : offering_price = -0.00
+[TOBE] DAD_FAS_APAC -> WS_APAC : offering_price = 0.00
+[TOBE] supply_point -> DAD_FAS_APAC : offering_price = -0.00
+[TOBE] root -> supply_point : offering_price = 0.00
+[ASIS Init] Root supply_point offering_price = 0.00
+[ASIS] supply_point -> DAD_FAS_AMER : offering_price = 0.00
+[ASIS] supply_point -> DAD_FAS_EURO : offering_price = 0.00
+[ASIS] supply_point -> DAD_FAS_APAC : offering_price = 0.00
+[ASIS] DAD_FAS_AMER -> WS_NA : offering_price = 0.00
+[ASIS] DAD_FAS_EURO -> WS_EU : offering_price = 0.00
+[ASIS] DAD_FAS_APAC -> WS_APAC : offering_price = 0.00
+[ASIS] WS_NA -> RT_US_ONLINE : offering_price = 0.00
+[ASIS] WS_NA -> RT_US_CARRIER : offering_price = 0.00
+[ASIS] WS_EU -> RT_DE_ONLINE : offering_price = 0.00
+[ASIS] WS_EU -> RT_UK_CARRIER : offering_price = 0.00
+[ASIS] WS_APAC -> RT_JP_APPLE : offering_price = 0.00
+[ASIS] WS_APAC -> RT_IN_ECOM : offering_price = 0.00
+[ASIS] WS_APAC -> RT_CN_ONLINE : offering_price = 0.00
+[ASIS] RT_US_ONLINE -> CS_US_PREMIUM : offering_price = 0.00
+[ASIS] RT_US_CARRIER -> CS_US_MAINSTREAM : offering_price = 0.00
+[ASIS] RT_DE_ONLINE -> CS_DE_PREMIUM : offering_price = 0.00
+[ASIS] RT_UK_CARRIER -> CS_UK_MAINSTREAM : offering_price = 0.00
+[ASIS] RT_JP_APPLE -> CS_JP_REPLACEMENT : offering_price = 0.00
+[ASIS] RT_IN_ECOM -> CS_IN_ASPIRER : offering_price = 0.00
+[ASIS] RT_CN_ONLINE -> CS_CN_PREMIUM : offering_price = 0.00
+[Info] 初期コスト伝播完了
+[INFO] offering price CSV exported: C:\Users\ohsug\WOM_V0R2M0_base\data\offering_price_ASIS_TOBE.csv
+product_name_list ['IPHONE_NM_2028_BASE', 'IPHONE_NM_2028_PRO']
+End of load_data_files
+[pipeline-check] OT len = 53
+[pipeline-check] IN len = 53
+[TRACE] WOMEnv class module = pysi.wom_main
+[TRACE] WOMEnv class file   = C:\Users\ohsug\WOM_V0R2M0_base\pysi\wom_main.py
+[TRACE] load_data_files file = C:\Users\ohsug\WOM_V0R2M0_base\pysi\wom_main.py
+[INFO] PSI spaces allocated to all outbound nodes.
+[DEBUG] monthly normalized head:
+           product_name         node_name  year  ...    m10    m11    m12
+0  IPHONE_NM_2028_BASE     CS_US_PREMIUM  2027  ...   5000   6000   7000
+1  IPHONE_NM_2028_BASE     CS_US_PREMIUM  2028  ...  55000  42000  38000
+2  IPHONE_NM_2028_BASE     CS_US_PREMIUM  2029  ...  18000  17000  16000
+3  IPHONE_NM_2028_BASE  CS_US_MAINSTREAM  2027  ...   4000   5000   6000
+4  IPHONE_NM_2028_BASE  CS_US_MAINSTREAM  2028  ...  62000  54000  50000
+5  IPHONE_NM_2028_BASE  CS_US_MAINSTREAM  2029  ...  30000  29000  28000
+
+[6 rows x 15 columns]
+[DEBUG] PSI slot lengths for node 'supply_point' (first 5 weeks): [0, 0, 0, 0, 0]
+[OK] IPHONE_NM_2028_BASE: df_weekly の総 S_lot と PSI の総ロットが全 leaf で一致。
+[supply_point] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[DAD_FAS_APAC] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[WS_APAC] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[RT_CN_ONLINE] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[CS_CN_PREMIUM] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[RT_IN_ECOM] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[CS_IN_ASPIRER] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[RT_JP_APPLE] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[CS_JP_REPLACEMENT] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[DAD_FAS_EURO] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[WS_EU] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[RT_UK_CARRIER] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[CS_UK_MAINSTREAM] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[RT_DE_ONLINE] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[CS_DE_PREMIUM] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[DAD_FAS_AMER] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[WS_NA] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[RT_US_CARRIER] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[CS_US_MAINSTREAM] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[RT_US_ONLINE] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[CS_US_PREMIUM] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[OK] IPHONE_NM_2028_PRO: df_weekly の総 S_lot と PSI の総ロットが全 leaf で一致。
+[supply_point] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[DAD_FAS_APAC] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[WS_APAC] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[RT_CN_ONLINE] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[CS_CN_PREMIUM] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[RT_IN_ECOM] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[CS_IN_ASPIRER] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[RT_JP_APPLE] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[CS_JP_REPLACEMENT] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[DAD_FAS_EURO] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[WS_EU] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[RT_UK_CARRIER] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[CS_UK_MAINSTREAM] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[RT_DE_ONLINE] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[CS_DE_PREMIUM] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[DAD_FAS_AMER] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[WS_NA] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[RT_US_CARRIER] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[CS_US_MAINSTREAM] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[RT_US_ONLINE] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[CS_US_PREMIUM] first 6 weeks (S,CO,I,P counts): [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+[WARN] duplicated lot_id(s): 566672 (showing first 566672)
+[OK] lot_id format verified: total=708340
+[INFO] weekly lots exported: C:\Users\ohsug\WOM_V0R2M0_base\data\_debug_weekly_lots.csv
+demand_planning4multi_product planning executed.
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             823.65
+self.cs_profit                 145.35
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       9.69
+self.cs_SGA_total              9.69
+self.cs_logistics_costs        9.69
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 678.3
+self.name supply_point
+I_total_qty_planned 0
+I_total_qty_init 92422
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_AMER
+I_total_qty_planned 0
+I_total_qty_init 42328
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_NA
+I_total_qty_planned 0
+I_total_qty_init 42328
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_US_ONLINE
+I_total_qty_planned 0
+I_total_qty_init 18789
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_US_PREMIUM
+I_total_qty_planned 0
+I_total_qty_init 18789
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_US_CARRIER
+I_total_qty_planned 0
+I_total_qty_init 23539
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    0
+self.cs_cost_total             0
+self.cs_profit                 0
+self.cs_marketing_promotion    0
+self.cs_sales_admin_cost       0
+self.cs_SGA_total              0
+self.cs_logistics_costs        0
+self.cs_warehouse_cost         0
+self.cs_direct_materials_costs 0
+self.name CS_US_MAINSTREAM
+I_total_qty_planned 0
+I_total_qty_init 23539
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_EURO
+I_total_qty_planned 0
+I_total_qty_init 14392
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_EU
+I_total_qty_planned 0
+I_total_qty_init 14392
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_DE_ONLINE
+I_total_qty_planned 0
+I_total_qty_init 7038
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_DE_PREMIUM
+I_total_qty_planned 0
+I_total_qty_init 7038
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_UK_CARRIER
+I_total_qty_planned 0
+I_total_qty_init 7354
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_UK_MAINSTREAM
+I_total_qty_planned 0
+I_total_qty_init 7354
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_APAC
+I_total_qty_planned 0
+I_total_qty_init 35702
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_APAC
+I_total_qty_planned 0
+I_total_qty_init 35702
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_JP_APPLE
+I_total_qty_planned 0
+I_total_qty_init 6804
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_JP_REPLACEMENT
+I_total_qty_planned 0
+I_total_qty_init 6804
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_IN_ECOM
+I_total_qty_planned 0
+I_total_qty_init 10159
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_IN_ASPIRER
+I_total_qty_planned 0
+I_total_qty_init 10159
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_CN_ONLINE
+I_total_qty_planned 0
+I_total_qty_init 18739
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 0
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_CN_PREMIUM
+I_total_qty_planned 0
+I_total_qty_init 18739
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+total_revenue 0
+total_profit 0
+profit_ratio 0
+Demand Leveling4multi_prod executed.
+ L = self.lot_counts_all 92422
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             823.65
+self.cs_profit                 145.35
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       9.69
+self.cs_SGA_total              9.69
+self.cs_logistics_costs        9.69
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 678.3
+self.name supply_point
+I_total_qty_planned 92422
+I_total_qty_init 92422
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 42328
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_AMER
+I_total_qty_planned 0
+I_total_qty_init 42328
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 820316.64
+self.eval_cs_warehouse_cost 820316.64
+ L = self.lot_counts_all 42328
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_NA
+I_total_qty_planned 0
+I_total_qty_init 42328
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 1640633.28
+self.eval_cs_warehouse_cost 1640633.28
+ L = self.lot_counts_all 18789
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_US_ONLINE
+I_total_qty_planned 0
+I_total_qty_init 18789
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18789
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_US_PREMIUM
+I_total_qty_planned 0
+I_total_qty_init 18789
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 23539
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_US_CARRIER
+I_total_qty_planned 0
+I_total_qty_init 23539
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 23539
+self.cs_price_sales_shipped    0
+self.cs_cost_total             0
+self.cs_profit                 0
+self.cs_marketing_promotion    0
+self.cs_sales_admin_cost       0
+self.cs_SGA_total              0
+self.cs_logistics_costs        0
+self.cs_warehouse_cost         0
+self.cs_direct_materials_costs 0
+self.name CS_US_MAINSTREAM
+I_total_qty_planned 0
+I_total_qty_init 23539
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 14392
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_EURO
+I_total_qty_planned 0
+I_total_qty_init 14392
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 278916.95999999996
+self.eval_cs_warehouse_cost 278916.95999999996
+ L = self.lot_counts_all 14392
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_EU
+I_total_qty_planned 0
+I_total_qty_init 14392
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 557833.9199999999
+self.eval_cs_warehouse_cost 557833.9199999999
+ L = self.lot_counts_all 7038
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_DE_ONLINE
+I_total_qty_planned 0
+I_total_qty_init 7038
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7038
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_DE_PREMIUM
+I_total_qty_planned 0
+I_total_qty_init 7038
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7354
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_UK_CARRIER
+I_total_qty_planned 0
+I_total_qty_init 7354
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7354
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_UK_MAINSTREAM
+I_total_qty_planned 0
+I_total_qty_init 7354
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 35702
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_APAC
+I_total_qty_planned 0
+I_total_qty_init 35702
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 691904.76
+self.eval_cs_warehouse_cost 691904.76
+ L = self.lot_counts_all 35702
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_APAC
+I_total_qty_planned 0
+I_total_qty_init 35702
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 1383809.52
+self.eval_cs_warehouse_cost 1383809.52
+ L = self.lot_counts_all 6804
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_JP_APPLE
+I_total_qty_planned 0
+I_total_qty_init 6804
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 6804
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_JP_REPLACEMENT
+I_total_qty_planned 0
+I_total_qty_init 6804
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 10159
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_IN_ECOM
+I_total_qty_planned 0
+I_total_qty_init 10159
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 10159
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_IN_ASPIRER
+I_total_qty_planned 0
+I_total_qty_init 10159
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18739
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_CN_ONLINE
+I_total_qty_planned 0
+I_total_qty_init 18739
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18739
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_CN_PREMIUM
+I_total_qty_planned 0
+I_total_qty_init 18739
+I_cost_coeff 0.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+total_revenue 424975299
+total_profit 116003932
+profit_ratio 27.3
+Supply planning with Decoupling points
+nodes_decouple_all by_product IPHONE_NM_2028_BASE [['CS_US_PREMIUM', 'CS_US_MAINSTREAM', 'CS_DE_PREMIUM', 'CS_UK_MAINSTREAM', 'CS_JP_REPLACEMENT', 'CS_IN_ASPIRER', 'CS_CN_PREMIUM'], ['CS_US_MAINSTREAM', 'CS_DE_PREMIUM', 'CS_UK_MAINSTREAM', 'CS_JP_REPLACEMENT', 'CS_IN_ASPIRER', 'CS_CN_PREMIUM', 'RT_US_ONLINE'], ['CS_DE_PREMIUM', 'CS_UK_MAINSTREAM', 'CS_JP_REPLACEMENT', 'CS_IN_ASPIRER', 'CS_CN_PREMIUM', 'RT_US_CARRIER', 'RT_US_ONLINE'], ['CS_UK_MAINSTREAM', 'CS_JP_REPLACEMENT', 'CS_IN_ASPIRER', 'CS_CN_PREMIUM', 'RT_DE_ONLINE', 'RT_US_CARRIER', 'RT_US_ONLINE'], ['CS_JP_REPLACEMENT', 'CS_IN_ASPIRER', 'CS_CN_PREMIUM', 'RT_UK_CARRIER', 'RT_DE_ONLINE', 'RT_US_CARRIER', 'RT_US_ONLINE'], ['CS_IN_ASPIRER', 'CS_CN_PREMIUM', 'RT_JP_APPLE', 'RT_UK_CARRIER', 'RT_DE_ONLINE', 'RT_US_CARRIER', 'RT_US_ONLINE'], ['CS_CN_PREMIUM', 'RT_IN_ECOM', 'RT_JP_APPLE', 'RT_UK_CARRIER', 'RT_DE_ONLINE', 'RT_US_CARRIER', 'RT_US_ONLINE'], ['RT_CN_ONLINE', 'RT_IN_ECOM', 'RT_JP_APPLE', 'RT_UK_CARRIER', 'RT_DE_ONLINE', 'RT_US_CARRIER', 'RT_US_ONLINE'], ['RT_UK_CARRIER', 'RT_DE_ONLINE', 'RT_US_CARRIER', 'RT_US_ONLINE', 'WS_APAC'], ['RT_US_CARRIER', 'RT_US_ONLINE', 'WS_EU', 'WS_APAC'], ['WS_NA', 'WS_EU', 'WS_APAC'], ['WS_EU', 'WS_APAC', 'DAD_FAS_AMER'], ['WS_APAC', 'DAD_FAS_EURO', 'DAD_FAS_AMER'], ['DAD_FAS_APAC', 'DAD_FAS_EURO', 'DAD_FAS_AMER'], ['supply_point'], ['root']]
+decouple_node_names = nodes_decouple_all[-3]  IPHONE_NM_2028_BASE ['DAD_FAS_APAC', 'DAD_FAS_EURO', 'DAD_FAS_AMER']
+push_pull_all_psi2i_decouple4supply5
+self.root_node_outbound_byprod.name supply_point
+decouple_node_names ['DAD_FAS_APAC', 'DAD_FAS_EURO', 'DAD_FAS_AMER']
+node in supply_proc supply_point
+push_pull_all_psi2i_decouple4supply5
+node.name & decouple_nodes supply_point ['DAD_FAS_APAC', 'DAD_FAS_EURO', 'DAD_FAS_AMER']
+PUSH_process applied to supply_point
+node in supply_proc DAD_FAS_AMER
+push_pull_all_psi2i_decouple4supply5
+node.name & decouple_nodes DAD_FAS_AMER ['DAD_FAS_APAC', 'DAD_FAS_EURO', 'DAD_FAS_AMER']
+PUSH_process applied to DAD_FAS_AMER
+PULL_process applied to WS_NA
+PULL_process applied to RT_US_ONLINE
+PULL_process applied to CS_US_PREMIUM
+PULL_process applied to RT_US_CARRIER
+PULL_process applied to CS_US_MAINSTREAM
+node in supply_proc DAD_FAS_EURO
+push_pull_all_psi2i_decouple4supply5
+node.name & decouple_nodes DAD_FAS_EURO ['DAD_FAS_APAC', 'DAD_FAS_EURO', 'DAD_FAS_AMER']
+PUSH_process applied to DAD_FAS_EURO
+PULL_process applied to WS_EU
+PULL_process applied to RT_DE_ONLINE
+PULL_process applied to CS_DE_PREMIUM
+PULL_process applied to RT_UK_CARRIER
+PULL_process applied to CS_UK_MAINSTREAM
+node in supply_proc DAD_FAS_APAC
+push_pull_all_psi2i_decouple4supply5
+node.name & decouple_nodes DAD_FAS_APAC ['DAD_FAS_APAC', 'DAD_FAS_EURO', 'DAD_FAS_AMER']
+PUSH_process applied to DAD_FAS_APAC
+PULL_process applied to WS_APAC
+PULL_process applied to RT_JP_APPLE
+PULL_process applied to CS_JP_REPLACEMENT
+PULL_process applied to RT_IN_ECOM
+PULL_process applied to CS_IN_ASPIRER
+PULL_process applied to RT_CN_ONLINE
+PULL_process applied to CS_CN_PREMIUM
+ L = self.lot_counts_all 92422
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             823.65
+self.cs_profit                 145.35
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       9.69
+self.cs_SGA_total              9.69
+self.cs_logistics_costs        9.69
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 678.3
+self.name supply_point
+I_total_qty_planned 92422
+I_total_qty_init 92422
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 42328
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_AMER
+I_total_qty_planned 3783887
+I_total_qty_init 42328
+I_cost_coeff 89.39441976941977
+self.eval_cs_warehouse_cost 820316.64
+self.eval_cs_warehouse_cost 74152046.7
+ L = self.lot_counts_all 42328
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_NA
+I_total_qty_planned 42328
+I_total_qty_init 42328
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 1640633.28
+self.eval_cs_warehouse_cost 3281266.56
+ L = self.lot_counts_all 18789
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_US_ONLINE
+I_total_qty_planned 18789
+I_total_qty_init 18789
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18789
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_US_PREMIUM
+I_total_qty_planned 18789
+I_total_qty_init 18789
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 23539
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_US_CARRIER
+I_total_qty_planned 23539
+I_total_qty_init 23539
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 23539
+self.cs_price_sales_shipped    0
+self.cs_cost_total             0
+self.cs_profit                 0
+self.cs_marketing_promotion    0
+self.cs_sales_admin_cost       0
+self.cs_SGA_total              0
+self.cs_logistics_costs        0
+self.cs_warehouse_cost         0
+self.cs_direct_materials_costs 0
+self.name CS_US_MAINSTREAM
+I_total_qty_planned 23539
+I_total_qty_init 23539
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 14392
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_EURO
+I_total_qty_planned 1282708
+I_total_qty_init 14392
+I_cost_coeff 89.12645914396887
+self.eval_cs_warehouse_cost 278916.95999999996
+self.eval_cs_warehouse_cost 25137797.999999996
+ L = self.lot_counts_all 14392
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_EU
+I_total_qty_planned 14392
+I_total_qty_init 14392
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 557833.9199999999
+self.eval_cs_warehouse_cost 1115667.8399999999
+ L = self.lot_counts_all 7038
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_DE_ONLINE
+I_total_qty_planned 7038
+I_total_qty_init 7038
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7038
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_DE_PREMIUM
+I_total_qty_planned 7038
+I_total_qty_init 7038
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7354
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_UK_CARRIER
+I_total_qty_planned 7354
+I_total_qty_init 7354
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7354
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_UK_MAINSTREAM
+I_total_qty_planned 7354
+I_total_qty_init 7354
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 35702
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_APAC
+I_total_qty_planned 3038661
+I_total_qty_init 35702
+I_cost_coeff 85.11178645454036
+self.eval_cs_warehouse_cost 691904.76
+self.eval_cs_warehouse_cost 59581154.940000005
+ L = self.lot_counts_all 35702
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_APAC
+I_total_qty_planned 35702
+I_total_qty_init 35702
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 1383809.52
+self.eval_cs_warehouse_cost 2767619.04
+ L = self.lot_counts_all 6804
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_JP_APPLE
+I_total_qty_planned 6804
+I_total_qty_init 6804
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 6804
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_JP_REPLACEMENT
+I_total_qty_planned 6804
+I_total_qty_init 6804
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 10159
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_IN_ECOM
+I_total_qty_planned 10159
+I_total_qty_init 10159
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 10159
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_IN_ASPIRER
+I_total_qty_planned 10159
+I_total_qty_init 10159
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18739
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_CN_ONLINE
+I_total_qty_planned 18739
+I_total_qty_init 18739
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18739
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_CN_PREMIUM
+I_total_qty_planned 18739
+I_total_qty_init 18739
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+total_revenue 424975299
+total_profit -44658206
+profit_ratio -10.5
+[pipeline] before after_supply_planning hook
+[pipeline] bus._actions type=<class 'dict'>
+[pipeline] registered actions for after_supply_planning: [_CB(priority=50, fn=<function on_after_supply_planning at 0x000002818CFF3BA0>, src='pysi.plugins.event_extractor.plugin:on_after_supply_planning')]
+[bridge] on_after_supply_planning invoked
+[bridge] current snapshot time_bucket=202601
+[bridge] previous snapshot exists=False
+[bridge] first cycle: previous snapshot is None, bridge events kept empty
+[pipeline] after after_supply_planning hook
+product node_name IPHONE_NM_2028_BASE supply_point
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE DAD_FAS_APAC
+inventory_lots =  25698
+inventory_unit_value =  1100.0
+inventory_value =  28267800.0
+product node_name IPHONE_NM_2028_BASE WS_APAC
+inventory_lots =  0
+inventory_unit_value =  1200.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE RT_CN_ONLINE
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE CS_CN_PREMIUM
+shipped_lots =  18739
+revenue_unit_value =  1600.0
+revenue =  29982400.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE RT_IN_ECOM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE CS_IN_ASPIRER
+shipped_lots =  10159
+revenue_unit_value =  1450.0
+revenue =  14730550.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE RT_JP_APPLE
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE CS_JP_REPLACEMENT
+shipped_lots =  6804
+revenue_unit_value =  1500.0
+revenue =  10206000.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE DAD_FAS_EURO
+inventory_lots =  10684
+inventory_unit_value =  1120.0
+inventory_value =  11966080.0
+product node_name IPHONE_NM_2028_BASE WS_EU
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE RT_UK_CARRIER
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE CS_UK_MAINSTREAM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE RT_DE_ONLINE
+shipped_lots =  7038
+revenue_unit_value =  0.0
+revenue =  0.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE CS_DE_PREMIUM
+shipped_lots =  7038
+revenue_unit_value =  0.0
+revenue =  0.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE DAD_FAS_AMER
+inventory_lots =  31716
+inventory_unit_value =  1110.0
+inventory_value =  35204760.0
+product node_name IPHONE_NM_2028_BASE WS_NA
+inventory_lots =  0
+inventory_unit_value =  1210.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE RT_US_CARRIER
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE CS_US_MAINSTREAM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE RT_US_ONLINE
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE CS_US_PREMIUM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE MOM_final_assy_EURO
+inventory_lots =  0
+inventory_unit_value =  980.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE PAD_final_assy_EURO
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE MOM_final_assy_ASIA
+inventory_lots =  0
+inventory_unit_value =  950.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE PAD_final_assy_ASIA
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO supply_point
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO DAD_FAS_APAC
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO WS_APAC
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO RT_CN_ONLINE
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO CS_CN_PREMIUM
+shipped_lots =  9325
+revenue_unit_value =  0.0
+revenue =  0.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO RT_IN_ECOM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO CS_IN_ASPIRER
+shipped_lots =  6057
+revenue_unit_value =  0.0
+revenue =  0.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO RT_JP_APPLE
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO CS_JP_REPLACEMENT
+shipped_lots =  4389
+revenue_unit_value =  0.0
+revenue =  0.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO DAD_FAS_EURO
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO WS_EU
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO RT_UK_CARRIER
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO CS_UK_MAINSTREAM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO RT_DE_ONLINE
+shipped_lots =  4725
+revenue_unit_value =  0.0
+revenue =  0.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO CS_DE_PREMIUM
+shipped_lots =  4725
+revenue_unit_value =  0.0
+revenue =  0.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO DAD_FAS_AMER
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO WS_NA
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO RT_US_CARRIER
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO CS_US_MAINSTREAM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO RT_US_ONLINE
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO CS_US_PREMIUM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO MOM_final_assy_EURO
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO PAD_final_assy_EURO
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO MOM_final_assy_ASIA
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO PAD_final_assy_ASIA
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+ L = self.lot_counts_all 92422
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             823.65
+self.cs_profit                 145.35
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       9.69
+self.cs_SGA_total              9.69
+self.cs_logistics_costs        9.69
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 678.3
+self.name supply_point
+I_total_qty_planned 92422
+I_total_qty_init 92422
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 42328
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_AMER
+I_total_qty_planned 3783887
+I_total_qty_init 42328
+I_cost_coeff 89.39441976941977
+self.eval_cs_warehouse_cost 820316.64
+self.eval_cs_warehouse_cost 74152046.7
+ L = self.lot_counts_all 42328
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_NA
+I_total_qty_planned 42328
+I_total_qty_init 42328
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 1640633.28
+self.eval_cs_warehouse_cost 3281266.56
+ L = self.lot_counts_all 18789
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_US_ONLINE
+I_total_qty_planned 18789
+I_total_qty_init 18789
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18789
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_US_PREMIUM
+I_total_qty_planned 18789
+I_total_qty_init 18789
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 23539
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_US_CARRIER
+I_total_qty_planned 23539
+I_total_qty_init 23539
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 23539
+self.cs_price_sales_shipped    0
+self.cs_cost_total             0
+self.cs_profit                 0
+self.cs_marketing_promotion    0
+self.cs_sales_admin_cost       0
+self.cs_SGA_total              0
+self.cs_logistics_costs        0
+self.cs_warehouse_cost         0
+self.cs_direct_materials_costs 0
+self.name CS_US_MAINSTREAM
+I_total_qty_planned 23539
+I_total_qty_init 23539
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 14392
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_EURO
+I_total_qty_planned 1282708
+I_total_qty_init 14392
+I_cost_coeff 89.12645914396887
+self.eval_cs_warehouse_cost 278916.95999999996
+self.eval_cs_warehouse_cost 25137797.999999996
+ L = self.lot_counts_all 14392
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_EU
+I_total_qty_planned 14392
+I_total_qty_init 14392
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 557833.9199999999
+self.eval_cs_warehouse_cost 1115667.8399999999
+ L = self.lot_counts_all 7038
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_DE_ONLINE
+I_total_qty_planned 7038
+I_total_qty_init 7038
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7038
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_DE_PREMIUM
+I_total_qty_planned 7038
+I_total_qty_init 7038
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7354
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_UK_CARRIER
+I_total_qty_planned 7354
+I_total_qty_init 7354
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7354
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_UK_MAINSTREAM
+I_total_qty_planned 7354
+I_total_qty_init 7354
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 35702
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_APAC
+I_total_qty_planned 3038661
+I_total_qty_init 35702
+I_cost_coeff 85.11178645454036
+self.eval_cs_warehouse_cost 691904.76
+self.eval_cs_warehouse_cost 59581154.940000005
+ L = self.lot_counts_all 35702
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_APAC
+I_total_qty_planned 35702
+I_total_qty_init 35702
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 1383809.52
+self.eval_cs_warehouse_cost 2767619.04
+ L = self.lot_counts_all 6804
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_JP_APPLE
+I_total_qty_planned 6804
+I_total_qty_init 6804
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 6804
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_JP_REPLACEMENT
+I_total_qty_planned 6804
+I_total_qty_init 6804
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 10159
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_IN_ECOM
+I_total_qty_planned 10159
+I_total_qty_init 10159
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 10159
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_IN_ASPIRER
+I_total_qty_planned 10159
+I_total_qty_init 10159
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18739
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_CN_ONLINE
+I_total_qty_planned 18739
+I_total_qty_init 18739
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18739
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_CN_PREMIUM
+I_total_qty_planned 18739
+I_total_qty_init 18739
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+total_revenue 424975299
+total_profit -44658206
+profit_ratio -10.5
+[trace] consumer experience inputs loaded: 10
+reading node_geo.csv
+setting data_dir C:\Users\ohsug\WOM_V0R2M0_base\data
+setting path C:\Users\ohsug\WOM_V0R2M0_base\data\node_geo.csv
+[TKMAP] geo_lookup: 27 entries
+product node_name IPHONE_NM_2028_BASE supply_point
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE DAD_FAS_APAC
+inventory_lots =  25698
+inventory_unit_value =  1100.0
+inventory_value =  28267800.0
+product node_name IPHONE_NM_2028_BASE WS_APAC
+inventory_lots =  0
+inventory_unit_value =  1200.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE RT_CN_ONLINE
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE CS_CN_PREMIUM
+shipped_lots =  18739
+revenue_unit_value =  1600.0
+revenue =  29982400.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE RT_IN_ECOM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE CS_IN_ASPIRER
+shipped_lots =  10159
+revenue_unit_value =  1450.0
+revenue =  14730550.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE RT_JP_APPLE
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE CS_JP_REPLACEMENT
+shipped_lots =  6804
+revenue_unit_value =  1500.0
+revenue =  10206000.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE DAD_FAS_EURO
+inventory_lots =  10684
+inventory_unit_value =  1120.0
+inventory_value =  11966080.0
+product node_name IPHONE_NM_2028_BASE WS_EU
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE RT_UK_CARRIER
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE CS_UK_MAINSTREAM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE RT_DE_ONLINE
+shipped_lots =  7038
+revenue_unit_value =  0.0
+revenue =  0.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE CS_DE_PREMIUM
+shipped_lots =  7038
+revenue_unit_value =  0.0
+revenue =  0.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE DAD_FAS_AMER
+inventory_lots =  31716
+inventory_unit_value =  1110.0
+inventory_value =  35204760.0
+product node_name IPHONE_NM_2028_BASE WS_NA
+inventory_lots =  0
+inventory_unit_value =  1210.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE RT_US_CARRIER
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE CS_US_MAINSTREAM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE RT_US_ONLINE
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE CS_US_PREMIUM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE MOM_final_assy_EURO
+inventory_lots =  0
+inventory_unit_value =  980.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE PAD_final_assy_EURO
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE MOM_final_assy_ASIA
+inventory_lots =  0
+inventory_unit_value =  950.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_BASE PAD_final_assy_ASIA
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO supply_point
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO DAD_FAS_APAC
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO WS_APAC
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO RT_CN_ONLINE
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO CS_CN_PREMIUM
+shipped_lots =  9325
+revenue_unit_value =  0.0
+revenue =  0.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO RT_IN_ECOM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO CS_IN_ASPIRER
+shipped_lots =  6057
+revenue_unit_value =  0.0
+revenue =  0.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO RT_JP_APPLE
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO CS_JP_REPLACEMENT
+shipped_lots =  4389
+revenue_unit_value =  0.0
+revenue =  0.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO DAD_FAS_EURO
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO WS_EU
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO RT_UK_CARRIER
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO CS_UK_MAINSTREAM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO RT_DE_ONLINE
+shipped_lots =  4725
+revenue_unit_value =  0.0
+revenue =  0.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO CS_DE_PREMIUM
+shipped_lots =  4725
+revenue_unit_value =  0.0
+revenue =  0.0
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO DAD_FAS_AMER
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO WS_NA
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO RT_US_CARRIER
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO CS_US_MAINSTREAM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO RT_US_ONLINE
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO CS_US_PREMIUM
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO MOM_final_assy_EURO
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO PAD_final_assy_EURO
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO MOM_final_assy_ASIA
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+product node_name IPHONE_NM_2028_PRO PAD_final_assy_ASIA
+inventory_lots =  0
+inventory_unit_value =  0.0
+inventory_value =  0.0
+[TKMAP] ready: 25 nodes, 48 paths
+pos_out =>  {'supply_point': (0.0, -0.0), 'DAD_FAS_AMER': (1.0, 1.0), 'DAD_FAS_APAC': (1.0, -0.0), 'DAD_FAS_EURO': (1.0, -1.0), 'WS_APAC': (2.0, 1.0), 'WS_EU': (2.0, -0.0), 'WS_NA': (2.0, -1.0), 'RT_CN_ONLINE': (3.0, 3.0), 'RT_DE_ONLINE': (3.0, 2.0), 'RT_IN_ECOM': (3.0, 1.0), 'RT_JP_APPLE': (3.0, -0.0), 'RT_UK_CARRIER': (3.0, -1.0), 'RT_US_CARRIER': (3.0, -2.0), 'RT_US_ONLINE': (3.0, -3.0), 'CS_CN_PREMIUM': (4.0, 3.0), 'CS_DE_PREMIUM': (4.0, 2.0), 'CS_IN_ASPIRER': (4.0, 1.0), 'CS_JP_REPLACEMENT': (4.0, -0.0), 'CS_UK_MAINSTREAM': (4.0, -1.0), 'CS_US_MAINSTREAM': (4.0, -2.0), 'CS_US_PREMIUM': (4.0, -3.0)}
+pos_in =>  {'supply_point': (-0.0, -0.0), 'MOM_final_assy_ASIA': (-1.0, 0.5), 'MOM_final_assy_EURO': (-1.0, -0.5), 'PAD_final_assy_ASIA': (-2.0, 0.5), 'PAD_final_assy_EURO': (-2.0, -0.5)}
+pos_mmerged =>  {'supply_point': (0.0, 0.0), 'MOM_final_assy_ASIA': (-1.0, 0.5), 'MOM_final_assy_EURO': (-1.0, -0.5), 'PAD_final_assy_ASIA': (-2.0, 0.5), 'PAD_final_assy_EURO': (-2.0, -0.5), 'DAD_FAS_AMER': (1.0, 1.0), 'DAD_FAS_APAC': (1.0, -0.0), 'DAD_FAS_EURO': (1.0, -1.0), 'WS_APAC': (2.0, 1.0), 'WS_EU': (2.0, -0.0), 'WS_NA': (2.0, -1.0), 'RT_CN_ONLINE': (3.0, 3.0), 'RT_DE_ONLINE': (3.0, 2.0), 'RT_IN_ECOM': (3.0, 1.0), 'RT_JP_APPLE': (3.0, -0.0), 'RT_UK_CARRIER': (3.0, -1.0), 'RT_US_CARRIER': (3.0, -2.0), 'RT_US_ONLINE': (3.0, -3.0), 'CS_CN_PREMIUM': (4.0, 3.0), 'CS_DE_PREMIUM': (4.0, 2.0), 'CS_IN_ASPIRER': (4.0, 1.0), 'CS_JP_REPLACEMENT': (4.0, -0.0), 'CS_UK_MAINSTREAM': (4.0, -1.0), 'CS_US_MAINSTREAM': (4.0, -2.0), 'CS_US_PREMIUM': (4.0, -3.0)}
+ L = self.lot_counts_all 92422
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             823.65
+self.cs_profit                 145.35
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       9.69
+self.cs_SGA_total              9.69
+self.cs_logistics_costs        9.69
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 678.3
+self.name supply_point
+I_total_qty_planned 92422
+I_total_qty_init 92422
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 42328
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_AMER
+I_total_qty_planned 3783887
+I_total_qty_init 42328
+I_cost_coeff 89.39441976941977
+self.eval_cs_warehouse_cost 820316.64
+self.eval_cs_warehouse_cost 74152046.7
+ L = self.lot_counts_all 42328
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_NA
+I_total_qty_planned 42328
+I_total_qty_init 42328
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 1640633.28
+self.eval_cs_warehouse_cost 3281266.56
+ L = self.lot_counts_all 18789
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_US_ONLINE
+I_total_qty_planned 18789
+I_total_qty_init 18789
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18789
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_US_PREMIUM
+I_total_qty_planned 18789
+I_total_qty_init 18789
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 23539
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_US_CARRIER
+I_total_qty_planned 23539
+I_total_qty_init 23539
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 23539
+self.cs_price_sales_shipped    0
+self.cs_cost_total             0
+self.cs_profit                 0
+self.cs_marketing_promotion    0
+self.cs_sales_admin_cost       0
+self.cs_SGA_total              0
+self.cs_logistics_costs        0
+self.cs_warehouse_cost         0
+self.cs_direct_materials_costs 0
+self.name CS_US_MAINSTREAM
+I_total_qty_planned 23539
+I_total_qty_init 23539
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 14392
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_EURO
+I_total_qty_planned 1282708
+I_total_qty_init 14392
+I_cost_coeff 89.12645914396887
+self.eval_cs_warehouse_cost 278916.95999999996
+self.eval_cs_warehouse_cost 25137797.999999996
+ L = self.lot_counts_all 14392
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_EU
+I_total_qty_planned 14392
+I_total_qty_init 14392
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 557833.9199999999
+self.eval_cs_warehouse_cost 1115667.8399999999
+ L = self.lot_counts_all 7038
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_DE_ONLINE
+I_total_qty_planned 7038
+I_total_qty_init 7038
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7038
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_DE_PREMIUM
+I_total_qty_planned 7038
+I_total_qty_init 7038
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7354
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_UK_CARRIER
+I_total_qty_planned 7354
+I_total_qty_init 7354
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7354
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_UK_MAINSTREAM
+I_total_qty_planned 7354
+I_total_qty_init 7354
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 35702
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_APAC
+I_total_qty_planned 3038661
+I_total_qty_init 35702
+I_cost_coeff 85.11178645454036
+self.eval_cs_warehouse_cost 691904.76
+self.eval_cs_warehouse_cost 59581154.940000005
+ L = self.lot_counts_all 35702
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_APAC
+I_total_qty_planned 35702
+I_total_qty_init 35702
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 1383809.52
+self.eval_cs_warehouse_cost 2767619.04
+ L = self.lot_counts_all 6804
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_JP_APPLE
+I_total_qty_planned 6804
+I_total_qty_init 6804
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 6804
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_JP_REPLACEMENT
+I_total_qty_planned 6804
+I_total_qty_init 6804
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 10159
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_IN_ECOM
+I_total_qty_planned 10159
+I_total_qty_init 10159
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 10159
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_IN_ASPIRER
+I_total_qty_planned 10159
+I_total_qty_init 10159
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18739
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_CN_ONLINE
+I_total_qty_planned 18739
+I_total_qty_init 18739
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18739
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_CN_PREMIUM
+I_total_qty_planned 18739
+I_total_qty_init 18739
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+total_revenue 424975299
+total_profit -44658206
+profit_ratio -10.5
+ L = self.lot_counts_all 92422
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             823.65
+self.cs_profit                 145.35
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       9.69
+self.cs_SGA_total              9.69
+self.cs_logistics_costs        9.69
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 678.3
+self.name supply_point
+I_total_qty_planned 92422
+I_total_qty_init 92422
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 42328
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_AMER
+I_total_qty_planned 3783887
+I_total_qty_init 42328
+I_cost_coeff 89.39441976941977
+self.eval_cs_warehouse_cost 820316.64
+self.eval_cs_warehouse_cost 74152046.7
+ L = self.lot_counts_all 42328
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_NA
+I_total_qty_planned 42328
+I_total_qty_init 42328
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 1640633.28
+self.eval_cs_warehouse_cost 3281266.56
+ L = self.lot_counts_all 18789
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_US_ONLINE
+I_total_qty_planned 18789
+I_total_qty_init 18789
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18789
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_US_PREMIUM
+I_total_qty_planned 18789
+I_total_qty_init 18789
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 23539
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_US_CARRIER
+I_total_qty_planned 23539
+I_total_qty_init 23539
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 23539
+self.cs_price_sales_shipped    0
+self.cs_cost_total             0
+self.cs_profit                 0
+self.cs_marketing_promotion    0
+self.cs_sales_admin_cost       0
+self.cs_SGA_total              0
+self.cs_logistics_costs        0
+self.cs_warehouse_cost         0
+self.cs_direct_materials_costs 0
+self.name CS_US_MAINSTREAM
+I_total_qty_planned 23539
+I_total_qty_init 23539
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 14392
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_EURO
+I_total_qty_planned 1282708
+I_total_qty_init 14392
+I_cost_coeff 89.12645914396887
+self.eval_cs_warehouse_cost 278916.95999999996
+self.eval_cs_warehouse_cost 25137797.999999996
+ L = self.lot_counts_all 14392
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_EU
+I_total_qty_planned 14392
+I_total_qty_init 14392
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 557833.9199999999
+self.eval_cs_warehouse_cost 1115667.8399999999
+ L = self.lot_counts_all 7038
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_DE_ONLINE
+I_total_qty_planned 7038
+I_total_qty_init 7038
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7038
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_DE_PREMIUM
+I_total_qty_planned 7038
+I_total_qty_init 7038
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7354
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_UK_CARRIER
+I_total_qty_planned 7354
+I_total_qty_init 7354
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7354
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_UK_MAINSTREAM
+I_total_qty_planned 7354
+I_total_qty_init 7354
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 35702
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_APAC
+I_total_qty_planned 3038661
+I_total_qty_init 35702
+I_cost_coeff 85.11178645454036
+self.eval_cs_warehouse_cost 691904.76
+self.eval_cs_warehouse_cost 59581154.940000005
+ L = self.lot_counts_all 35702
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_APAC
+I_total_qty_planned 35702
+I_total_qty_init 35702
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 1383809.52
+self.eval_cs_warehouse_cost 2767619.04
+ L = self.lot_counts_all 6804
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_JP_APPLE
+I_total_qty_planned 6804
+I_total_qty_init 6804
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 6804
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_JP_REPLACEMENT
+I_total_qty_planned 6804
+I_total_qty_init 6804
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 10159
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_IN_ECOM
+I_total_qty_planned 10159
+I_total_qty_init 10159
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 10159
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_IN_ASPIRER
+I_total_qty_planned 10159
+I_total_qty_init 10159
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18739
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_CN_ONLINE
+I_total_qty_planned 18739
+I_total_qty_init 18739
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18739
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_CN_PREMIUM
+I_total_qty_planned 18739
+I_total_qty_init 18739
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+total_revenue 424975299
+total_profit -44658206
+profit_ratio -10.5
+ L = self.lot_counts_all 92422
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             823.65
+self.cs_profit                 145.35
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       9.69
+self.cs_SGA_total              9.69
+self.cs_logistics_costs        9.69
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 678.3
+self.name supply_point
+I_total_qty_planned 92422
+I_total_qty_init 92422
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 42328
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_AMER
+I_total_qty_planned 3783887
+I_total_qty_init 42328
+I_cost_coeff 89.39441976941977
+self.eval_cs_warehouse_cost 820316.64
+self.eval_cs_warehouse_cost 74152046.7
+ L = self.lot_counts_all 42328
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_NA
+I_total_qty_planned 42328
+I_total_qty_init 42328
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 1640633.28
+self.eval_cs_warehouse_cost 3281266.56
+ L = self.lot_counts_all 18789
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_US_ONLINE
+I_total_qty_planned 18789
+I_total_qty_init 18789
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18789
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_US_PREMIUM
+I_total_qty_planned 18789
+I_total_qty_init 18789
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 23539
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_US_CARRIER
+I_total_qty_planned 23539
+I_total_qty_init 23539
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 23539
+self.cs_price_sales_shipped    0
+self.cs_cost_total             0
+self.cs_profit                 0
+self.cs_marketing_promotion    0
+self.cs_sales_admin_cost       0
+self.cs_SGA_total              0
+self.cs_logistics_costs        0
+self.cs_warehouse_cost         0
+self.cs_direct_materials_costs 0
+self.name CS_US_MAINSTREAM
+I_total_qty_planned 23539
+I_total_qty_init 23539
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 14392
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_EURO
+I_total_qty_planned 1282708
+I_total_qty_init 14392
+I_cost_coeff 89.12645914396887
+self.eval_cs_warehouse_cost 278916.95999999996
+self.eval_cs_warehouse_cost 25137797.999999996
+ L = self.lot_counts_all 14392
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_EU
+I_total_qty_planned 14392
+I_total_qty_init 14392
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 557833.9199999999
+self.eval_cs_warehouse_cost 1115667.8399999999
+ L = self.lot_counts_all 7038
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_DE_ONLINE
+I_total_qty_planned 7038
+I_total_qty_init 7038
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7038
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_DE_PREMIUM
+I_total_qty_planned 7038
+I_total_qty_init 7038
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7354
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_UK_CARRIER
+I_total_qty_planned 7354
+I_total_qty_init 7354
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 7354
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_UK_MAINSTREAM
+I_total_qty_planned 7354
+I_total_qty_init 7354
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 35702
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             794.58
+self.cs_profit                 174.42
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       29.07
+self.cs_SGA_total              29.07
+self.cs_logistics_costs        58.14
+self.cs_warehouse_cost         19.38
+self.cs_direct_materials_costs 658.92
+self.name DAD_FAS_APAC
+I_total_qty_planned 3038661
+I_total_qty_init 35702
+I_cost_coeff 85.11178645454036
+self.eval_cs_warehouse_cost 691904.76
+self.eval_cs_warehouse_cost 59581154.940000005
+ L = self.lot_counts_all 35702
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             852.72
+self.cs_profit                 116.28
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       19.38
+self.cs_SGA_total              19.38
+self.cs_logistics_costs        48.45
+self.cs_warehouse_cost         38.76
+self.cs_direct_materials_costs 736.44
+self.name WS_APAC
+I_total_qty_planned 35702
+I_total_qty_init 35702
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 1383809.52
+self.eval_cs_warehouse_cost 2767619.04
+ L = self.lot_counts_all 6804
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_JP_APPLE
+I_total_qty_planned 6804
+I_total_qty_init 6804
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 6804
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_JP_REPLACEMENT
+I_total_qty_planned 6804
+I_total_qty_init 6804
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 10159
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_IN_ECOM
+I_total_qty_planned 10159
+I_total_qty_init 10159
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 10159
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_IN_ASPIRER
+I_total_qty_planned 10159
+I_total_qty_init 10159
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18739
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             872.1
+self.cs_profit                 96.9
+self.cs_marketing_promotion    29.07
+self.cs_sales_admin_cost       67.83
+self.cs_SGA_total              96.9
+self.cs_logistics_costs        19.38
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 755.82
+self.name RT_CN_ONLINE
+I_total_qty_planned 18739
+I_total_qty_init 18739
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+ L = self.lot_counts_all 18739
+self.cs_price_sales_shipped    969.0
+self.cs_cost_total             0.0
+self.cs_profit                 969.0
+self.cs_marketing_promotion    0.0
+self.cs_sales_admin_cost       0.0
+self.cs_SGA_total              0.0
+self.cs_logistics_costs        0.0
+self.cs_warehouse_cost         0.0
+self.cs_direct_materials_costs 0.0
+self.name CS_CN_PREMIUM
+I_total_qty_planned 18739
+I_total_qty_init 18739
+I_cost_coeff 1.0
+self.eval_cs_warehouse_cost 0.0
+self.eval_cs_warehouse_cost 0.0
+total_revenue 424975299
+total_profit -44658206
+profit_ratio -10.5

@@ -328,7 +328,7 @@ class WOMEnv:
         print("product_name_list", self.product_name_list)
         print("End of load_data_files")
 
-    def _load_money_master_bundle_once(self):
+    def _load_money_master_bundle_once_OLD(self):
         """Load optional finance master once and attach it to env."""
         if getattr(self, "_money_master_bundle_loaded", False):
             return
@@ -360,6 +360,55 @@ class WOMEnv:
         except Exception as e:
             print(f"[WARN] money master loading failed: {e}")
             self.money_master_bundle = None
+
+    def _load_money_master_bundle_once(self):
+        """Load optional finance master once and attach it to env."""
+        if getattr(self, "_money_master_bundle_loaded", False):
+            return
+
+        self._money_master_bundle_loaded = True
+        self.money_master_bundle = None
+
+        try:
+            base_dir = os.path.dirname(__file__)
+            master_dir = os.path.join(base_dir, "master_data")
+            node_master_csv = os.path.join(master_dir, "node_master.csv")
+            node_character_money_master_csv = os.path.join(
+                master_dir, "node_character_money_master.csv"
+            )
+            node_product_money_master_csv = os.path.join(
+                master_dir, "node_product_money_master.csv"
+            )
+
+            # required masters
+            if not (
+                os.path.exists(node_master_csv)
+                and os.path.exists(node_character_money_master_csv)
+            ):
+                print("[INFO] required money master CSV not found. Skip loading.")
+                return
+
+            # optional product-specific money master
+            node_product_money_master_csv_arg = (
+                node_product_money_master_csv
+                if os.path.exists(node_product_money_master_csv)
+                else None
+            )
+
+            self.money_master_bundle = load_money_master_bundle(
+                node_master_csv=node_master_csv,
+                node_character_money_master_csv=node_character_money_master_csv,
+                node_product_money_master_csv=node_product_money_master_csv_arg,
+            )
+
+            if node_product_money_master_csv_arg is None:
+                print("[INFO] money master loaded (without node_product_money_master.csv).")
+            else:
+                print("[INFO] money master loaded.")
+
+        except Exception as e:
+            print(f"[WARN] money master loading failed: {e}")
+
     # **************************************
     # smoke chack
     # **************************************
@@ -407,6 +456,9 @@ class WOMEnv:
 #_propagate_prices_and_costs()	TOBE/ASIS価格の伝播と計画ノードへの反映
 #_check_demand_data()	月次需要データがあるか確認し、メッセージを出すだけ
 #_export_offering_prices()	offering price CSV を出力（あれば）
+
+
+
     def _prepare_directories_and_config(self) -> bool:
         """Configとディレクトリの初期化。失敗したらFalseを返す"""
         import os

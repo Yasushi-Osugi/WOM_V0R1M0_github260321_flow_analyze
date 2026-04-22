@@ -15,10 +15,19 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from dataclasses import dataclass
 
+import threading
+
 import numpy as np
 
 # for events dump
 from pysi.bridge.dump_rows import build_dump_rows_from_product_plan_tree
+
+# for getting money evaluation results 
+try:
+    from pysi.evaluate.money_evaluator import evaluate_money_by_node
+except Exception:
+    evaluate_money_by_node = None
+
 
 # management cockpit
 try:
@@ -1012,7 +1021,10 @@ class WOMCockpit(tk.Tk):
         # L1: PSI mini (selected node)
         self.l1_frame = ttk.Labelframe(self, text="L1: Selected Node PSI (mini)")
         self.l1_frame.pack(fill="x", padx=10, pady=(0, 6))
-        self.l1_text = tk.Text(self.l1_frame, height=6, wrap="word")
+
+        #@UPDATE
+        self.l1_text = tk.Text(self.l1_frame, height=14, wrap="word")
+        
         self.l1_text.pack(fill="x", padx=6, pady=6)
 
         # KPI panel
@@ -1079,14 +1091,47 @@ class WOMCockpit(tk.Tk):
         frm = ttk.Frame(self)
         frm.pack(fill="x", padx=10, pady=10)
 
-        ttk.Label(frm, text="Product:", width=10).pack(side="left")
-        self.cb_product = ttk.Combobox(frm, textvariable=self.var_product, values=self.products, width=35, state="readonly")
+        # --------------------------------------------------
+        # Row 1: Action menu
+        # --------------------------------------------------
+        action_row = ttk.Frame(frm)
+        action_row.pack(fill="x", pady=(0, 6))
+
+        ttk.Button(action_row, text="Network", command=self.open_network).pack(side="left", padx=(0, 6))
+        ttk.Button(action_row, text="World", command=self.open_world_map).pack(side="left", padx=(0, 6))
+        ttk.Button(action_row, text="Run (recompute)", command=self.run_and_refresh).pack(side="left", padx=(0, 6))
+        ttk.Button(action_row, text="Refresh", command=self.refresh).pack(side="left", padx=(0, 6))
+
+        ttk.Checkbutton(action_row, text="Trace", variable=self.var_trace_enabled).pack(side="left", padx=(12, 6))
+        ttk.Button(action_row, text="Trace Viewer", command=self.open_trace_viewer).pack(side="left", padx=(0, 6))
+        ttk.Button(action_row, text="Mgmt Cockpit", command=self.open_management_cockpit).pack(side="left", padx=(0, 6))
+        ttk.Button(action_row, text="Business Animation", command=self.open_business_animation).pack(side="left", padx=(0, 6))
+        ttk.Button(action_row, text="PSI累計+利益率", command=self.open_psi_profit_animation).pack(side="left", padx=(0, 6))
+        ttk.Button(action_row, text="Animation Viewer", command=self.open_animation_viewer).pack(side="left", padx=(0, 6))
+
+        ttk.Button(action_row, text="Run Full Plan", command=self.run_full_plan).pack(side="right", padx=(6, 0))
+        ttk.Button(action_row, text="Run Step", command=self.run_step).pack(side="right")
+
+        # --------------------------------------------------
+        # Row 2: Basic selection
+        # --------------------------------------------------
+        select_row = ttk.Frame(frm)
+        select_row.pack(fill="x")
+
+        ttk.Label(select_row, text="Product:", width=10).pack(side="left")
+        self.cb_product = ttk.Combobox(
+            select_row,
+            textvariable=self.var_product,
+            values=self.products,
+            width=35,
+            state="readonly",
+        )
         self.cb_product.pack(side="left", padx=5)
         self.cb_product.bind("<<ComboboxSelected>>", lambda e: self.on_change_product())
 
-        ttk.Label(frm, text="Node:", width=6).pack(side="left", padx=(20, 0))
+        ttk.Label(select_row, text="Node:", width=6).pack(side="left", padx=(20, 0))
         self.cb_node = ttk.Combobox(
-            frm,
+            select_row,
             textvariable=self.var_node,
             values=self.node_names,
             width=28,
@@ -1095,34 +1140,25 @@ class WOMCockpit(tk.Tk):
         self.cb_node.pack(side="left", padx=5)
         self.cb_node.bind("<<ComboboxSelected>>", lambda e: self.on_change_node())
 
-        # ---- Step workbench controls ----
-        ttk.Label(frm, text="Step:", width=6).pack(side="left", padx=(20, 0))
+        ttk.Label(select_row, text="Step:", width=6).pack(side="left", padx=(20, 0))
         self.cb_step_type = ttk.Combobox(
-            frm, textvariable=self.var_step_type, values=["Demand", "Supply"], width=10, state="readonly"
+            select_row,
+            textvariable=self.var_step_type,
+            values=["Demand", "Supply"],
+            width=10,
+            state="readonly",
         )
         self.cb_step_type.pack(side="left", padx=5)
 
-        ttk.Label(frm, text="Dir:", width=4).pack(side="left")
+        ttk.Label(select_row, text="Dir:", width=4).pack(side="left")
         self.cb_direction = ttk.Combobox(
-            frm, textvariable=self.var_direction, values=["Outbound", "Inbound"], width=10, state="readonly"
+            select_row,
+            textvariable=self.var_direction,
+            values=["Outbound", "Inbound"],
+            width=10,
+            state="readonly",
         )
         self.cb_direction.pack(side="left", padx=5)
-
-        ttk.Button(frm, text="Run Step", command=self.run_step).pack(side="right")
-        ttk.Button(frm, text="Run Full Plan", command=self.run_full_plan).pack(side="right", padx=8)
-
-        ttk.Button(frm, text="Animation Viewer", command=self.open_animation_viewer).pack(side="right", padx=8)
-        ttk.Button(frm, text="PSI累計+利益率", command=self.open_psi_profit_animation).pack(side="right", padx=8)
-        ttk.Button(frm, text="Business Animation", command=self.open_business_animation).pack(side="right", padx=8)
-        ttk.Button(frm, text="Mgmt Cockpit", command=self.open_management_cockpit).pack(side="right", padx=8)
-        ttk.Button(frm, text="Trace Viewer", command=self.open_trace_viewer).pack(side="right", padx=8)
-        ttk.Checkbutton(frm, text="Trace", variable=self.var_trace_enabled).pack(side="right", padx=8)
-        ttk.Button(frm, text="Refresh", command=self.refresh).pack(side="right", padx=8)
-        ttk.Button(frm, text="Run (recompute)", command=self.run_and_refresh).pack(side="right")
-        ttk.Button(frm, text="World Map", command=self.open_world_map).pack(side="right", padx=8)
-        ttk.Button(frm, text="Network",   command=self.open_network).pack(side="right", padx=8)
-        ttk.Button(frm, text="Select Node", command=self.open_node_selector).pack(side="right", padx=8)
-
 
 
 
@@ -1323,12 +1359,100 @@ class WOMCockpit(tk.Tk):
 
         env.node_dict = node_dict
 
+
+    def _get_money_row_for_selected_node(self, node_name: str | None):
+        if not node_name:
+            return None
+
+        candidates = [
+            getattr(self.env, "node_money_rows", None),
+            getattr(self.env, "money_node_rows", None),
+        ]
+
+        money_payload = getattr(self.env, "money_result", None)
+        if isinstance(money_payload, dict):
+            candidates.append(money_payload.get("node_money_rows"))
+
+        product_name = None
+        try:
+            product_name = str(self.var_product.get()).strip()
+        except Exception:
+            product_name = None
+
+        # 1) prefer already evaluated rows
+        for rows in candidates:
+            if not isinstance(rows, list):
+                continue
+            for r in rows:
+                if not isinstance(r, dict):
+                    continue
+                if (r.get("node_name") or "").strip() != node_name:
+                    continue
+                row_product = (r.get("product") or "").strip()
+                if product_name and row_product and row_product != product_name:
+                    continue
+                return r
+
+        # 2) fallback: evaluate on demand
+        if evaluate_money_by_node is not None:
+            try:
+                rows = evaluate_money_by_node(self.env)
+            except Exception as e:
+                print(f"[L1] evaluate_money_by_node fallback skipped: {e}")
+                return None
+
+            if isinstance(rows, list):
+                for r in rows:
+                    if not isinstance(r, dict):
+                        continue
+                    if (r.get("node_name") or "").strip() != node_name:
+                        continue
+                    row_product = (r.get("product") or "").strip()
+                    if product_name and row_product and row_product != product_name:
+                        continue
+                    return r
+
+        return None
+
+
+    def _format_money_debug_lines(self, node_name: str | None) -> list[str]:
+        row = self._get_money_row_for_selected_node(node_name)
+        if not row:
+            return []
+
+        def _fmt(v):
+            try:
+                return f"{float(v):,.2f}"
+            except Exception:
+                return "-"
+
+        lines = []
+        node_character = row.get("node_character")
+        if node_character:
+            lines.append(f"node_character: {node_character}")
+
+        lines.extend(
+            [
+                f"revenue:        {_fmt(row.get('revenue'))}",
+                f"variable_cost:  {_fmt(row.get('variable_cost'))}",
+                f"fixed_cost:     {_fmt(row.get('fixed_cost'))}",
+                f"inventory_value:{_fmt(row.get('inventory_value'))}",
+                f"profit:         {_fmt(row.get('profit'))}",
+            ]
+        )
+        return lines
+
+
+
+
+
     def l1_clear(self):
         self.l1_text.delete("1.0", "end")
 
     def l1_show_text(self, s: str):
         self.l1_clear()
         self.l1_text.insert("end", s)
+
 
     def render_l1_psi_mini(self):
         node_name = getattr(self.state, "selected_node", None)
@@ -1349,14 +1473,23 @@ class WOMCockpit(tk.Tk):
 
         self.l1_draw_mini_from_node(node)
 
+
+
     def l1_draw_mini_from_node(self, node):
         """Default mini view: last 10 weeks of S/I/P lot counts (supply layer)."""
         def cnt(x):
             return len(x) if x else 0
 
         psi4 = getattr(node, "psi4supply", None) or []
-        W = min(10, len(psi4))
+
+        #@RESET
+        # keep mini text compact so money debug lines remain visible
+        #W = min(10, len(psi4))
+        W = min(5, len(psi4))
+
         lines = [f"node: {getattr(node, 'name', '')}", ""]
+
+        #@STOP@GO
         for w in range(W):
             try:
                 S = cnt(psi4[w][0])
@@ -1365,8 +1498,16 @@ class WOMCockpit(tk.Tk):
             except Exception:
                 S = I = P = 0
             lines.append(f"w{w+1:02d}  S:{S:4d}  I:{I:4d}  P:{P:4d}")
+        
         if W == 0:
             lines.append("(psi4supply is empty)")
+
+
+        #@ADD "MONEY attribute" on "node&product"
+        money_lines = self._format_money_debug_lines(getattr(node, "name", None))
+        if money_lines:
+            lines.extend([""] + money_lines)
+        
         self.l1_show_text("\n".join(lines))
 
     # ----------------------------
@@ -3929,19 +4070,68 @@ class WOMCockpit(tk.Tk):
             on_select=self.set_selected_node,
         )
 
-    def set_selected_node(self, node_name: str, source: str = ""):
-        """Update selection state and refresh dependent views.
-        node_name is the common key across map/network/PSI.
-        """
-        self.selected_node_id = node_name
-        self.state.selected_node = node_name
-        self.state.selected_product = self.var_product.get() if self.var_product.get() else None
+    #@STOP
+    #def set_selected_node(self, node_name: str, source: str = ""):
+    #    """Update selection state and refresh dependent views.
+    #    node_name is the common key across map/network/PSI.
+    #    """
+    #    self.selected_node_id = node_name
+    #    self.state.selected_node = node_name
+    #    self.state.selected_product = self.var_product.get() if self.var_product.get() else None
+    #
+    #    try:
+    #        if node_name and hasattr(self, "var_node") and self.var_node.get() != node_name:
+    #            self.var_node.set(node_name)
+    #    except Exception:
+    #        pass
 
-        try:
-            if node_name and hasattr(self, "var_node") and self.var_node.get() != node_name:
+    #@UPDATE wrapping with "_apply()"
+    def set_selected_node(self, node_name: str, source: str = ""):
+        def _apply():
+
+            self.state.selected_node = node_name
+
+            #@ADD for "node_name" linking
+            try:
                 self.var_node.set(node_name)
-        except Exception:
-            pass
+            except Exception:
+                pass
+
+
+            self.state.selected_product = self.var_product.get() if self.var_product.get() else None
+
+            try:
+                self.render_l1_psi_mini()
+            except Exception:
+                pass
+
+            if hasattr(self, "_network_viewer") and self._network_viewer:
+                try:
+                    self._network_viewer.set_selected_node(node_name)
+                except Exception:
+                    pass
+
+            if hasattr(self, "_world_map_view") and self._world_map_view:
+                try:
+                    self._world_map_view.set_selected_node(node_name)
+                except Exception:
+                    pass
+
+            try:
+                self.refresh()
+            except Exception:
+                pass
+
+        if threading.current_thread() is threading.main_thread():
+            _apply()
+        else:
+            self.after(0, _apply)
+
+
+
+
+
+
 
 # ...既存処理...
         if hasattr(self, "_network_viewer") and self._network_viewer:

@@ -41,6 +41,118 @@ def _legacy_node_character(node_name: str) -> str:
     return "unknown"
 
 
+def _last_inventory_lots(node: Any) -> int:
+    """
+    Return last-week inventory lot count from psi4supply[w][2].
+    Safe fallback = 0.
+    """
+    psi4supply = getattr(node, "psi4supply", None) or []
+    if not psi4supply:
+        return 0
+
+    try:
+        last_week = psi4supply[-1]
+        lots = last_week[2] if len(last_week) > 2 else []
+        return len(lots or [])
+    except Exception:
+        return 0
+
+
+def _inventory_unit_value_from_master(bundle: Any, node_name: str, product: str) -> float:
+    """
+    Read inventory_unit_value from node_product_money_master.
+    Safe fallback = 0.0.
+    """
+    if bundle is None:
+        return 0.0
+
+    try:
+        rec = bundle.get_node_product_money(node_name, product)
+    except Exception:
+        rec = None
+
+    if rec is None:
+        return 0.0
+
+    return _safe_float(getattr(rec, "inventory_unit_value", 0.0))
+
+
+def _total_shipped_lots(node: Any) -> int:
+    """
+    Return cumulative shipped/sales lot count from psi4supply[w][0].
+    Safe fallback = 0.
+    """
+    psi4supply = getattr(node, "psi4supply", None) or []
+    if not psi4supply:
+        return 0
+
+    total = 0
+    for week in psi4supply:
+        try:
+            lots = week[0] if len(week) > 0 else []
+            total += len(lots or [])
+        except Exception:
+            continue
+    return total
+
+
+def _revenue_unit_value_from_master(bundle: Any, node_name: str, product: str) -> float:
+    """
+    Read revenue_unit_value from node_product_money_master.
+    Safe fallback = 0.0.
+    """
+    if bundle is None:
+        return 0.0
+
+    try:
+        rec = bundle.get_node_product_money(node_name, product)
+    except Exception:
+        rec = None
+
+    if rec is None:
+        return 0.0
+
+    return _safe_float(getattr(rec, "revenue_unit_value", 0.0))
+
+
+def _variable_cost_unit_value_from_master(bundle: Any, node_name: str, product: str) -> float:
+    """
+    Read variable_cost_unit_value from node_product_money_master.
+    Safe fallback = 0.0.
+    """
+    if bundle is None:
+        return 0.0
+
+    try:
+        rec = bundle.get_node_product_money(node_name, product)
+    except Exception:
+        rec = None
+
+    if rec is None:
+        return 0.0
+
+    return _safe_float(getattr(rec, "variable_cost_unit_value", 0.0))
+
+
+def _fixed_cost_weekly_from_master(bundle: Any, node_name: str, product: str) -> float:
+    """
+    Read fixed_cost_weekly from node_product_money_master.
+    Safe fallback = 0.0.
+    """
+    if bundle is None:
+        return 0.0
+
+    try:
+        rec = bundle.get_node_product_money(node_name, product)
+    except Exception:
+        rec = None
+
+    if rec is None:
+        return 0.0
+
+    return _safe_float(getattr(rec, "fixed_cost_weekly", 0.0))
+
+
 def evaluate_money_by_node(env: Any) -> List[Dict[str, Any]]:
     """
     Build minimal node-level money rows after planning.
@@ -82,12 +194,67 @@ def evaluate_money_by_node(env: Any) -> List[Dict[str, Any]]:
                     except Exception:
                         money_master_found = 0
 
+                #@STOP
+                #revenue = 0.0
+                #variable_cost = 0.0
+                #fixed_cost = 0.0
+                #inventory_value = 0.0
+                #tax_base = revenue - variable_cost - fixed_cost
+                #profit = tax_base
+
+                print("product node_name", product, node_name)
+
                 revenue = 0.0
+                if node_character in ("CS", "RT"):
+                    shipped_lots = _total_shipped_lots(node)
+                    revenue_unit_value = _revenue_unit_value_from_master(
+                        bundle,
+                        node_name,
+                        product,
+                    )
+                    revenue = shipped_lots * revenue_unit_value
+                    print("shipped_lots = ", shipped_lots)
+                    print("revenue_unit_value = ", revenue_unit_value)
+                    print("revenue = ", revenue)
+
+
                 variable_cost = 0.0
+                if node_character in ("MOM", "DAD", "WS"):
+                    flow_lots = _total_shipped_lots(node)
+                    variable_cost_unit_value = _variable_cost_unit_value_from_master(
+                        bundle,
+                        node_name,
+                        product,
+                    )
+                    variable_cost = flow_lots * variable_cost_unit_value
+
+
                 fixed_cost = 0.0
-                inventory_value = 0.0
+                if node_character in ("MOM", "DAD", "WS"):
+                    fixed_cost = _fixed_cost_weekly_from_master(
+                        bundle,
+                        node_name,
+                        product,
+                    )
+
+                # ********
+                # Inventory Evaluation
+                # ********
+                inventory_lots = _last_inventory_lots(node)
+                inventory_unit_value = _inventory_unit_value_from_master(
+                    bundle,
+                    node_name,
+                    product,
+                )
+
+                inventory_value = inventory_lots * inventory_unit_value
+                print("inventory_lots = ", inventory_lots)
+                print("inventory_unit_value = ", inventory_unit_value)
+                print("inventory_value = ", inventory_value)
+
                 tax_base = revenue - variable_cost - fixed_cost
                 profit = tax_base
+
 
                 rows.append(
                     {

@@ -32,10 +32,23 @@ class NodeCharacterMoneyMasterRecord:
     tax_compare_items: List[str]
 
 
+@dataclass(frozen=True)
+class NodeProductMoneyMasterRecord:
+    node_name: str
+    product_name: str
+    inventory_unit_value: float = 0.0
+    revenue_unit_value: float = 0.0
+    variable_cost_unit_value: float = 0.0
+    fixed_cost_weekly: float = 0.0
+    currency: str = ""
+    remarks: str = ""
+
+
 @dataclass
 class MoneyMasterBundle:
     node_master: Dict[str, NodeMasterRecord]
     money_master: Dict[str, NodeCharacterMoneyMasterRecord]
+    node_product_money_master: Dict[tuple[str, str], NodeProductMoneyMasterRecord]
 
     def get_node(self, node_name: str) -> Optional[NodeMasterRecord]:
         return self.node_master.get(node_name)
@@ -63,6 +76,10 @@ class MoneyMasterBundle:
     ) -> Optional[NodeCharacterMoneyMasterRecord]:
         return self.money_master.get(node_character)
 
+    def get_node_product_money(
+        self, node_name: str, product_name: str
+    ) -> Optional[NodeProductMoneyMasterRecord]:
+        return self.node_product_money_master.get((node_name, product_name))
 
 # ------------------------------------------------------------
 # Internal helpers
@@ -85,6 +102,14 @@ def _require_columns(row: dict, required: List[str], source_name: str) -> None:
             f"{source_name}: missing required columns: {', '.join(missing)}"
         )
 
+
+def _to_float(value: str) -> float:
+    if value is None:
+        return 0.0
+    s = str(value).strip()
+    if not s:
+        return 0.0
+    return float(s)
 
 # ------------------------------------------------------------
 # CSV loaders
@@ -197,22 +222,88 @@ def load_node_character_money_master_csv(
     return out
 
 
+def load_node_product_money_master_csv(
+    csv_path: str | Path,
+) -> Dict[tuple[str, str], NodeProductMoneyMasterRecord]:
+    """
+    Load node_name x product_name money master CSV.
+
+    Required columns:
+      - node_name
+      - product_name
+
+    Optional columns:
+      - inventory_unit_value
+      - revenue_unit_value
+      - variable_cost_unit_value
+      - fixed_cost_weekly
+      - currency
+      - remarks
+    """
+    path = Path(csv_path)
+    if not path.exists():
+        raise FileNotFoundError(f"node product money master CSV not found: {path}")
+
+    out: Dict[tuple[str, str], NodeProductMoneyMasterRecord] = {}
+
+    with path.open("r", newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+
+        first_row_checked = False
+        for row in reader:
+            if not first_row_checked:
+                _require_columns(
+                    row,
+                    required=["node_name", "product_name"],
+                    source_name=str(path),
+                )
+                first_row_checked = True
+
+            node_name = (row.get("node_name") or "").strip()
+            product_name = (row.get("product_name") or "").strip()
+            if not node_name or not product_name:
+                continue
+
+            rec = NodeProductMoneyMasterRecord(
+                node_name=node_name,
+                product_name=product_name,
+                inventory_unit_value=_to_float(row.get("inventory_unit_value", "")),
+                revenue_unit_value=_to_float(row.get("revenue_unit_value", "")),
+                variable_cost_unit_value=_to_float(row.get("variable_cost_unit_value", "")),
+                fixed_cost_weekly=_to_float(row.get("fixed_cost_weekly", "")),
+                currency=(row.get("currency") or "").strip(),
+                remarks=(row.get("remarks") or "").strip(),
+            )
+            out[(node_name, product_name)] = rec
+
+    return out
+
+
+
 def load_money_master_bundle(
     node_master_csv: str | Path,
     node_character_money_master_csv: str | Path,
+    node_product_money_master_csv: str | Path | None = None,
 ) -> MoneyMasterBundle:
     """
-    Load both CSVs and return a single bundle object.
+    Load CSV masters and return a single bundle object.
     """
     node_master = load_node_master_csv(node_master_csv)
     money_master = load_node_character_money_master_csv(
         node_character_money_master_csv
     )
+
+    node_product_money_master: Dict[tuple[str, str], NodeProductMoneyMasterRecord] = {}
+    if node_product_money_master_csv:
+        node_product_money_master = load_node_product_money_master_csv(
+            node_product_money_master_csv
+        )
+
     return MoneyMasterBundle(
         node_master=node_master,
         money_master=money_master,
+        node_product_money_master=node_product_money_master,
     )
-
 
 # ------------------------------------------------------------
 # Example usage
