@@ -718,6 +718,22 @@ class WorldMapViewTk:
             anchor="w",
         ).pack(fill="x", padx=8)
 
+        # ********
+        # OpenStreetMap copy right
+        # ********
+        tk.Label(
+            parent,
+            text="Map Data: © OpenStreetMap contributors",
+            bg="#f0f0f0",
+            fg="#555555",
+            font=("Helvetica", 8),
+            anchor="w",
+            justify="left",
+            wraplength=190,
+        ).pack(fill="x", padx=8, pady=(8, 0))
+
+
+
     # ----------------------------------------------------------
     # Click handler
     # ----------------------------------------------------------
