@@ -1,0 +1,3 @@
+product_name,inventory_valuation_method,issue_cost_method,inventory_carrying_rate,obsolescence_rate,price_propagation_method,remarks
+IPHONE_NM_2028_BASE,STANDARD,OPENING_PLUS_INBOUND_MINUS_ENDING,0.05,0.01,EDGE_TRANSFER_PRICE,starter valuation policy for base
+IPHONE_NM_2028_PRO,STANDARD,OPENING_PLUS_INBOUND_MINUS_ENDING,0.05,0.015,EDGE_TRANSFER_PRICE,starter valuation policy for pro

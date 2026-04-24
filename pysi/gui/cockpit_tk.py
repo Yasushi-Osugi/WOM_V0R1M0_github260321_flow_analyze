@@ -1097,6 +1097,7 @@ class WOMCockpit(tk.Tk):
         action_row = ttk.Frame(frm)
         action_row.pack(fill="x", pady=(0, 6))
 
+        ttk.Button(action_row, text="Select Node", command=self.open_node_selector).pack(side="left", padx=(0, 6))
         ttk.Button(action_row, text="Network", command=self.open_network).pack(side="left", padx=(0, 6))
         ttk.Button(action_row, text="World", command=self.open_world_map).pack(side="left", padx=(0, 6))
         ttk.Button(action_row, text="Run (recompute)", command=self.run_and_refresh).pack(side="left", padx=(0, 6))

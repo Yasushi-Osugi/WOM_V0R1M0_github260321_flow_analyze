@@ -1,0 +1,19 @@
+node_name,node_character,display_name,country,company,remarks
+supply_point,SUPPLY_CHAIN_OFFICE,Global Supply Chain Office,GLOBAL,WOM,internal id kept for backward compatibility
+MOM_final_assy_EURO,MOM,MOM Final Assy EURO,DE,Apple_EU,final assembly / manufacturing example
+DAD_FAS_APAC,DAD,DAD FAS APAC,SG,Apple_APAC,demand allocation / distribution hub example
+WS_EU,WS,Warehouse EU,NL,Apple_EU,warehouse example
+RT_DE_ONLINE,RT,Retail DE Online,DE,Apple_DE,retail / channel example
+CS_DE_PREMIUM,CS,Customer DE Premium,DE,Market_DE,market / customer demand sink example
+WEB_SALE_EU,WEB_SALE,Web Sale EU,IE,Apple_Online,e-commerce / direct sale example
+TIER1_camera_module_ASIA,TIER_1_ASSY,Tier1 Camera Module ASIA,CN,Supplier_A,tier1 assembly / module supplier example
+TIER2_lens_parts_ASIA,TIER_2_PARTS,Tier2 Lens Parts ASIA,CN,Supplier_B,tier2 parts supplier example
+TIER3_glass_material_ASIA,TIER_3_MATERIAL,Tier3 Glass Material ASIA,JP,Supplier_C,tier3 material supplier example
+supply_point,SUPPLY_CHAIN_OFFICE,Global Supply Chain Office,GLOBAL,WOM,backward-compatible internal id
+MOM_final_assy_ASIA,MOM,MOM Final Assy ASIA,IN,Apple_ASIA,
+DAD_FAS_APAC,DAD,DAD FAS APAC,SG,Apple_APAC,
+WS_APAC,WS,Warehouse APAC,SG,Apple_APAC,
+RT_IN_ASPIRER,RT,Retail India Aspirer,IN,Market_IN,
+CS_IN_ASPIRER,CS,Customer India Aspirer,IN,Market_IN,
+CS_CN_PREMIUM,CS,Customer China Premium,CN,Market_CN,
+CS_JP_REPLACEMENT,CS,Customer Japan Replacement,JP,Market_JP,

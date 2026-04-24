@@ -1,0 +1,8 @@
+node_character,revenue_recognition_flag,purchase_recognition_flag,inventory_valuation_flag,variable_cost_flag,fixed_cost_flag,tax_applicable_flag,default_inventory_carrying_rate,default_target_profit_margin,default_tax_rate,default_fixed_cost_basis,remarks
+SUPPLY_CHAIN_OFFICE,0,0,1,0,1,1,0.00,0.00,0.10,weekly,global planning office / no external revenue
+MOM,1,1,1,1,1,1,0.05,0.15,0.10,weekly,manufacturing node standard policy
+TIER_1_ASSY,1,1,1,1,1,1,0.05,0.12,0.10,weekly,upstream assembly / supplier policy
+DAD,1,1,1,1,1,1,0.05,0.15,0.10,weekly,distribution yard standard policy
+WS,1,1,1,1,1,1,0.05,0.12,0.10,weekly,warehouse standard policy
+RT,1,1,1,1,1,1,0.03,0.18,0.10,weekly,retail / channel standard policy
+CS,1,1,1,0,0,1,0.00,0.20,0.10,none,consumer / sell-out terminal node
