@@ -371,6 +371,7 @@ class WOMPipelineRunner:
             #result["money"] をセットした直後、return result の前
             env.money_result = result["money"]
             env.node_money_rows = result["money"].get("node_money_rows", [])
+            env.money_node_rows = env.node_money_rows
 
         except Exception as e:
             print(f"[WARN] money evaluation skipped: {e}")

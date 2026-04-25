@@ -270,6 +270,26 @@ def evaluate_money_by_node(env: Any) -> List[Dict[str, Any]]:
                         "profit": _safe_float(profit),
                     }
                 )
+
+    # ------------------------------------------------------------
+    # Backward-compatible bridge for existing GUI / reporting code
+    # ------------------------------------------------------------
+    try:
+        env.node_money_rows = rows
+        env.money_node_rows = rows
+
+        money_result = getattr(env, "money_result", None)
+        if not isinstance(money_result, dict):
+            money_result = {}
+
+        money_result["node_money_rows"] = rows
+        money_result["kpi_summary_rows"] = build_kpi_summary(rows)
+        money_result["product_money_summary_rows"] = build_product_money_summary(rows)
+
+        env.money_result = money_result
+    except Exception as e:
+        print(f"[WARN] failed to attach money rows to env: {e}")
+
     return rows
 
 
