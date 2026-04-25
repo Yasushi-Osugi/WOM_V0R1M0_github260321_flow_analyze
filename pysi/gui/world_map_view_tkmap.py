@@ -256,6 +256,13 @@ class WorldMapViewTk:
     def set_selected_node(self, node_name: str) -> None:
         if not node_name or node_name not in self._pos:
             return
+
+        # Refresh money rows because recompute may update env after the map was opened.
+        try:
+            self._money_by_node = self._build_money_by_node()
+        except Exception as e:
+            print(f"[TKMAP] money cache refresh skipped: {e}")
+
         self._highlight_node(node_name)
 
     # ----------------------------------------------------------
@@ -551,6 +558,14 @@ class WorldMapViewTk:
         if self._info_var is None:
             return
 
+        # Always refresh before rendering selected-node detail.
+        # This keeps the map panel aligned with the latest recompute result.
+        try:
+            self._money_by_node = self._build_money_by_node()
+        except Exception as e:
+            print(f"[TKMAP] money cache refresh skipped: {e}")
+
+
         node = self._nodes.get(node_name)
         money_row = self._money_by_node.get(node_name, {})
         shown_name = self._display_name(node_name)
@@ -601,16 +616,30 @@ class WorldMapViewTk:
             if not isinstance(rows, list):
                 continue
             out: Dict[str, Dict[str, Any]] = {}
+
+
+
             for r in rows:
                 if not isinstance(r, dict):
                     continue
+
                 node_name = (r.get("node_name") or "").strip()
                 if not node_name:
                     continue
+
+                # これがかなり重要です。
+                # node_money_rows に複数 product の同一 node が含まれる場合、
+                # product filter なしだと、別 product の row で上書きされる可能性があります。
+                product = (r.get("product_name") or r.get("product") or "").strip()
+                if self.product_name and product and product != self.product_name:
+                    continue
+
                 out[node_name] = r
+
             if out:
                 return out
-            
+
+
 
         # Fallback: evaluate on demand if pipeline did not attach money rows to env
         if evaluate_money_by_node is not None:

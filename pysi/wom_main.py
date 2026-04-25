@@ -373,38 +373,47 @@ class WOMEnv:
             base_dir = os.path.dirname(__file__)
             master_dir = os.path.join(base_dir, "master_data")
             node_master_csv = os.path.join(master_dir, "node_master.csv")
+            node_character_policy_master_csv = os.path.join(
+                master_dir, "node_character_policy_master.csv"
+            )
             node_character_money_master_csv = os.path.join(
                 master_dir, "node_character_money_master.csv"
             )
             node_product_money_master_csv = os.path.join(
                 master_dir, "node_product_money_master.csv"
             )
+            edge_product_money_master_csv = os.path.join(
+                master_dir, "edge_product_money_master.csv"
+            )
+            valuation_policy_master_csv = os.path.join(
+                master_dir, "valuation_policy_master.csv"
+            )
 
-            # required masters
-            if not (
-                os.path.exists(node_master_csv)
-                and os.path.exists(node_character_money_master_csv)
-            ):
+            if not os.path.exists(node_master_csv):
                 print("[INFO] required money master CSV not found. Skip loading.")
                 return
 
-            # optional product-specific money master
-            node_product_money_master_csv_arg = (
-                node_product_money_master_csv
-                if os.path.exists(node_product_money_master_csv)
-                else None
-            )
+            policy_csv = None
+            if os.path.exists(node_character_policy_master_csv):
+                policy_csv = node_character_policy_master_csv
+            elif os.path.exists(node_character_money_master_csv):
+                policy_csv = node_character_money_master_csv
 
             self.money_master_bundle = load_money_master_bundle(
                 node_master_csv=node_master_csv,
-                node_character_money_master_csv=node_character_money_master_csv,
-                node_product_money_master_csv=node_product_money_master_csv_arg,
+                node_character_policy_master_csv=policy_csv,
+                node_character_money_master_csv=policy_csv,
+                node_product_money_master_csv=(
+                    node_product_money_master_csv if os.path.exists(node_product_money_master_csv) else None
+                ),
+                edge_product_money_master_csv=(
+                    edge_product_money_master_csv if os.path.exists(edge_product_money_master_csv) else None
+                ),
+                valuation_policy_master_csv=(
+                    valuation_policy_master_csv if os.path.exists(valuation_policy_master_csv) else None
+                ),
             )
-
-            if node_product_money_master_csv_arg is None:
-                print("[INFO] money master loaded (without node_product_money_master.csv).")
-            else:
-                print("[INFO] money master loaded.")
+            print("[INFO] money master loaded.")
 
         except Exception as e:
             print(f"[WARN] money master loading failed: {e}")
