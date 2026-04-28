@@ -1,353 +1,392 @@
 # WOM — Weekly Operation Model
 
-At first, starter "phthon -m main" will show you WOM UI that will take some minutes for loading Supply Chain Model.
+WOM (Weekly Operation Model) is an experimental **End-to-End Supply Chain Planning and Management Cockpit**.
 
-WOM (Weekly Operation Model) is an experimental planning framework for modeling and simulating economic activity through supply chain flows.
+WOM visualizes and simulates weekly PSI planning:
 
-The project explores how **planning systems can evolve from static planning tools into dynamic simulation-based decision engines**.
+- **P**: Production / Purchase
+- **S**: Shipment / Sales
+- **I**: Inventory
 
-WOM is designed as a **planning kernel** that integrates:
+across a global supply chain network.
 
-- demand modeling
-- supply chain flow simulation
-- evaluation of system performance
-- decision search and corrective planning actions
+The goal of WOM is to help business leaders, planners, and consultants understand how future business scenarios propagate through the end-to-end supply chain, including:
+
+- demand changes
+- supply capacity constraints
+- inventory movements
+- cost structure
+- revenue and profit
+- management risks and issues
+- suggested management actions
+
+WOM is still under development, but the current version already includes a working GUI demo, supply chain network visualization, PSI charts, money evaluation, Management Cockpit, and an experimental rule-based Management Issue Analyzer.
 
 ---
-WOM System Architecture Map
 
-Human Objectives
-        ↓
-   AI Research
-        ↓
-   WOM Architecture
-        ↓
-   Planning Kernel
-        ↓
-Demand → Flow → State
-        ↓
-   Evaluation
-        ↓
-    Resolver
-        ↓
-    Operator
-        ↓
-   Re-simulation
+## Current Demo Capabilities
+
+The current WOM demo can:
+
+- visualize an end-to-end supply chain network
+- show PSI time-series charts for each supply chain node
+- run weekly supply chain planning
+- evaluate sales, cost, profit, and profit ratio
+- display node-level and product-level money evaluation
+- compare baseline and scenario planning states
+- extract management issues from scenario deltas
+- generate executive narrative text for risks and suggested actions
+
 ---
-# Why WOM?
 
-Traditional planning systems rely on static planning tables.
+## Getting Started
 
-WOM models economic activity as **flows of supply through a network over time**.
+Clone the repository:
+
+```bash
+git clone https://github.com/Yasushi-Osugi/wom-event-flow-analyzer.git
+cd wom-event-flow-analyzer
+```
+
+Run the WOM GUI:
+
+```bash
+python -m main
+```
+
+The initial loading process may take several minutes depending on the supply chain model, master data, and local environment.
+
+When the GUI starts, you can use the cockpit window to:
+
+- visualize the supply chain network
+- inspect PSI charts by node
+- run full planning
+- evaluate revenue, cost, profit, and profit ratio
+- open the Management Cockpit
+- compare baseline and scenario states
+- review Issues, Top Risks, and executive Narrative
+
+---
+
+## Key Features
+
+### 1. Supply Chain Network Visualization
+
+WOM visualizes supply chain nodes and edges as an end-to-end network.
+
+Users can inspect factories, warehouses, distribution nodes, market nodes, and other supply chain entities.
+
+Each node can be linked with PSI behavior, inventory movement, and management-level indicators.
+
+---
+
+### 2. Weekly PSI Planning
+
+WOM simulates weekly production, purchase, shipment, sales, and inventory flows.
+
+The PSI planner shows how supply and demand move through the network over time.
+
+Each node can display its own PSI time-series graph, making it possible to understand where inventory is accumulated, depleted, or delayed.
+
+---
+
+### 3. Money Evaluation
+
+WOM evaluates supply chain plans not only by quantity, but also by money.
+
+Current money evaluation includes:
+
+- revenue
+- cost
+- profit
+- profit ratio
+- node-level money evaluation
+- product-level money summary
+- cost waterfall reporting
+
+This enables WOM to connect operational planning with management-level financial evaluation.
+
+---
+
+### 4. Management Cockpit
+
+WOM includes an experimental **Management Cockpit** for scenario comparison.
+
+The cockpit compares baseline and scenario planning results and shows:
+
+- Top KPIs
+- Top Risks
+- Management Issues
+- Issue Detail
+- Executive Narrative
+
+The purpose of the Management Cockpit is to help users understand not only what changed in the plan, but also why it matters from a management perspective.
+
+---
+
+### 5. Management Issue Analyzer
+
+WOM includes a rule-based **Management Issue Analyzer** as the first step toward AI-assisted scenario diagnosis.
+
+The analyzer compares KPI deltas between baseline and scenario plans.
+
+It evaluates:
+
+- revenue
+- profit
+- profit ratio
+- inventory
+- shortage
+- backlog
+
+and generates:
+
+- management issues
+- top risks
+- suggested actions
+- executive narrative
+
+The analyzer is implemented in:
+
+```text
+pysi/reporting/management_issue_analyzer.py
+```
+
+It is integrated with the Management Cockpit GUI.
+
+For example, in a demand surge scenario, WOM can show:
+
+- revenue and profit improvement
+- supply capacity pressure risk
+- opportunity for revenue expansion
+- recommended actions such as short-term production increase, supply reallocation, and safety stock review
+
+---
+
+## Scenario Difference Analysis
+
+WOM can compare baseline and scenario planning states and extract issues from KPI deltas.
+
+This supports scenario planning such as:
+
+- demand surge
+- demand slowdown
+- supply constraint
+- logistics disruption
+- port stop
+- inventory risk
+- profit deterioration
+- cash efficiency risk
+
+The current rule-based analyzer is intentionally simple and explainable.
+
+Future versions may combine rule-based logic with LLM-based narrative generation and scenario-specific management recommendations.
+
+---
+
+## Concept
+
+WOM is based on the idea that modern planning systems should evolve from static planning tables into simulation-driven management cockpits.
+
+The core concept is:
+
+```text
+Future Scenario
+↓
+Supply Chain Planning
+↓
+PSI / Cost / Profit / Inventory Simulation
+↓
+Scenario Difference
+↓
+Management Issues
+↓
+Suggested Actions
+```
+
+In this sense, WOM is not only a PSI planning tool.
+
+It is an experimental environment for **E2E supply chain scenario planning**.
+
+---
+
+## Why WOM?
+
+Traditional planning systems often rely on static planning tables.
+
+WOM models economic activity as flows of supply through a network over time.
 
 The core principle is:
 
-Flow/Event = source of truth  
+```text
+Flow / Event = source of truth
 State = derived view
+```
 
-Instead of maintaining static state tables, WOM tracks **events and flows**, from which planning states such as inventory or backlog are derived.
+Instead of treating static state tables as the primary source, WOM aims to track planning flows and derive states such as inventory, backlog, capacity usage, and service level.
 
-This approach enables:
+This approach supports:
 
 - explainable planning
 - reproducible simulations
-- AI-assisted decision search
+- scenario-based decision support
+- AI-assisted management issue analysis
 
 ---
 
-# Core Planning Loop
+## Architecture Overview
 
-The WOM engine operates as a closed-loop planning system.
+WOM combines several layers:
 
-
-Demand
+```text
+Business Scenario
 ↓
-Flow Simulation
+Demand / Supply Planning
 ↓
-State Derivation
+PSI Flow Simulation
 ↓
-Evaluation
+Money Evaluation
 ↓
-Resolver Decision
+State Snapshot
 ↓
-Operator Application
+Plan Delta
 ↓
-Re-Simulation
+Management Issue Analyzer
+↓
+Management Cockpit
+```
 
-
-This loop transforms WOM from a planning calculator into a **simulation-driven planning engine**.
-
----
-
-# Core Concepts
-
-The WOM model is built around six fundamental concepts.
-
-CPU  
-Price  
-Lot  
-Flow  
-Resolver  
-Evaluation  
-
-### CPU (Common Planning Unit)
-
-The fundamental unit of demand, such as a household consumption unit or market demand segment.
-
-### Price
-
-Market signal influencing supply and demand behavior.
-
-### Lot
-
-The basic supply object used by the planning system.
-
-### Flow
-
-Movement of lots through the supply chain network.
-
-### Resolver
-
-Decision engine that searches for corrective actions.
-
-### Evaluation
-
-Objective function measuring plan quality.
+The current implementation includes both quantity-based and money-based evaluation.
 
 ---
 
-# Architecture Overview
+## Repository Structure
 
-The WOM system architecture can be understood as a layered model.
+Main areas:
 
-Human Objectives  
-↓  
-AI Research Design  
-↓  
-Software Architecture  
-↓  
-Planning Kernel  
-↓  
-Mathematical Model  
-↓  
-Economic System Model  
+```text
+pysi/
+  gui/
+    cockpit_tk.py
 
-This layered structure allows WOM to function both as a **planning engine and a research platform**.
+  reporting/
+    management_issue_analyzer.py
+    business_report_builder.py
 
----
+  evaluate/
+    money_evaluator.py
 
-# Planning Engine Modules
+  cost/
+    load_cost_masters.py
 
-The WOM planning engine consists of four core modules.
+  master_data/
+    money_master_loader.py
 
+wom_cockpit/
+  domain/
+  services/
+  ui/
+```
 
-demand_model.py
-flow_engine.py
-evaluation.py
-resolver.py
+Important modules:
 
-
-| Module | Responsibility |
-|------|------|
-| demand_model | demand generation |
-| flow_engine | supply chain simulation |
-| evaluation | plan scoring |
-| resolver | decision search |
-
----
-
-# Data Model
-
-The WOM planning system uses an event-based data model.
-
-Key entities include:
-
-Lot  
-Event  
-Flow  
-State  
-TrustEvent  
-Operator  
-
-Events represent the **true record of system activity**, while states are derived views computed from event streams.
+```text
+main.py
+pysi/gui/cockpit_tk.py
+pysi/reporting/management_issue_analyzer.py
+pysi/evaluate/money_evaluator.py
+wom_cockpit/ui/tk/cockpit_panel_adapter.py
+```
 
 ---
 
-# Repository Structure
-
-The repository contains a set of architecture and design documents.
-
-Core documents include:
-
-
-ARCHITECTURE.md
-WOM_META_ARCHITECTURE.md
-WOM_PLANNING_ENGINE_ARCHITECTURE.md
-WOM_EXECUTION_MODEL.md
-WOM_DATA_MODEL.md
-WOM_SYSTEM_DESIGN_INDEX.md
-
-
-These documents collectively define the WOM planning system.
-
----
-
-# AI-Assisted Development
-
-The project is designed to support **AI-assisted development workflows**.
-
-Documentation such as:
-
-AGENTS.md  
-INTERFACE_SPEC.md  
-DEV_ROADMAP.md  
-
-enables collaboration between:
-
-- human architects
-- AI design agents
-- code generation systems
-
----
-
-# Project Scope
-
-Current focus areas:
-
-- weekly supply chain planning
-- event-based flow simulation
-- explainable planning artifacts
-- deterministic planning engines
-
-The project may later expand into broader economic system modeling.
-
----
-
-# Project Status
+## Current Development Status
 
 WOM is an experimental research and development project.
 
-Current priorities include:
+Current focus areas include:
 
-- stabilizing the planning kernel
-- improving modular architecture
-- enabling AI-assisted development
-
----
-
-# Getting Started
-
-
-Recommended reading order:
-
-REPO_BOOTSTRAP.md  
-ARCHITECTURE_MAP.md  
-ARCHITECTURE.md  
-WOM_PLANNING_ENGINE_ARCHITECTURE.md  
-WOM_EXECUTION_MODEL.md  
-WOM_DATA_MODEL.md  
-
-These documents provide a structured introduction to the system.
+- stabilizing the GUI demo
+- improving scenario comparison
+- strengthening costing and profit evaluation
+- enhancing Management Cockpit
+- refining Management Issue Analyzer rules
+- preparing 1-minute demo content
+- documenting architecture and use cases
 
 ---
 
-# Summary
+## Concept Article
 
-WOM combines:
+A Japanese concept article is available on note:
 
-- supply chain flow simulation
-- deterministic planning engines
-- decision search mechanisms
-- structured planning artifacts
+```text
+E2Eサプライチェーン理解に基づく事業経営の重要性
+```
 
-into a unified planning framework.
+The article explains why business leaders need to understand the end-to-end supply chain model and how WOM aims to support scenario-based supply chain management.
 
-The project explores how **planning systems can be built as simulation-driven economic engines**.
+Article URL:
+
+```text
+https://note.com/osuosu1123/n/n4bca0c3906f9
+```
 
 ---
-WOM Economic OS Architecture (Final Conceptual Diagram)
-                    ┌─────────────────────────────┐
-                    │        Human Objectives      │
-                    │  Wellbeing / Stability /    │
-                    │  Productivity / Sustainability │
-                    └───────────────┬─────────────┘
-                                    │
-                                    ▼
-                         ┌───────────────────┐
-                         │     Evaluation     │
-                         │  Objective Function│
-                         │                   │
-                         │ U(plan)            │
-                         │ = w1 Service       │
-                         │ + w2 Profit        │
-                         │ - w3 Cost          │
-                         │ - w4 Risk          │
-                         └─────────┬─────────┘
-                                   │
-                                   ▼
-                         ┌───────────────────┐
-                         │      Resolver      │
-                         │ Decision / Search  │
-                         │                   │
-                         │ Operator Selection │
-                         └─────────┬─────────┘
-                                   │
-                                   ▼
-       ┌─────────────────────────────────────────────────────┐
-       │                  WOM Planning Kernel                 │
-       │                                                     │
-       │                                                     │
-       │   CPU (Common Planning Unit)                       │
-       │          ↓                                          │
-       │   Demand Generation                                 │
-       │          ↓                                          │
-       │   LOT Creation                                      │
-       │          ↓                                          │
-       │   Flow Simulation                                   │
-       │                                                     │
-       │   Production → Shipment → Arrival → Sales           │
-       │                                                     │
-       │          ↓                                          │
-       │   State Derivation                                  │
-       │                                                     │
-       │   Inventory / Capacity / Backlog / Service          │
-       │                                                     │
-       └─────────────────────────┬───────────────────────────┘
-                                 │
-                                 ▼
-                        ┌─────────────────┐
-                        │      Price       │
-                        │ Economic Signal  │
-                        │ Demand Response  │
-                        └─────────┬────────┘
-                                  │
-                                  ▼
-                     ┌────────────────────────┐
-                     │    Economic Network    │
-                     │                        │
-                     │ Factory → Warehouse    │
-                     │        → Market        │
-                     │                        │
-                     │ Nodes / Edges / Flow   │
-                     └──────────┬─────────────┘
-                                │
-                                ▼
-                     ┌────────────────────────┐
-                     │     Agents / Actors    │
-                     │                        │
-                     │ Firms                  │
-                     │ Consumers              │
-                     │ Logistics providers    │
-                     │ Governments            │
-                     └────────────────────────┘
+
+## Example Management Cockpit Scenario
+
+In a demand surge scenario, WOM can compare a baseline plan with a scenario plan.
+
+The Management Cockpit can show that:
+
+- revenue increases
+- profit improves
+- profit ratio improves
+- supply capacity pressure risk is detected
+- revenue expansion opportunity is detected
+- recommended actions are generated
+
+Example recommended actions include:
+
+- short-term production increase
+- supply reallocation to priority markets
+- safety stock level review
+- monitoring of supply capacity constraints
+
+This demonstrates how WOM can move from planning visualization toward management-level scenario diagnosis.
+
 ---
 
-# License
+## Project Scope
+
+Current scope:
+
+- weekly supply chain planning
+- PSI visualization
+- quantity-based flow simulation
+- money-based evaluation
+- scenario comparison
+- management issue extraction
+- executive narrative generation
+
+Future scope may include:
+
+- richer demand scenario generation
+- inbound and outbound planning integration
+- alternative logistics route simulation
+- stronger costing allocation rules
+- LLM-assisted scenario diagnosis
+- ERP / BI / database integration
+
+---
+
+## License
 
 This project is released under the MIT License.
 
 ---
 
-# Author
+## Author
 
 Yasushi Osugi
