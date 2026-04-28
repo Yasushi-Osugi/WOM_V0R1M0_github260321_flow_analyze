@@ -240,6 +240,12 @@ class CockpitPanelAdapter:
 
     def _render_narrative(self, vm: CockpitViewModel) -> None:
         text = render_narrative_text(vm)
+        extra_text = str((vm.metadata or {}).get("narrative_override", "") or "").strip()
+        if extra_text:
+            if text.strip():
+                text = f"{text}\n\n---\n[Management Issue Analyzer]\n{extra_text}"
+            else:
+                text = extra_text
         self._set_text(self.narrative_text, text)
 
     # ------------------------------------------------------------

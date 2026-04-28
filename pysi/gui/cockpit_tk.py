@@ -34,7 +34,8 @@ try:
     from wom_cockpit.services.delta_detector import compare_snapshots
     from wom_cockpit.services.fact_extractor import extract_management_facts
     from wom_cockpit.services.issue_engine import generate_issues
-    from wom_cockpit.ui.cockpit_view_model import build_cockpit_view_model
+    from wom_cockpit.domain.issue import Issue, RecommendedAction
+    from wom_cockpit.ui.cockpit_view_model import build_cockpit_view_model, RiskViewModel
     from wom_cockpit.ui.tk.cockpit_panel_adapter import CockpitPanelAdapter
     _WOM_MANAGEMENT_COCKPIT_AVAILABLE = True
 except Exception as e:
@@ -42,9 +43,18 @@ except Exception as e:
     compare_snapshots = None
     extract_management_facts = None
     generate_issues = None
+    Issue = None
+    RecommendedAction = None
     build_cockpit_view_model = None
+    RiskViewModel = None
     CockpitPanelAdapter = None
     _WOM_MANAGEMENT_COCKPIT_AVAILABLE = False
+
+try:
+    from pysi.reporting.management_issue_analyzer import analyze_management_delta
+except Exception as e:
+    print("[management_issue_analyzer] import skipped:", e)
+    analyze_management_delta = None
 
 # optional snapshot builder for management cockpit
 try:
@@ -3915,6 +3925,133 @@ class WOMCockpit(tk.Tk):
         # baseline は自動追随させない
         #self._last_management_snapshot = scenario_snapshot
 
+    @staticmethod
+    def _is_management_demo_scenario(scenario_name: str) -> bool:
+        if not scenario_name:
+            return False
+        name = scenario_name.lower()
+        return any(
+            token in name
+            for token in ("demo", "sample", "demand_surge", "demand_down", "port_stop")
+        )
+
+    @staticmethod
+    #@STOP
+    #def _extract_management_analyzer_input(snapshot, plan_delta) -> dict[str, float]:
+    def _extract_management_analyzer_input(snapshot, plan_delta, side: str = "after") -> dict[str, float]:
+
+        summary = getattr(plan_delta, "summary_delta", None)
+        if summary is not None:
+            return {
+                "revenue": float(getattr(getattr(summary, "total_revenue", None), side, 0.0) or 0.0),
+                "profit": float(getattr(getattr(summary, "total_profit", None), side, 0.0) or 0.0),
+                "profit_ratio": float(getattr(getattr(summary, "profit_ratio", None), side, 0.0) or 0.0),
+                "inventory": float(getattr(getattr(summary, "total_inventory_qty", None), side, 0.0) or 0.0),
+                "shortage": float(getattr(getattr(summary, "total_lost_sales_qty", None), side, 0.0) or 0.0),
+                "backlog": float(getattr(getattr(summary, "total_backlog_qty", None), side, 0.0) or 0.0),
+            }
+
+        kpi = getattr(snapshot, "kpi_summary", None)
+        if kpi is None:
+            return {
+                "revenue": 0.0,
+                "profit": 0.0,
+                "profit_ratio": 0.0,
+                "inventory": 0.0,
+                "shortage": 0.0,
+                "backlog": 0.0,
+            }
+        return {
+            "revenue": float(getattr(kpi, "total_revenue", 0.0) or 0.0),
+            "profit": float(getattr(kpi, "total_profit", 0.0) or 0.0),
+            "profit_ratio": float(getattr(kpi, "profit_ratio", 0.0) or 0.0),
+            "inventory": float(getattr(kpi, "total_inventory_qty", 0.0) or 0.0),
+            "shortage": float(getattr(kpi, "total_lost_sales_qty", 0.0) or 0.0),
+            "backlog": float(getattr(kpi, "total_backlog_qty", 0.0) or 0.0),
+        }
+
+    def _apply_management_analyzer(self, vm, baseline_snapshot, scenario_snapshot, plan_delta):
+        if analyze_management_delta is None or Issue is None or RiskViewModel is None:
+            return vm
+
+        priority_map = {"High": 10, "Medium": 50, "Low": 90}
+        severity_map = {"Critical": "critical", "Warning": "high", "Info": "low"}
+        issue_type_map = {"Opportunity": "opportunity"}
+
+        baseline_input = self._extract_management_analyzer_input(baseline_snapshot, plan_delta, side="before")
+        scenario_input = self._extract_management_analyzer_input(scenario_snapshot, plan_delta, side="after")
+        scenario_name = str(
+            getattr(scenario_snapshot, "scenario_name", None)
+            or getattr(scenario_snapshot, "scenario_id", None)
+            or "Scenario"
+        )
+        demo_mode = self._is_management_demo_scenario(scenario_name)
+
+        result = analyze_management_delta(
+            baseline_input,
+            scenario_input,
+            scenario_name=scenario_name,
+            demo_mode=demo_mode,
+        )
+
+        mapped_issues = []
+        issue_id_by_title = {}
+        for idx, src in enumerate(result.issues, start=1):
+            issue_id = f"mgmt_analyzer::{idx}"
+            mapped_issues.append(
+                Issue(
+                    issue_id=issue_id,
+                    issue_type=issue_type_map.get(src.category, "risk"),
+                    category=src.category,
+                    title=src.title,
+                    summary=src.reason,
+                    severity=severity_map.get(src.severity, "medium"),
+                    priority=priority_map.get(src.priority, 50),
+                    why_it_matters=src.reason,
+                    management_question=f"{src.related_kpi} をどのように改善するか？",
+                    recommendation_summary=src.suggested_action,
+                    recommended_actions=[
+                        RecommendedAction(
+                            action_id=f"mgmt_action::{idx}",
+                            action_type="management_action",
+                            title=src.suggested_action,
+                            description=src.suggested_action,
+                        )
+                    ],
+                    owner_hint=src.owner,
+                    tags=[src.related_kpi],
+                    attributes={
+                        "baseline_value": src.baseline_value,
+                        "scenario_value": src.scenario_value,
+                        "delta_value": src.delta_value,
+                    },
+                )
+            )
+            issue_id_by_title.setdefault(src.title, issue_id)
+
+        vm.issues = mapped_issues
+        vm.top_risks = [
+            RiskViewModel(
+                risk_id=issue_id_by_title.get(risk.risk_name, f"mgmt_analyzer::risk::{risk.rank}"),
+                title=risk.risk_name,
+                category="Management",
+                severity=severity_map.get(risk.severity, "medium"),
+                priority=risk.rank,
+                summary=risk.description,
+            )
+            for risk in result.risks
+        ]
+        if result.narrative:
+            vm.metadata["narrative_override"] = result.narrative
+        vm.metadata["management_analyzer_input"] = {
+            "baseline": baseline_input,
+            "scenario": scenario_input,
+            "scenario_name": scenario_name,
+            "demo_mode": demo_mode,
+        }
+        vm.metadata["issue_count"] = len(mapped_issues)
+        vm.metadata["issue_count_analyzer"] = len(mapped_issues)
+        return vm
 
     def refresh_management_cockpit(self, baseline_snapshot=None, scenario_snapshot=None):
         if not _WOM_MANAGEMENT_COCKPIT_AVAILABLE:
@@ -3942,6 +4079,10 @@ class WOMCockpit(tk.Tk):
         facts = extract_management_facts(plan_delta)
         issues = generate_issues(facts, group_similar_facts=False)
         vm = build_cockpit_view_model(plan_delta, issues)
+        try:
+            vm = self._apply_management_analyzer(vm, baseline_snapshot, scenario_snapshot, plan_delta)
+        except Exception as e:
+            print("[management_issue_analyzer] apply skipped:", e)
 
         self.management_cockpit_panel.render(vm)
 
