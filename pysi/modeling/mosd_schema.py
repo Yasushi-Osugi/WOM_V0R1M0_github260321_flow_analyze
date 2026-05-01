@@ -108,5 +108,55 @@ def validate_mosd_schema(mosd: dict) -> list[dict]:
             if st == "navigator_assumption" or conf in LOW_CONF:
                 msgs.append(_msg("WARNING", "LOW_CONFIDENCE_DATA", f"{section_name}[{i}] has assumption/low confidence metadata"))
 
+
+
+    # optional phase2 money checks
+    markets = mosd.get("markets", []) if isinstance(mosd.get("markets"), list) else []
+    market_ids=[m.get("market_id") for m in markets if isinstance(m, dict)]
+    if len(set(market_ids)) != len(market_ids): msgs.append(_msg("ERROR","DUP_MARKET_ID","markets.market_id must be unique"))
+    currency_set={mosd.get("reporting_currency")}
+    fx=mosd.get("currencies",{}).get("fx_rates",[]) if isinstance(mosd.get("currencies"),dict) else []
+    for r in fx:
+        if isinstance(r,dict): currency_set|={r.get("from_currency"),r.get("to_currency")}
+    map_market=set(market_ids)
+    for i,m in enumerate(markets):
+        if not isinstance(m,dict): continue
+        if m.get("currency") and m.get("currency") not in currency_set: msgs.append(_msg("ERROR","MARKET_CURRENCY",f"markets[{i}] currency unknown"))
+
+    for i,r in enumerate(mosd.get("money_overlay",{}).get("node_product_values",[]) if isinstance(mosd.get("money_overlay"),dict) else []):
+        if not isinstance(r,dict): continue
+        if r.get("node_name") not in node_set: msgs.append(_msg("ERROR","MONEY_NODE_REF",f"money_overlay[{i}] node unknown"))
+        if r.get("product_name") not in prod_set: msgs.append(_msg("ERROR","MONEY_PRODUCT_REF",f"money_overlay[{i}] product unknown"))
+        for k in ("inventory_unit_value","revenue_unit_value","variable_cost_unit_value","fixed_cost_weekly"):
+            if float(r.get(k,0))<0: msgs.append(_msg("ERROR","MONEY_NEG",f"money_overlay[{i}] {k} must be >=0"))
+
+    for i,r in enumerate(mosd.get("node_market_mapping",[]) if isinstance(mosd.get("node_market_mapping"),list) else []):
+        if not isinstance(r,dict): continue
+        if r.get("node_name") not in node_set: msgs.append(_msg("ERROR","NODE_MARKET_NODE",f"node_market_mapping[{i}] node unknown"))
+        if r.get("market_id") not in map_market: msgs.append(_msg("ERROR","NODE_MARKET_MARKET",f"node_market_mapping[{i}] market unknown"))
+        if r.get("product_name") not in prod_set: msgs.append(_msg("ERROR","NODE_MARKET_PRODUCT",f"node_market_mapping[{i}] product unknown"))
+        if float(r.get("allocation_ratio",0))<=0: msgs.append(_msg("ERROR","NODE_MARKET_ALLOC",f"node_market_mapping[{i}] allocation_ratio must be >0"))
+
+    ca=mosd.get("cost_assumptions",{}) if isinstance(mosd.get("cost_assumptions"),dict) else {}
+    for i,r in enumerate(ca.get("product_costs",[]) or []):
+        if not isinstance(r,dict): continue
+        if r.get("product_name") not in prod_set: msgs.append(_msg("ERROR","PC_PRODUCT",f"product_costs[{i}] product unknown"))
+    for i,r in enumerate(ca.get("node_costs",[]) or []):
+        if isinstance(r,dict) and r.get("node_name") not in node_set: msgs.append(_msg("ERROR","NC_NODE",f"node_costs[{i}] node unknown"))
+    for i,r in enumerate(ca.get("lane_costs",[]) or []):
+        if not isinstance(r,dict): continue
+        if r.get("from_node") not in node_set or r.get("to_node") not in node_set: msgs.append(_msg("ERROR","LC_NODE",f"lane_costs[{i}] node unknown"))
+        if int(r.get("valid_from_week",1))>int(r.get("valid_to_week",52)): msgs.append(_msg("ERROR","LC_WEEK",f"lane_costs[{i}] invalid week range"))
+    for i,r in enumerate(ca.get("sales_prices",[]) or []):
+        if not isinstance(r,dict): continue
+        if r.get("product_name") not in prod_set: msgs.append(_msg("ERROR","SP_PRODUCT",f"sales_prices[{i}] product unknown"))
+        if r.get("market_id") not in map_market: msgs.append(_msg("ERROR","SP_MARKET",f"sales_prices[{i}] market unknown"))
+        if float(r.get("sales_price",0))<0: msgs.append(_msg("ERROR","SP_PRICE",f"sales_prices[{i}] sales_price must be >=0"))
+    for i,r in enumerate(fx):
+        if not isinstance(r,dict): continue
+        if r.get("from_currency")==r.get("to_currency"): msgs.append(_msg("ERROR","FX_PAIR",f"fx_rates[{i}] from and to must differ"))
+        if float(r.get("fx_rate",0))<=0: msgs.append(_msg("ERROR","FX_RATE",f"fx_rates[{i}] fx_rate must be >0"))
+        if int(r.get("valid_from_week",1))>int(r.get("valid_to_week",52)): msgs.append(_msg("ERROR","FX_WEEK",f"fx_rates[{i}] invalid week range"))
+
     msgs.append(_msg("INFO", "SCHEMA_VALIDATION_DONE", "MOSD schema validation completed"))
     return msgs

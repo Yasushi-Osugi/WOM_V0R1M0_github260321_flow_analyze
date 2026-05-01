@@ -76,5 +76,53 @@ def validate_generated_masters(output_dir: str) -> dict[str, list[str]]:
             if r["product_name"] not in product_set:
                 warnings.append(f"{rel} product not found in product trees: {r['product_name']}")
 
+
+
+    # optional phase2 validation
+    npm = out / "pysi/master_data/node_product_money_master.csv"
+    ncm = out / "pysi/master_data/node_character_money_master.csv"
+    if npm.exists():
+        rows=_read_csv(npm)
+        req={"node_name","product_name","inventory_unit_value","revenue_unit_value","variable_cost_unit_value","fixed_cost_weekly","currency","remarks"}
+        if rows and not req.issubset(set(rows[0].keys())): errors.append("node_product_money_master required columns missing")
+        for r in rows:
+            if r["node_name"] not in node_set: errors.append(f"node_product_money_master node missing: {r['node_name']}")
+            if r["product_name"] not in product_set: errors.append(f"node_product_money_master product missing: {r['product_name']}")
+            for k in ("inventory_unit_value","revenue_unit_value","variable_cost_unit_value","fixed_cost_weekly"):
+                if float(r.get(k,0))<0: errors.append(f"node_product_money_master {k} must be >=0")
+    if ncm.exists():
+        rows=_read_csv(ncm); chars={r.get("node_character","") for r in rows}
+        for r in node_rows:
+            c=r.get("node_character","")
+            if c and c!="UNKNOWN" and c not in chars: errors.append(f"node_character missing in node_character_money_master: {c}")
+
+    mm=out/"data/cost_masters/market_master.csv"
+    if mm.exists():
+        mk=_read_csv(mm); mids=[r.get("market_id","") for r in mk]; mset=set(mids)
+        if len(mids)!=len(mset): errors.append("market_master market_id must be unique")
+        csm=out/"data/cost_masters/cs_node_to_market_map.csv"
+        if csm.exists():
+            for r in _read_csv(csm):
+                if r.get("market_id") not in mset: errors.append("cs_node_to_market_map market_id missing")
+                if r.get("node_name") not in node_set: errors.append("cs_node_to_market_map node missing")
+        sp=out/"data/cost_masters/sales_price_master.csv"
+        if sp.exists():
+            for r in _read_csv(sp):
+                if r.get("market_id") not in mset: errors.append("sales_price_master market_id missing")
+    for rel,key in (("data/cost_masters/product_cost_master.csv","product_name"),("data/cost_masters/node_cost_master.csv","node_name")):
+        p=out/rel
+        if p.exists():
+            for r in _read_csv(p):
+                if key=="product_name" and r.get(key) not in product_set: errors.append("product_cost_master product missing")
+                if key=="node_name" and r.get(key) not in node_set: errors.append("node_cost_master node missing")
+    lc=out/"data/cost_masters/lane_cost_master.csv"
+    if lc.exists():
+        for r in _read_csv(lc):
+            if r.get("from_node") not in node_set or r.get("to_node") not in node_set: errors.append("lane_cost_master node missing")
+    fx=out/"data/cost_masters/fx_rate_master.csv"
+    if fx.exists():
+        for r in _read_csv(fx):
+            if float(r.get("fx_rate",0))<=0: errors.append("fx_rate_master fx_rate must be >0")
+
     infos.append("Generated master validation completed")
     return {"errors": errors, "warnings": warnings, "infos": infos}
