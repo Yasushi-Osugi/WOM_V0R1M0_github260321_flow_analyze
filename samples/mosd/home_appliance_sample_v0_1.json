@@ -1,0 +1,254 @@
+{
+  "schema_version": "wom_mosd_v0_1",
+  "model_id": "home_appliance_sample_001",
+  "model_name": "Home Appliance Sample Supply Chain",
+  "case_type": "hypothetical_demo",
+  "industry": "home_appliance",
+  "human_review_required": true,
+  "planning_horizon": {
+    "start_year": 2028,
+    "start_week": 1,
+    "end_year": 2028,
+    "end_week": 52,
+    "weeks_per_year": 52
+  },
+  "products": [
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "lot_size": 100,
+      "source_type": "navigator_assumption",
+      "confidence": "medium"
+    }
+  ],
+  "physical_nodes": [
+    {
+      "node_name": "MOM_JP_WASHER_PLANT",
+      "node_character": "MOM",
+      "role": "MOM",
+      "display_name": "Japan Washer Plant",
+      "country": "JP",
+      "company": "WOM",
+      "lat": 35.68,
+      "lon": 139.76,
+      "source_type": "navigator_assumption",
+      "confidence": "low"
+    },
+    {
+      "node_name": "supply_point",
+      "node_character": "SUPPLY_CHAIN_OFFICE",
+      "role": "SUPPLY_CHAIN_OFFICE",
+      "display_name": "Global Supply Chain Office",
+      "country": "GLOBAL",
+      "company": "WOM",
+      "lat": 35.0,
+      "lon": 135.0,
+      "source_type": "industry_template",
+      "confidence": "medium"
+    },
+    {
+      "node_name": "DAD_US_CENTRAL_DC",
+      "node_character": "DAD",
+      "role": "DAD",
+      "display_name": "US Central Distribution Center",
+      "country": "US",
+      "company": "WOM",
+      "lat": 41.88,
+      "lon": -87.63,
+      "source_type": "navigator_assumption",
+      "confidence": "medium"
+    },
+    {
+      "node_name": "CS_US_ECOM",
+      "node_character": "CS",
+      "role": "CS",
+      "display_name": "US eCommerce Market",
+      "country": "US",
+      "company": "WOM",
+      "lat": 40.71,
+      "lon": -74.0,
+      "source_type": "public_reference",
+      "confidence": "medium"
+    }
+  ],
+  "product_plan_edges": [
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "bound": "IN",
+      "parent_node": "MOM_JP_WASHER_PLANT",
+      "child_node": "supply_point",
+      "lot_size": 100,
+      "leadtime_days": 14,
+      "process_capa": 5000,
+      "source_type": "navigator_assumption",
+      "confidence": "medium"
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "bound": "OUT",
+      "parent_node": "supply_point",
+      "child_node": "DAD_US_CENTRAL_DC",
+      "lot_size": 100,
+      "leadtime_days": 21,
+      "process_capa": 4500,
+      "source_type": "navigator_assumption",
+      "confidence": "medium"
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "bound": "OUT",
+      "parent_node": "DAD_US_CENTRAL_DC",
+      "child_node": "CS_US_ECOM",
+      "lot_size": 100,
+      "leadtime_days": 7,
+      "process_capa": 4500,
+      "source_type": "navigator_assumption",
+      "confidence": "medium"
+    }
+  ],
+  "quantity_profiles": [
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "MOM_JP_WASHER_PLANT",
+      "bucket": "P",
+      "year": 2028,
+      "month": 1,
+      "quantity": 900
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "MOM_JP_WASHER_PLANT",
+      "bucket": "P",
+      "year": 2028,
+      "month": 2,
+      "quantity": 920
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "MOM_JP_WASHER_PLANT",
+      "bucket": "P",
+      "year": 2028,
+      "month": 3,
+      "quantity": 950
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "MOM_JP_WASHER_PLANT",
+      "bucket": "P",
+      "year": 2028,
+      "month": 4,
+      "quantity": 970
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "MOM_JP_WASHER_PLANT",
+      "bucket": "P",
+      "year": 2028,
+      "month": 5,
+      "quantity": 980
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "MOM_JP_WASHER_PLANT",
+      "bucket": "P",
+      "year": 2028,
+      "month": 6,
+      "quantity": 1000
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "MOM_JP_WASHER_PLANT",
+      "bucket": "P",
+      "year": 2028,
+      "month": 7,
+      "quantity": 1020
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "MOM_JP_WASHER_PLANT",
+      "bucket": "P",
+      "year": 2028,
+      "month": 8,
+      "quantity": 1010
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "MOM_JP_WASHER_PLANT",
+      "bucket": "P",
+      "year": 2028,
+      "month": 9,
+      "quantity": 990
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "MOM_JP_WASHER_PLANT",
+      "bucket": "P",
+      "year": 2028,
+      "month": 10,
+      "quantity": 960
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "MOM_JP_WASHER_PLANT",
+      "bucket": "P",
+      "year": 2028,
+      "month": 11,
+      "quantity": 940
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "MOM_JP_WASHER_PLANT",
+      "bucket": "P",
+      "year": 2028,
+      "month": 12,
+      "quantity": 930
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "CS_US_ECOM",
+      "bucket": "S",
+      "year": 2028,
+      "month": 1,
+      "quantity": 820
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "CS_US_ECOM",
+      "bucket": "S",
+      "year": 2028,
+      "month": 2,
+      "quantity": 830
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "CS_US_ECOM",
+      "bucket": "S",
+      "year": 2028,
+      "month": 3,
+      "quantity": 840
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "CS_US_ECOM",
+      "bucket": "S",
+      "year": 2028,
+      "month": 4,
+      "quantity": 860
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "CS_US_ECOM",
+      "bucket": "S",
+      "year": 2028,
+      "month": 5,
+      "quantity": 870
+    },
+    {
+      "product_name": "SMART_WASHER_2028_BASE",
+      "node_name": "CS_US_ECOM",
+      "bucket": "S",
+      "year": 2028,
+      "month": 6,
+      "quantity": 880
+    }
+  ]
+}
