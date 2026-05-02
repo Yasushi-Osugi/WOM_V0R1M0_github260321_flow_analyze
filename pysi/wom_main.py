@@ -1548,62 +1548,88 @@ class WOMEnv:
             #self.root.after(1000, self.show_psi("outbound", "supply"))
         self.display_decoupling_patterns()
         # PSI area => move to selected_node in window
+
+
     def update_evaluation_results4multi_product(self):
-        #@250730 ADD Focus on Product Selected
-        # root_node is "supply_point"
-        self.root_node_outbound_byprod = self.prod_tree_dict_OT[self.product_selected]
-        self.root_node_inbound_byprod  = self.prod_tree_dict_IN[self.product_selected]
-        # Evaluation on PSI
-        self.total_revenue = 0
-        self.total_profit  = 0
-        self.profit_ratio  = 0
-        # ***********************
-        # This is a simple Evaluation process with "cost table"
-        # ***********************
-#@241120 STOP
-#        self.eval_plan()
+        """
+        Legacy PySI V0R8 cost-table evaluation hook.
+
+        Current WOM money evaluation is handled by node-level money master overlay
+        and GUI/runtime money display.
+
+        This method is intentionally kept as a no-op for backward compatibility
+        because planning methods still call it.
+        """
+        self.root_node_outbound_byprod = self.prod_tree_dict_OT.get(self.product_selected)
+        self.root_node_inbound_byprod = self.prod_tree_dict_IN.get(self.product_selected)
+
+        # Do not call legacy eval_supply_chain_cost() here.
+        # Legacy total_revenue / total_profit are not authoritative in current WOM.
+        return
+
+    #@260502 STOP OLD Definition for Evaluatot
+    #def update_evaluation_results4multi_product(self):
+    #    #@250730 ADD Focus on Product Selected
+    #    # root_node is "supply_point"
+    #    self.root_node_outbound_byprod = self.prod_tree_dict_OT[self.product_selected]
+    #    self.root_node_inbound_byprod  = self.prod_tree_dict_IN[self.product_selected]
+    #    # Evaluation on PSI
+    #    self.total_revenue = 0
+    #    self.total_profit  = 0
+    #    self.profit_ratio  = 0
+    #    # ***********************
+    #    # This is a simple Evaluation process with "cost table"
+    #    # ***********************
+
+##@241120 STOP
+##        self.eval_plan()
+##
+##    def eval_plan(self):
+#        # 在庫係数の計算
+#        # I_cost_coeff = I_total_qty_init / I_total_qty_planned
+#        #
+#        # 計画された在庫コストの算定
+#        # I_cost_planned = I_cost_init * I_cost_coeff
+#        # by node evaluation Revenue / Cost / Profit
+#        # "eval_xxx" = "lot_counts" X "cs_xxx" that is from cost_table
+#        # Inventory cost has 係数 = I_total on Demand/ I_total on Supply
+#        #self.total_revenue = 0
+#        #self.total_profit  = 0
+#        #eval_supply_chain_cost(self.root_node_outbound)
+#        #self.eval_supply_chain_cost(self.root_node_outbound)
+#        #eval_supply_chain_cost(self.root_node_inbound)
+#        #self.eval_supply_chain_cost(self.root_node_inbound)
+#        #@ CONTEXT グローバル変数 STOP
+#        ## サプライチェーン全体のコストを評価
+#        #eval_supply_chain_cost(self.root_node_outbound, self)
+#        #eval_supply_chain_cost(self.root_node_inbound, self)
+#        # サプライチェーンの評価を開始
+#        # tree.py に配置して、node に対して：
+#        # set_lot_counts() を呼び出し、ロット数を設定
+#        # EvalPlanSIP_cost() で revenue と profit を計算
+#        # 子ノード (children) に対して再帰的に eval_supply_chain_cost() をcall
 #
-#    def eval_plan(self):
-        # 在庫係数の計算
-        # I_cost_coeff = I_total_qty_init / I_total_qty_planned
-        #
-        # 計画された在庫コストの算定
-        # I_cost_planned = I_cost_init * I_cost_coeff
-        # by node evaluation Revenue / Cost / Profit
-        # "eval_xxx" = "lot_counts" X "cs_xxx" that is from cost_table
-        # Inventory cost has 係数 = I_total on Demand/ I_total on Supply
-        #self.total_revenue = 0
-        #self.total_profit  = 0
-        #eval_supply_chain_cost(self.root_node_outbound)
-        #self.eval_supply_chain_cost(self.root_node_outbound)
-        #eval_supply_chain_cost(self.root_node_inbound)
-        #self.eval_supply_chain_cost(self.root_node_inbound)
-        #@ CONTEXT グローバル変数 STOP
-        ## サプライチェーン全体のコストを評価
-        #eval_supply_chain_cost(self.root_node_outbound, self)
-        #eval_supply_chain_cost(self.root_node_inbound, self)
-        # サプライチェーンの評価を開始
-        # tree.py に配置して、node に対して：
-        # set_lot_counts() を呼び出し、ロット数を設定
-        # EvalPlanSIP_cost() で revenue と profit を計算
-        # 子ノード (children) に対して再帰的に eval_supply_chain_cost() をcall
-        self.total_revenue, self.total_profit = eval_supply_chain_cost(self.root_node_outbound_byprod)
-        ttl_revenue = self.total_revenue
-        ttl_profit  = self.total_profit
-        if ttl_revenue == 0:
-            ttl_profit_ratio = 0
-        else:
-            ttl_profit_ratio = ttl_profit / ttl_revenue
-        # 四捨五入して表示
-        total_revenue = round(ttl_revenue)
-        total_profit = round(ttl_profit)
-        profit_ratio = round(ttl_profit_ratio*100, 1) # パーセント表示
-        print("total_revenue", total_revenue)
-        print("total_profit", total_profit)
-        print("profit_ratio", profit_ratio)
-#total_revenue 343587
-#total_profit 32205
-#profit_ratio 9.4
+#        self.total_revenue, self.total_profit = eval_supply_chain_cost(self.root_node_outbound_byprod)
+#        ttl_revenue = self.total_revenue
+#        ttl_profit  = self.total_profit
+#        if ttl_revenue == 0:
+#            ttl_profit_ratio = 0
+#        else:
+#            ttl_profit_ratio = ttl_profit / ttl_revenue
+#        # 四捨五入して表示
+#        total_revenue = round(ttl_revenue)
+#        total_profit = round(ttl_profit)
+#        profit_ratio = round(ttl_profit_ratio*100, 1) # パーセント表示
+#        print("total_revenue", total_revenue)
+#        print("total_profit", total_profit)
+#        print("profit_ratio", profit_ratio)
+#
+##total_revenue 343587
+##total_profit 32205
+##profit_ratio 9.4
+
+
+
     #@250808 ADD ******************
     # export offring_price ASIS/TOBE to csv
     # *****************************
