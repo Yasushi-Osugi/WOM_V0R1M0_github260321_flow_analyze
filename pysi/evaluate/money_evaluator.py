@@ -15,6 +15,13 @@ class UnitPriceRecord:
     inventory_unit_value_per_lot: float = 0.0
     variable_cost_per_lot: float = 0.0
     fixed_cost_per_week: float = 0.0
+    fixed_cost_per_lot: float = 0.0
+    value_added_cost_per_lot: float = 0.0
+    logistics_cost_per_lot: float = 0.0
+    inventory_handling_cost_per_lot: float = 0.0
+    tax_tariff_cost_per_lot: float = 0.0
+    target_profit_per_lot: float = 0.0
+    price_formation_mode: str = "fallback_zero"
     tax_rate: float = 0.0
 
 
@@ -152,6 +159,37 @@ def _edge_price(bundle: Any, parent_name: str, child_name: str, product: str) ->
     )
 
 
+def _calculate_fixed_cost_per_lot(explicit: Any, fixed_cost_per_week: float) -> float:
+    explicit_fixed_per_lot = _safe_float(getattr(explicit, "fixed_cost_per_lot", 0.0)) if explicit else 0.0
+    if explicit_fixed_per_lot > 0.0:
+        return explicit_fixed_per_lot
+
+    # Preferred basis is standard_volume_lots_per_week, then safe fallback 1.0.
+    basis = _safe_float(getattr(explicit, "standard_volume_lots_per_week", 0.0)) if explicit else 0.0
+    if basis <= 0.0:
+        basis = 1.0
+    return fixed_cost_per_week / basis if fixed_cost_per_week > 0.0 else 0.0
+
+
+def _form_ship_price_per_lot(rec: UnitPriceRecord, explicit_ship: float) -> tuple[float, str]:
+    if explicit_ship > 0.0:
+        return explicit_ship, "explicit_ship_price"
+    components = [
+        rec.purchase_cost_per_lot,
+        rec.value_added_cost_per_lot,
+        rec.variable_cost_per_lot,
+        rec.fixed_cost_per_lot,
+        rec.logistics_cost_per_lot,
+        rec.inventory_handling_cost_per_lot,
+        rec.tax_tariff_cost_per_lot,
+        rec.target_profit_per_lot,
+    ]
+    ship = sum(components)
+    if ship == 0.0:
+        return 0.0, "fallback_zero"
+    return ship, "calculated_from_cost_components"
+
+
 def _build_unit_price_table(env: Any) -> Dict[tuple[str, str], UnitPriceRecord]:
     bundle = getattr(env, "money_master_bundle", None)
     products_to_roots = _collect_product_trees(env)
@@ -183,7 +221,15 @@ def _build_unit_price_table(env: Any) -> Dict[tuple[str, str], UnitPriceRecord]:
             inventory = _safe_float(getattr(explicit, "inventory_unit_value_per_lot", 0.0)) if explicit else 0.0
             variable = _safe_float(getattr(explicit, "variable_cost_per_lot", 0.0)) if explicit else 0.0
             fixed = _safe_float(getattr(explicit, "fixed_cost_per_week", 0.0)) if explicit else 0.0
+            value_added = _safe_float(getattr(explicit, "value_added_cost_per_lot", 0.0)) if explicit else 0.0
+            logistics = _safe_float(getattr(explicit, "logistics_cost_per_lot", 0.0)) if explicit else 0.0
+            inventory_handling = _safe_float(getattr(explicit, "inventory_handling_cost_per_lot", 0.0)) if explicit else 0.0
+            target_profit = _safe_float(getattr(explicit, "target_profit_per_lot", 0.0)) if explicit else 0.0
             tax_rate = _safe_float(getattr(explicit, "tax_rate", 0.0)) if explicit else 0.0
+            fixed_per_lot = _calculate_fixed_cost_per_lot(explicit, fixed)
+            explicit_tax_tariff = _safe_float(getattr(explicit, "tax_tariff_cost_per_lot", 0.0)) if explicit else 0.0
+            tax_base = purchase if purchase > 0.0 else ship
+            tax_tariff = explicit_tax_tariff if explicit_tax_tariff > 0.0 else tax_rate * tax_base
 
             if tax_rate == 0.0 and policy is not None:
                 tax_rate = _safe_float(getattr(policy, "default_tax_rate", 0.0))
@@ -196,6 +242,12 @@ def _build_unit_price_table(env: Any) -> Dict[tuple[str, str], UnitPriceRecord]:
                 inventory_unit_value_per_lot=inventory,
                 variable_cost_per_lot=variable,
                 fixed_cost_per_week=fixed,
+                fixed_cost_per_lot=fixed_per_lot,
+                value_added_cost_per_lot=value_added,
+                logistics_cost_per_lot=logistics,
+                inventory_handling_cost_per_lot=inventory_handling,
+                tax_tariff_cost_per_lot=tax_tariff,
+                target_profit_per_lot=target_profit,
                 tax_rate=tax_rate,
             )
 
@@ -223,10 +275,15 @@ def _build_unit_price_table(env: Any) -> Dict[tuple[str, str], UnitPriceRecord]:
 
                 # MVP rule: without explicit variable-cost master field, keep 0.0 fallback.
 
-                if rec.ship_price_per_lot == 0.0 and explicit is None:
-                    rec.ship_price_per_lot = rec.purchase_cost_per_lot + rec.variable_cost_per_lot
-                    if rec.ship_price_per_lot > 0:
-                        changed = True
+                explicit_ship = _safe_float(getattr(explicit, "ship_price_per_lot", 0.0)) if explicit else 0.0
+                if rec.tax_tariff_cost_per_lot == 0.0:
+                    tax_base = rec.purchase_cost_per_lot if rec.purchase_cost_per_lot > 0.0 else explicit_ship
+                    rec.tax_tariff_cost_per_lot = rec.tax_rate * tax_base
+                ship, mode = _form_ship_price_per_lot(rec, explicit_ship)
+                if rec.ship_price_per_lot != ship:
+                    rec.ship_price_per_lot = ship
+                    changed = True
+                rec.price_formation_mode = mode
 
                 if rec.inventory_unit_value_per_lot == 0.0 and explicit is None:
                     rec.inventory_unit_value_per_lot = rec.purchase_cost_per_lot
@@ -367,6 +424,13 @@ def evaluate_money_by_node(env: Any) -> List[Dict[str, Any]]:
                     "inventory_unit_value_per_lot": unit.inventory_unit_value_per_lot,
                     "variable_cost_per_lot": unit.variable_cost_per_lot,
                     "fixed_cost_per_week": unit.fixed_cost_per_week,
+                    "fixed_cost_per_lot": unit.fixed_cost_per_lot,
+                    "value_added_cost_per_lot": unit.value_added_cost_per_lot,
+                    "logistics_cost_per_lot": unit.logistics_cost_per_lot,
+                    "inventory_handling_cost_per_lot": unit.inventory_handling_cost_per_lot,
+                    "tax_tariff_cost_per_lot": unit.tax_tariff_cost_per_lot,
+                    "target_profit_per_lot": unit.target_profit_per_lot,
+                    "price_formation_mode": unit.price_formation_mode,
                     "tax_rate": unit.tax_rate,
                 }
             )
