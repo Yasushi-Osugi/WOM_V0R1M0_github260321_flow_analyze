@@ -206,8 +206,11 @@ def _build_unit_price_table(env: Any) -> Dict[tuple[str, str], UnitPriceRecord]:
                 rec = table[key]
                 explicit = _explicit_node_price(bundle, node_name, product)
                 parent_name = parent_map.get(node_name, "")
+                explicit_purchase = _safe_float(getattr(explicit, "purchase_cost_per_lot", 0.0)) if explicit else 0.0
 
-                if rec.purchase_cost_per_lot == 0.0 and explicit is None:
+                # Phase 2B+1: explicit non-zero child purchase cost is authoritative.
+                # When explicit is missing OR explicitly zero, allow additive fallback propagation.
+                if rec.purchase_cost_per_lot == 0.0 and explicit_purchase == 0.0:
                     edge_cost = _edge_price(bundle, parent_name, node_name, product)
                     if edge_cost > 0:
                         rec.purchase_cost_per_lot = edge_cost
