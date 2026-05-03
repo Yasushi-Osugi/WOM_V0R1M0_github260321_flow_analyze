@@ -3,10 +3,10 @@ from __future__ import annotations
 import csv
 import os
 import re
-from collections import defaultdict
+from collections import defaultdict, deque
 from typing import Any
 
-STACK_COMPONENTS = [
+FULL_PRICE_COMPONENTS = [
     "purchase_cost_per_lot",
     "value_added_cost_per_lot",
     "variable_cost_per_lot",
@@ -16,6 +16,18 @@ STACK_COMPONENTS = [
     "tax_tariff_cost_per_lot",
     "target_profit_per_lot",
 ]
+
+DELTA_ONLY_COMPONENTS = [
+    "value_added_cost_per_lot",
+    "variable_cost_per_lot",
+    "fixed_cost_per_lot",
+    "logistics_cost_per_lot",
+    "inventory_handling_cost_per_lot",
+    "tax_tariff_cost_per_lot",
+    "target_profit_per_lot",
+]
+
+ZERO_CHECK_COMPONENTS = ["ship_price_per_lot", *FULL_PRICE_COMPONENTS]
 
 
 def _as_float(value: Any) -> float:
@@ -38,6 +50,19 @@ def load_node_price_waterfall(path: str) -> list[dict[str, str]]:
         return list(csv.DictReader(f))
 
 
+def load_price_propagation_trace(path: str) -> list[dict[str, str]]:
+    with open(path, newline="", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
+def get_chart_components(chart_mode: str) -> list[str]:
+    if chart_mode == "full_price":
+        return list(FULL_PRICE_COMPONENTS)
+    if chart_mode == "delta_only":
+        return list(DELTA_ONLY_COMPONENTS)
+    raise ValueError(f"Unknown chart_mode: {chart_mode}. Supported modes: full_price, delta_only")
+
+
 def sort_waterfall_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     has_sequence = any((row.get("sequence_no") or "").strip() != "" for row in rows)
     if not has_sequence:
@@ -51,6 +76,72 @@ def sort_waterfall_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     ]
 
 
+def build_edge_order_from_trace(trace_rows: list[dict[str, str]], product: str, direction: str | None = None) -> list[str]:
+    rows = [
+        r
+        for r in trace_rows
+        if r.get("product") == product and (direction is None or (r.get("direction") or None) == direction)
+    ]
+    rows = sorted(rows, key=lambda r: _as_float(r.get("sequence_no")))
+    ordered_nodes: list[str] = []
+    for row in rows:
+        from_node = row.get("from_node", "")
+        to_node = row.get("to_node", "")
+        if from_node and from_node not in ordered_nodes:
+            ordered_nodes.append(from_node)
+        if to_node and to_node not in ordered_nodes:
+            ordered_nodes.append(to_node)
+    return ordered_nodes
+
+
+def find_route_to_leaf(
+    trace_rows: list[dict[str, str]],
+    product: str,
+    leaf_node: str,
+    direction: str | None = None,
+) -> list[str]:
+    rows = [
+        r
+        for r in trace_rows
+        if r.get("product") == product and (direction is None or (r.get("direction") or None) == direction)
+    ]
+    if not rows:
+        return []
+
+    parents: dict[str, str] = {}
+    seq: dict[tuple[str, str], float] = {}
+    for row in rows:
+        f, t = row.get("from_node", ""), row.get("to_node", "")
+        if not f or not t:
+            continue
+        s = _as_float(row.get("sequence_no"))
+        if t not in parents or s < seq.get((parents[t], t), float("inf")):
+            parents[t] = f
+            seq[(f, t)] = s
+
+    if leaf_node not in parents and all((row.get("from_node") != leaf_node for row in rows)):
+        return []
+
+    route = deque([leaf_node])
+    seen = {leaf_node}
+    while route[0] in parents:
+        parent = parents[route[0]]
+        if parent in seen:
+            break
+        route.appendleft(parent)
+        seen.add(parent)
+    return list(route)
+
+
+def sort_rows_by_route(rows: list[dict[str, str]], route_nodes: list[str]) -> list[dict[str, str]]:
+    if not route_nodes:
+        return rows
+    by_node = {r.get("node_name", ""): r for r in rows}
+    ordered = [by_node[n] for n in route_nodes if n in by_node]
+    remaining = [r for r in rows if r.get("node_name", "") not in route_nodes]
+    return ordered + remaining
+
+
 def group_rows_by_product_and_direction(rows: list[dict[str, str]]) -> dict[tuple[str, str | None], list[dict[str, str]]]:
     grouped: dict[tuple[str, str | None], list[dict[str, str]]] = defaultdict(list)
     for row in rows:
@@ -58,13 +149,27 @@ def group_rows_by_product_and_direction(rows: list[dict[str, str]]) -> dict[tupl
     return grouped
 
 
-def build_chart_title(product: str, direction: str | None) -> str:
+def build_chart_title(product: str, direction: str | None, chart_mode: str, leaf_node: str | None = None) -> str:
+    title = f"Price Waterfall Stacked Bar - {product}"
     if direction:
-        return f"Price Waterfall Stacked Bar - {product} ({direction})"
-    return f"Price Waterfall Stacked Bar - {product}"
+        title += f" ({direction})"
+    if leaf_node:
+        title += f" route to {leaf_node}"
+    if chart_mode == "delta_only":
+        title += " [delta_only]"
+    return title
 
 
-def _render_stacked_chart(rows: list[dict[str, str]], output_path: str, title: str) -> None:
+def is_all_zero_chart(rows: list[dict[str, str]], components: list[str]) -> bool:
+    check_components = list(dict.fromkeys([*ZERO_CHECK_COMPONENTS, *components]))
+    for row in rows:
+        for component in check_components:
+            if _as_float(row.get(component)) != 0.0:
+                return False
+    return True
+
+
+def _render_stacked_chart(rows: list[dict[str, str]], output_path: str, title: str, components: list[str]) -> None:
     import matplotlib
 
     matplotlib.use("Agg")
@@ -78,7 +183,7 @@ def _render_stacked_chart(rows: list[dict[str, str]], output_path: str, title: s
     fig, ax = plt.subplots(figsize=(max(8, len(sorted_rows) * 1.2), 5))
     bottoms = [0.0] * len(sorted_rows)
 
-    for component in STACK_COMPONENTS:
+    for component in components:
         values = [_as_float(r.get(component)) for r in sorted_rows]
         ax.bar(x, values, bottom=bottoms, label=component)
         bottoms = [b + v for b, v in zip(bottoms, values)]
@@ -104,8 +209,15 @@ def generate_price_waterfall_stacked_bar(
     *,
     product: str | None = None,
     direction: str | None = None,
+    leaf_node: str | None = None,
+    price_propagation_trace_csv: str | None = None,
+    chart_mode: str = "full_price",
+    skip_all_zero: bool = True,
 ) -> list[str]:
     rows = load_node_price_waterfall(node_price_waterfall_csv)
+    trace_rows = load_price_propagation_trace(price_propagation_trace_csv) if price_propagation_trace_csv else []
+    components = get_chart_components(chart_mode)
+
     os.makedirs(output_dir, exist_ok=True)
 
     filtered = []
@@ -127,19 +239,49 @@ def generate_price_waterfall_stacked_bar(
         for prod, prod_rows in product_rows.items():
             if not prod_rows:
                 continue
-            out = os.path.join(output_dir, f"{_sanitize_filename(prod)}_price_waterfall_stacked_bar.png")
-            _render_stacked_chart(prod_rows, out, build_chart_title(prod, None))
+            working_rows = prod_rows
+            route_nodes = find_route_to_leaf(trace_rows, prod, leaf_node) if leaf_node else build_edge_order_from_trace(trace_rows, prod)
+            if leaf_node and route_nodes:
+                route_set = set(route_nodes)
+                working_rows = [r for r in working_rows if r.get("node_name", "") in route_set]
+            working_rows = sort_rows_by_route(working_rows, route_nodes)
+            if skip_all_zero and is_all_zero_chart(working_rows, components):
+                continue
+            suffix = "delta_only" if chart_mode == "delta_only" else "stacked_bar"
+            route_suffix = "_route" if leaf_node and route_nodes else ""
+            out = os.path.join(output_dir, f"{_sanitize_filename(prod)}_price_waterfall{route_suffix}_{suffix}.png")
+            _render_stacked_chart(working_rows, out, build_chart_title(prod, None, chart_mode, leaf_node if route_nodes else None), components)
             generated.append(out)
     else:
         for (prod, dir_key), prod_rows in grouped.items():
             if not prod_rows:
                 continue
+            working_rows = prod_rows
+            route_nodes = (
+                find_route_to_leaf(trace_rows, prod, leaf_node, dir_key)
+                if leaf_node
+                else build_edge_order_from_trace(trace_rows, prod, dir_key)
+            )
+            if leaf_node and route_nodes:
+                route_set = set(route_nodes)
+                working_rows = [r for r in working_rows if r.get("node_name", "") in route_set]
+            working_rows = sort_rows_by_route(working_rows, route_nodes)
+            if skip_all_zero and is_all_zero_chart(working_rows, components):
+                continue
+
             direction_name = dir_key or "unknown"
+            suffix = "delta_only" if chart_mode == "delta_only" else "stacked_bar"
+            route_suffix = "_route" if leaf_node and route_nodes else ""
             out = os.path.join(
                 output_dir,
-                f"{_sanitize_filename(prod)}_{_sanitize_filename(direction_name)}_price_waterfall_stacked_bar.png",
+                f"{_sanitize_filename(prod)}_{_sanitize_filename(direction_name)}_price_waterfall{route_suffix}_{suffix}.png",
             )
-            _render_stacked_chart(prod_rows, out, build_chart_title(prod, dir_key))
+            _render_stacked_chart(
+                working_rows,
+                out,
+                build_chart_title(prod, dir_key, chart_mode, leaf_node if route_nodes else None),
+                components,
+            )
             generated.append(out)
 
     return generated
