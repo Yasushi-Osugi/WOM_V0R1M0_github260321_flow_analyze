@@ -6,9 +6,13 @@ import csv
 
 from pysi.reporting.price_propagation_chart import (
     build_edge_order_from_trace,
+    build_route_order_from_e2e_lane_rows,
     find_route_to_leaf,
     generate_price_waterfall_stacked_bar,
     get_chart_components,
+    load_e2e_lane_route,
+    select_e2e_lane_route_rows,
+    sort_waterfall_rows_by_route,
     sort_rows_by_route,
     stitch_routes,
     build_e2e_lane_route,
@@ -191,3 +195,70 @@ def test_e2e_route_display_order():
         {"product": "PRODUCT_A", "direction": "outbound", "from_node": "DAD", "to_node": "CS", "sequence_no": "3"},
     ]
     assert build_e2e_lane_route(trace_rows, "PRODUCT_A", "CS") == ["MOM", "supply_point", "DAD", "CS"]
+
+
+def test_load_e2e_lane_route_and_build_order(tmp_path):
+    route_path = tmp_path / "e2e_lane_route.csv"
+    _write_csv(
+        route_path,
+        ["product", "leaf_node", "inbound_leaf_node", "chart_scope", "sequence_no", "node_name"],
+        [
+            {"product": "P", "leaf_node": "CS", "inbound_leaf_node": "", "chart_scope": "e2e_primary", "sequence_no": "1", "node_name": "MOM"},
+            {"product": "P", "leaf_node": "CS", "inbound_leaf_node": "", "chart_scope": "e2e_primary", "sequence_no": "2", "node_name": "supply_point"},
+            {"product": "P", "leaf_node": "CS", "inbound_leaf_node": "", "chart_scope": "e2e_primary", "sequence_no": "3", "node_name": "DAD"},
+            {"product": "P", "leaf_node": "CS", "inbound_leaf_node": "", "chart_scope": "e2e_primary", "sequence_no": "4", "node_name": "CS"},
+        ],
+    )
+    rows = load_e2e_lane_route(str(route_path))
+    selected = select_e2e_lane_route_rows(rows, product="P", leaf_node="CS", chart_scope="e2e_primary")
+    assert build_route_order_from_e2e_lane_rows(selected) == ["MOM", "supply_point", "DAD", "CS"]
+
+
+def test_sort_waterfall_rows_by_e2e_route_and_exclude_extra_nodes():
+    route_nodes = ["MOM", "supply_point", "DAD", "CS"]
+    rows = [{"node_name": "CS"}, {"node_name": "DAD"}, {"node_name": "MOM"}, {"node_name": "OTHER_NODE"}, {"node_name": "supply_point"}]
+    sorted_rows = sort_waterfall_rows_by_route(rows, route_nodes)
+    assert [r["node_name"] for r in sorted_rows] == ["MOM", "supply_point", "DAD", "CS"]
+
+
+def test_e2e_chart_with_route_csv_allows_unknown_waterfall_direction(tmp_path):
+    csv_path = tmp_path / "node_price_waterfall.csv"
+    trace_path = tmp_path / "price_propagation_trace.csv"
+    route_path = tmp_path / "e2e_lane_route.csv"
+    _write_csv(csv_path,["product","direction","sequence_no","node_name","purchase_cost_per_lot","value_added_cost_per_lot","ship_price_per_lot"],[
+        {"product":"PRODUCT_A","direction":"unknown","sequence_no":"4","node_name":"CS","purchase_cost_per_lot":"13","value_added_cost_per_lot":"3","ship_price_per_lot":"16"},
+        {"product":"PRODUCT_A","direction":"unknown","sequence_no":"3","node_name":"DAD","purchase_cost_per_lot":"11","value_added_cost_per_lot":"2","ship_price_per_lot":"13"},
+        {"product":"PRODUCT_A","direction":"unknown","sequence_no":"1","node_name":"MOM","purchase_cost_per_lot":"8","value_added_cost_per_lot":"2","ship_price_per_lot":"10"},
+        {"product":"PRODUCT_A","direction":"unknown","sequence_no":"2","node_name":"supply_point","purchase_cost_per_lot":"10","value_added_cost_per_lot":"1","ship_price_per_lot":"11"},
+        {"product":"PRODUCT_A","direction":"unknown","sequence_no":"5","node_name":"OTHER_NODE","purchase_cost_per_lot":"1","value_added_cost_per_lot":"1","ship_price_per_lot":"2"},
+    ])
+    _write_csv(trace_path,["product","direction","sequence_no","from_node","to_node"],[])
+    _write_csv(route_path,["product","lane_id","leaf_node","inbound_leaf_node","chart_scope","sequence_no","segment","direction","node_name"],[
+        {"product":"PRODUCT_A","lane_id":"L1","leaf_node":"CS","inbound_leaf_node":"","chart_scope":"e2e_primary","sequence_no":"1","segment":"inbound","direction":"IN","node_name":"MOM"},
+        {"product":"PRODUCT_A","lane_id":"L1","leaf_node":"CS","inbound_leaf_node":"","chart_scope":"e2e_primary","sequence_no":"2","segment":"bridge","direction":"OUT","node_name":"supply_point"},
+        {"product":"PRODUCT_A","lane_id":"L1","leaf_node":"CS","inbound_leaf_node":"","chart_scope":"e2e_primary","sequence_no":"3","segment":"outbound","direction":"OUT","node_name":"DAD"},
+        {"product":"PRODUCT_A","lane_id":"L1","leaf_node":"CS","inbound_leaf_node":"","chart_scope":"e2e_primary","sequence_no":"4","segment":"outbound","direction":"OUT","node_name":"CS"},
+    ])
+    outputs = generate_price_waterfall_stacked_bar(str(csv_path), str(tmp_path / "out"), product="PRODUCT_A", leaf_node="CS", price_propagation_trace_csv=str(trace_path), e2e_lane_route_csv=str(route_path), chart_mode="full_price", chart_scope="e2e_primary")
+    assert len(outputs) == 1
+    assert (tmp_path / "out" / "PRODUCT_A_CS_e2e_lane_price_cost_structure.png").stat().st_size > 0
+
+
+def test_e2e_delta_only_chart_generation_with_route_csv(tmp_path):
+    csv_path = tmp_path / "node_price_waterfall.csv"
+    route_path = tmp_path / "e2e_lane_route.csv"
+    _write_csv(csv_path,["product","direction","sequence_no","node_name","purchase_cost_per_lot","value_added_cost_per_lot","ship_price_per_lot"],[
+        {"product":"PRODUCT_A","direction":"unknown","sequence_no":"1","node_name":"MOM","purchase_cost_per_lot":"8","value_added_cost_per_lot":"2","ship_price_per_lot":"10"},
+        {"product":"PRODUCT_A","direction":"unknown","sequence_no":"2","node_name":"supply_point","purchase_cost_per_lot":"10","value_added_cost_per_lot":"1","ship_price_per_lot":"11"},
+        {"product":"PRODUCT_A","direction":"unknown","sequence_no":"3","node_name":"DAD","purchase_cost_per_lot":"11","value_added_cost_per_lot":"2","ship_price_per_lot":"13"},
+        {"product":"PRODUCT_A","direction":"unknown","sequence_no":"4","node_name":"CS","purchase_cost_per_lot":"13","value_added_cost_per_lot":"3","ship_price_per_lot":"16"},
+    ])
+    _write_csv(route_path,["product","lane_id","leaf_node","inbound_leaf_node","chart_scope","sequence_no","node_name"],[
+        {"product":"PRODUCT_A","lane_id":"L1","leaf_node":"CS","inbound_leaf_node":"","chart_scope":"e2e_primary","sequence_no":"1","node_name":"MOM"},
+        {"product":"PRODUCT_A","lane_id":"L1","leaf_node":"CS","inbound_leaf_node":"","chart_scope":"e2e_primary","sequence_no":"2","node_name":"supply_point"},
+        {"product":"PRODUCT_A","lane_id":"L1","leaf_node":"CS","inbound_leaf_node":"","chart_scope":"e2e_primary","sequence_no":"3","node_name":"DAD"},
+        {"product":"PRODUCT_A","lane_id":"L1","leaf_node":"CS","inbound_leaf_node":"","chart_scope":"e2e_primary","sequence_no":"4","node_name":"CS"},
+    ])
+    outputs = generate_price_waterfall_stacked_bar(str(csv_path), str(tmp_path / "out"), product="PRODUCT_A", leaf_node="CS", e2e_lane_route_csv=str(route_path), chart_mode="delta_only", chart_scope="e2e_primary")
+    assert len(outputs) == 1
+    assert outputs[0].endswith("PRODUCT_A_CS_e2e_lane_added_cost_structure_delta_only.png")
