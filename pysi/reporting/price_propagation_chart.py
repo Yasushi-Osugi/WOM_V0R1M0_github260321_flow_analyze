@@ -149,7 +149,79 @@ def group_rows_by_product_and_direction(rows: list[dict[str, str]]) -> dict[tupl
     return grouped
 
 
-def build_chart_title(product: str, direction: str | None, chart_mode: str, leaf_node: str | None = None) -> str:
+def stitch_routes(
+    inbound_route: list[str],
+    outbound_route: list[str],
+    supply_point_node: str = "supply_point",
+) -> list[str]:
+    if not inbound_route:
+        return list(outbound_route)
+    if not outbound_route:
+        return list(inbound_route)
+    if inbound_route[-1] == supply_point_node and outbound_route[0] == supply_point_node:
+        return [*inbound_route, *outbound_route[1:]]
+    return [*inbound_route, *outbound_route]
+
+
+def find_primary_inbound_route_to_supply_point(
+    trace_rows: list[dict[str, str]],
+    product: str,
+    supply_point_node: str = "supply_point",
+    inbound_leaf_node: str | None = None,
+) -> list[str]:
+    inbound_rows = [
+        r for r in trace_rows if r.get("product") == product and (r.get("direction") or None) == "inbound"
+    ]
+    if not inbound_rows:
+        return []
+
+    if inbound_leaf_node:
+        return find_route_to_leaf(inbound_rows, product, supply_point_node, "inbound")
+
+    candidates = []
+    to_supply = [r for r in inbound_rows if r.get("to_node") == supply_point_node]
+    for row in sorted(to_supply, key=lambda r: _as_float(r.get("sequence_no"))):
+        from_node = row.get("from_node")
+        if not from_node:
+            continue
+        route = find_route_to_leaf(inbound_rows, product, supply_point_node, "inbound")
+        if route:
+            candidates.append(route)
+            break
+    return candidates[0] if candidates else []
+
+
+def build_e2e_lane_route(
+    trace_rows: list[dict[str, str]],
+    product: str,
+    leaf_node: str,
+    supply_point_node: str = "supply_point",
+    inbound_leaf_node: str | None = None,
+) -> list[str]:
+    outbound_route = find_route_to_leaf(trace_rows, product, leaf_node, "outbound")
+    if not outbound_route:
+        return []
+    inbound_route = find_primary_inbound_route_to_supply_point(
+        trace_rows,
+        product,
+        supply_point_node=supply_point_node,
+        inbound_leaf_node=inbound_leaf_node,
+    )
+    return stitch_routes(inbound_route, outbound_route, supply_point_node=supply_point_node) if inbound_route else outbound_route
+
+
+def build_chart_title(
+    product: str,
+    direction: str | None,
+    chart_mode: str,
+    leaf_node: str | None = None,
+    chart_scope: str = "outbound_only",
+) -> str:
+    if chart_scope == "e2e_primary" and leaf_node:
+        if chart_mode == "delta_only":
+            return f"E2E Lane Added Cost Structure per Lot - {product} → {leaf_node} [delta only]"
+        return f"E2E Lane Price & Cost Structure per Lot - {product} → {leaf_node}"
+
     title = f"Price Waterfall Stacked Bar - {product}"
     if direction:
         title += f" ({direction})"
@@ -194,7 +266,7 @@ def _render_stacked_chart(rows: list[dict[str, str]], output_path: str, title: s
 
     ax.set_title(title)
     ax.set_xlabel("Node")
-    ax.set_ylabel("Amount per lot")
+    ax.set_ylabel("Price / Cost per lot")
     ax.set_xticks(x)
     ax.set_xticklabels(node_labels, rotation=45, ha="right")
     ax.legend(fontsize=7)
@@ -212,6 +284,9 @@ def generate_price_waterfall_stacked_bar(
     leaf_node: str | None = None,
     price_propagation_trace_csv: str | None = None,
     chart_mode: str = "full_price",
+    chart_scope: str = "outbound_only",
+    inbound_leaf_node: str | None = None,
+    supply_point_node: str = "supply_point",
     skip_all_zero: bool = True,
 ) -> list[str]:
     rows = load_node_price_waterfall(node_price_waterfall_csv)
@@ -228,6 +303,9 @@ def generate_price_waterfall_stacked_bar(
             continue
         filtered.append(row)
 
+    if chart_scope not in {"outbound_only", "e2e_primary"}:
+        raise ValueError("Unknown chart_scope: {0}. Supported scopes: outbound_only, e2e_primary".format(chart_scope))
+
     grouped = group_rows_by_product_and_direction(filtered)
     generated: list[str] = []
 
@@ -240,7 +318,12 @@ def generate_price_waterfall_stacked_bar(
             if not prod_rows:
                 continue
             working_rows = prod_rows
-            route_nodes = find_route_to_leaf(trace_rows, prod, leaf_node) if leaf_node else build_edge_order_from_trace(trace_rows, prod)
+            if leaf_node and chart_scope == "e2e_primary":
+                route_nodes = build_e2e_lane_route(
+                    trace_rows, prod, leaf_node, supply_point_node=supply_point_node, inbound_leaf_node=inbound_leaf_node
+                )
+            else:
+                route_nodes = find_route_to_leaf(trace_rows, prod, leaf_node) if leaf_node else build_edge_order_from_trace(trace_rows, prod)
             if leaf_node and route_nodes:
                 route_set = set(route_nodes)
                 working_rows = [r for r in working_rows if r.get("node_name", "") in route_set]
@@ -248,20 +331,33 @@ def generate_price_waterfall_stacked_bar(
             if skip_all_zero and is_all_zero_chart(working_rows, components):
                 continue
             suffix = "delta_only" if chart_mode == "delta_only" else "stacked_bar"
-            route_suffix = "_route" if leaf_node and route_nodes else ""
-            out = os.path.join(output_dir, f"{_sanitize_filename(prod)}_price_waterfall{route_suffix}_{suffix}.png")
-            _render_stacked_chart(working_rows, out, build_chart_title(prod, None, chart_mode, leaf_node if route_nodes else None), components)
+            if chart_scope == "e2e_primary" and leaf_node and route_nodes:
+                out_name = (
+                    f"{_sanitize_filename(prod)}_{_sanitize_filename(leaf_node)}_e2e_lane_added_cost_structure_delta_only.png"
+                    if chart_mode == "delta_only"
+                    else f"{_sanitize_filename(prod)}_{_sanitize_filename(leaf_node)}_e2e_lane_price_cost_structure.png"
+                )
+            else:
+                route_suffix = "_route" if leaf_node and route_nodes else ""
+                out_name = f"{_sanitize_filename(prod)}_price_waterfall{route_suffix}_{suffix}.png"
+            out = os.path.join(output_dir, out_name)
+            _render_stacked_chart(working_rows, out, build_chart_title(prod, None, chart_mode, leaf_node if route_nodes else None, chart_scope=chart_scope), components)
             generated.append(out)
     else:
         for (prod, dir_key), prod_rows in grouped.items():
             if not prod_rows:
                 continue
             working_rows = prod_rows
-            route_nodes = (
-                find_route_to_leaf(trace_rows, prod, leaf_node, dir_key)
-                if leaf_node
-                else build_edge_order_from_trace(trace_rows, prod, dir_key)
-            )
+            if leaf_node and chart_scope == "e2e_primary":
+                route_nodes = build_e2e_lane_route(
+                    trace_rows, prod, leaf_node, supply_point_node=supply_point_node, inbound_leaf_node=inbound_leaf_node
+                )
+            else:
+                route_nodes = (
+                    find_route_to_leaf(trace_rows, prod, leaf_node, dir_key)
+                    if leaf_node
+                    else build_edge_order_from_trace(trace_rows, prod, dir_key)
+                )
             if leaf_node and route_nodes:
                 route_set = set(route_nodes)
                 working_rows = [r for r in working_rows if r.get("node_name", "") in route_set]
@@ -279,7 +375,7 @@ def generate_price_waterfall_stacked_bar(
             _render_stacked_chart(
                 working_rows,
                 out,
-                build_chart_title(prod, dir_key, chart_mode, leaf_node if route_nodes else None),
+                build_chart_title(prod, dir_key, chart_mode, leaf_node if route_nodes else None, chart_scope=chart_scope),
                 components,
             )
             generated.append(out)

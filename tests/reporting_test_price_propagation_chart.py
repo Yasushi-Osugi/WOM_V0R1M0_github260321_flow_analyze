@@ -10,6 +10,8 @@ from pysi.reporting.price_propagation_chart import (
     generate_price_waterfall_stacked_bar,
     get_chart_components,
     sort_rows_by_route,
+    stitch_routes,
+    build_e2e_lane_route,
 )
 
 
@@ -127,3 +129,65 @@ def test_all_zero_generated_when_requested(tmp_path):
     outputs = generate_price_waterfall_stacked_bar(str(csv_path), str(tmp_path / "out"), skip_all_zero=False)
     assert len(outputs) == 1
     assert (tmp_path / "out" / "A_price_waterfall_stacked_bar.png").exists()
+
+
+def test_stitch_routes_avoids_duplicate_supply_point():
+    assert stitch_routes(["MOM", "supply_point"], ["supply_point", "DAD", "CS"]) == ["MOM", "supply_point", "DAD", "CS"]
+
+
+def test_build_e2e_lane_route():
+    trace_rows = [
+        {"product": "PRODUCT_A", "direction": "inbound", "from_node": "MOM", "to_node": "supply_point", "sequence_no": "1"},
+        {"product": "PRODUCT_A", "direction": "outbound", "from_node": "supply_point", "to_node": "DAD", "sequence_no": "2"},
+        {"product": "PRODUCT_A", "direction": "outbound", "from_node": "DAD", "to_node": "CS", "sequence_no": "3"},
+    ]
+    assert build_e2e_lane_route(trace_rows, "PRODUCT_A", "CS") == ["MOM", "supply_point", "DAD", "CS"]
+
+
+def test_e2e_full_price_chart_generation(tmp_path):
+    csv_path = tmp_path / "node_price_waterfall.csv"
+    trace_path = tmp_path / "price_propagation_trace.csv"
+    _write_csv(csv_path,["product","direction","sequence_no","node_name","purchase_cost_per_lot","value_added_cost_per_lot","ship_price_per_lot"],[
+        {"product":"PRODUCT_A","direction":"inbound","sequence_no":"1","node_name":"MOM","purchase_cost_per_lot":"8","value_added_cost_per_lot":"2","ship_price_per_lot":"10"},
+        {"product":"PRODUCT_A","direction":"outbound","sequence_no":"2","node_name":"supply_point","purchase_cost_per_lot":"10","value_added_cost_per_lot":"1","ship_price_per_lot":"11"},
+        {"product":"PRODUCT_A","direction":"outbound","sequence_no":"3","node_name":"DAD","purchase_cost_per_lot":"11","value_added_cost_per_lot":"2","ship_price_per_lot":"13"},
+        {"product":"PRODUCT_A","direction":"outbound","sequence_no":"4","node_name":"CS","purchase_cost_per_lot":"13","value_added_cost_per_lot":"3","ship_price_per_lot":"16"},
+    ])
+    _write_csv(trace_path,["product","direction","sequence_no","from_node","to_node"],[
+        {"product":"PRODUCT_A","direction":"inbound","sequence_no":"1","from_node":"MOM","to_node":"supply_point"},
+        {"product":"PRODUCT_A","direction":"outbound","sequence_no":"2","from_node":"supply_point","to_node":"DAD"},
+        {"product":"PRODUCT_A","direction":"outbound","sequence_no":"3","from_node":"DAD","to_node":"CS"},
+    ])
+    outputs = generate_price_waterfall_stacked_bar(str(csv_path), str(tmp_path / "out"), product="PRODUCT_A", leaf_node="CS", price_propagation_trace_csv=str(trace_path), chart_mode="full_price", chart_scope="e2e_primary")
+    assert len(outputs) == 1
+    assert outputs[0].endswith("PRODUCT_A_CS_e2e_lane_price_cost_structure.png")
+    assert (tmp_path / "out" / "PRODUCT_A_CS_e2e_lane_price_cost_structure.png").stat().st_size > 0
+
+
+def test_e2e_delta_only_chart_generation(tmp_path):
+    assert "purchase_cost_per_lot" not in get_chart_components("delta_only")
+
+
+def test_e2e_fallback_to_outbound_route_when_inbound_missing(tmp_path):
+    csv_path = tmp_path / "node_price_waterfall.csv"
+    trace_path = tmp_path / "price_propagation_trace.csv"
+    _write_csv(csv_path,["product","direction","sequence_no","node_name","purchase_cost_per_lot","value_added_cost_per_lot","ship_price_per_lot"],[
+        {"product":"PRODUCT_A","direction":"outbound","sequence_no":"2","node_name":"supply_point","purchase_cost_per_lot":"10","value_added_cost_per_lot":"1","ship_price_per_lot":"11"},
+        {"product":"PRODUCT_A","direction":"outbound","sequence_no":"3","node_name":"DAD","purchase_cost_per_lot":"11","value_added_cost_per_lot":"2","ship_price_per_lot":"13"},
+        {"product":"PRODUCT_A","direction":"outbound","sequence_no":"4","node_name":"CS","purchase_cost_per_lot":"13","value_added_cost_per_lot":"3","ship_price_per_lot":"16"},
+    ])
+    _write_csv(trace_path,["product","direction","sequence_no","from_node","to_node"],[
+        {"product":"PRODUCT_A","direction":"outbound","sequence_no":"2","from_node":"supply_point","to_node":"DAD"},
+        {"product":"PRODUCT_A","direction":"outbound","sequence_no":"3","from_node":"DAD","to_node":"CS"},
+    ])
+    outputs = generate_price_waterfall_stacked_bar(str(csv_path), str(tmp_path / "out"), product="PRODUCT_A", leaf_node="CS", price_propagation_trace_csv=str(trace_path), chart_scope="e2e_primary")
+    assert len(outputs) == 1
+
+
+def test_e2e_route_display_order():
+    trace_rows = [
+        {"product": "PRODUCT_A", "direction": "inbound", "from_node": "MOM", "to_node": "supply_point", "sequence_no": "1"},
+        {"product": "PRODUCT_A", "direction": "outbound", "from_node": "supply_point", "to_node": "DAD", "sequence_no": "2"},
+        {"product": "PRODUCT_A", "direction": "outbound", "from_node": "DAD", "to_node": "CS", "sequence_no": "3"},
+    ]
+    assert build_e2e_lane_route(trace_rows, "PRODUCT_A", "CS") == ["MOM", "supply_point", "DAD", "CS"]
