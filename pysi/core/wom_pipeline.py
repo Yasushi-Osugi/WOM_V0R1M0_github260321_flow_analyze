@@ -359,6 +359,7 @@ class WOMPipelineRunner:
                 node_money_rows=node_money_rows,
                 kpi_summary_rows=kpi_summary_rows,
                 product_money_summary_rows=product_money_summary_rows,
+                env=env,
             )
 
             result["money"] = {
