@@ -12,7 +12,7 @@ import os
 import math
 import json
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import ttk, filedialog, messagebox, simpledialog
 from dataclasses import dataclass
 
 import threading
@@ -1114,6 +1114,7 @@ class WOMCockpit(tk.Tk):
 
         ttk.Checkbutton(action_row, text="Trace", variable=self.var_trace_enabled).pack(side="left", padx=(12, 6))
         ttk.Button(action_row, text="Trace Viewer", command=self.open_trace_viewer).pack(side="left", padx=(0, 6))
+        ttk.Button(action_row, text="Price & Cost Structure", command=self.on_generate_price_cost_structure_chart).pack(side="left", padx=(0, 6))
         ttk.Button(action_row, text="Mgmt Cockpit", command=self.open_management_cockpit).pack(side="left", padx=(0, 6))
         ttk.Button(action_row, text="Business Animation", command=self.open_business_animation).pack(side="left", padx=(0, 6))
         ttk.Button(action_row, text="PSI累計+利益率", command=self.open_psi_profit_animation).pack(side="left", padx=(0, 6))
@@ -1709,6 +1710,62 @@ class WOMCockpit(tk.Tk):
                     self.business_animation_panel.set_context(ctx)
         except Exception:
             pass
+
+    def on_generate_price_cost_structure_chart(self):
+        """Thin GUI adapter to generate E2E lane price/cost structure charts."""
+        product_name = (self.var_product.get() or "").strip()
+        if not product_name:
+            messagebox.showwarning("Price & Cost Structure", "Please select a product.")
+            return
+
+        leaf_node = simpledialog.askstring(
+            "Price & Cost Structure",
+            "Enter market leaf node:",
+            parent=self,
+        )
+        leaf_node = (leaf_node or "").strip()
+        if not leaf_node:
+            return
+
+        try:
+            from pysi.reporting.e2e_lane_price_chart_runtime import (
+                generate_e2e_lane_price_chart_from_env,
+            )
+
+            result = generate_e2e_lane_price_chart_from_env(
+                self.env,
+                product_name=product_name,
+                leaf_node=leaf_node,
+            )
+
+            errors = result.get("errors") or []
+            warnings = result.get("warnings") or []
+            files = result.get("generated_files") or []
+
+            print("[price-cost-structure]", result)
+
+            if errors:
+                messagebox.showerror(
+                    "Price & Cost Structure",
+                    "\n".join(str(e) for e in errors),
+                )
+                return
+
+            msg_lines = []
+            if files:
+                msg_lines.append("Generated chart files:")
+                msg_lines.extend(str(p) for p in files)
+            else:
+                msg_lines.append("No chart files were generated.")
+
+            if warnings:
+                msg_lines.append("")
+                msg_lines.append("Warnings:")
+                msg_lines.extend(str(w) for w in warnings)
+
+            messagebox.showinfo("Price & Cost Structure", "\n".join(msg_lines))
+        except Exception as exc:
+            messagebox.showerror("Price & Cost Structure", str(exc))
 
 
 
