@@ -1,29 +1,55 @@
 node_name,product_name,inventory_unit_value,revenue_unit_value,variable_cost_unit_value,fixed_cost_weekly,currency,remarks
-supply_point,IPHONE_NM_2028_BASE,0,0,0,0,USD,global office / no inventory valuation
-MOM_final_assy_ASIA,IPHONE_NM_2028_BASE,950,0,400,12000,USD,final assembly base inventory value
-MOM_final_assy_EURO,IPHONE_NM_2028_BASE,980,0,420,12500,USD,final assembly euro
-DAD_FAS_APAC,IPHONE_NM_2028_BASE,1100,0,20,3000,USD,distribution hub apac
-DAD_FAS_EURO,IPHONE_NM_2028_BASE,1120,0,22,3200,USD,distribution hub euro
-DAD_FAS_AMER,IPHONE_NM_2028_BASE,1110,0,21,3100,USD,distribution hub amer
-WS_APAC,IPHONE_NM_2028_BASE,1200,0,35,5000,USD,warehouse apac
-WS_EURO,IPHONE_NM_2028_BASE,1220,0,36,5200,USD,warehouse euro
-WS_NA,IPHONE_NM_2028_BASE,1210,0,37,5100,USD,warehouse north america
-RT_IN_ASPIRER,IPHONE_NM_2028_BASE,0,1450,0,0,USD,retail india aspirer
-RT_JP_APPLE,IPHONE_NM_2028_BASE,0,1550,0,0,USD,retail japan apple
-CS_IN_ASPIRER,IPHONE_NM_2028_BASE,0,1450,0,0,USD,end customer india aspirer
-CS_CN_PREMIUM,IPHONE_NM_2028_BASE,0,1600,0,0,USD,end customer china premium
-CS_JP_REPLACEMENT,IPHONE_NM_2028_BASE,0,1500,0,0,USD,end customer japan replacement
-supply_point,IPHONE_NM_2028_PRO,0,900,0,0,USD,global office / no inventory valuation | PRO placeholder from BASE multipliers
-MOM_final_assy_ASIA,IPHONE_NM_2028_PRO,1092.5,0,460,13200,USD,final assembly base inventory value | PRO placeholder from BASE multipliers
-MOM_final_assy_EURO,IPHONE_NM_2028_PRO,1127,0,483,13750,USD,final assembly euro | PRO placeholder from BASE multipliers
-DAD_FAS_APAC,IPHONE_NM_2028_PRO,1265,0,23,3300,USD,distribution hub apac | PRO placeholder from BASE multipliers
-DAD_FAS_EURO,IPHONE_NM_2028_PRO,1288,0,25.3,3520,USD,distribution hub euro | PRO placeholder from BASE multipliers
-DAD_FAS_AMER,IPHONE_NM_2028_PRO,1276.5,0,24.15,3410,USD,distribution hub amer | PRO placeholder from BASE multipliers
-WS_APAC,IPHONE_NM_2028_PRO,1380,0,40.25,5500,USD,warehouse apac | PRO placeholder from BASE multipliers
-WS_EURO,IPHONE_NM_2028_PRO,1403,0,41.4,5720,USD,warehouse euro | PRO placeholder from BASE multipliers
-WS_NA,IPHONE_NM_2028_PRO,1391.5,0,42.55,5610,USD,warehouse north america | PRO placeholder from BASE multipliers
-RT_IN_ASPIRER,IPHONE_NM_2028_PRO,0,1812.5,0,0,USD,retail india aspirer | PRO placeholder from BASE multipliers
-RT_JP_APPLE,IPHONE_NM_2028_PRO,0,1937.5,0,0,USD,retail japan apple | PRO placeholder from BASE multipliers
-CS_IN_ASPIRER,IPHONE_NM_2028_PRO,0,1812.5,0,0,USD,end customer india aspirer | PRO placeholder from BASE multipliers
-CS_CN_PREMIUM,IPHONE_NM_2028_PRO,0,2000,0,0,USD,end customer china premium | PRO placeholder from BASE multipliers
-CS_JP_REPLACEMENT,IPHONE_NM_2028_PRO,0,1875,0,0,USD,end customer japan replacement | PRO placeholder from BASE multipliers
+supply_point,IPHONE_NM_2028_BASE,0.00,20.00,4.00,16.00,USD,Phase2B7 realism profile; role=supply_point; HQ/PSI coordination allocation only; no physical purchase/logistics
+supply_point,IPHONE_NM_2028_PRO,0.00,30.00,6.00,24.00,USD,Phase2B7 realism profile; role=supply_point; HQ/PSI coordination allocation only; no physical purchase/logistics
+PAD_final_assy_ASIA,IPHONE_NM_2028_BASE,330.00,430.00,32.00,55.00,USD,Phase2B7 realism profile; role=PAD; parts/final-assy prep Asia
+PAD_final_assy_ASIA,IPHONE_NM_2028_PRO,430.00,600.00,42.00,65.00,USD,Phase2B7 realism profile; role=PAD; parts/final-assy prep Asia
+PAD_final_assy_EURO,IPHONE_NM_2028_BASE,350.00,455.00,34.00,60.00,USD,Phase2B7 realism profile; role=PAD; parts/final-assy prep Europe
+PAD_final_assy_EURO,IPHONE_NM_2028_PRO,455.00,630.00,45.00,70.00,USD,Phase2B7 realism profile; role=PAD; parts/final-assy prep Europe
+MOM_final_assy_ASIA,IPHONE_NM_2028_BASE,460.00,560.00,58.00,95.00,USD,Phase2B7 realism profile; role=MOM; final assembly Asia
+MOM_final_assy_ASIA,IPHONE_NM_2028_PRO,620.00,790.00,75.00,110.00,USD,Phase2B7 realism profile; role=MOM; final assembly Asia
+MOM_final_assy_EURO,IPHONE_NM_2028_BASE,485.00,590.00,62.00,105.00,USD,Phase2B7 realism profile; role=MOM; final assembly Europe
+MOM_final_assy_EURO,IPHONE_NM_2028_PRO,650.00,820.00,80.00,120.00,USD,Phase2B7 realism profile; role=MOM; final assembly Europe
+DAD_FAS_AMER,IPHONE_NM_2028_BASE,560.00,650.00,38.00,80.00,USD,Phase2B7 realism profile; role=DAD; sales company HQ / finished goods receiving AMER
+DAD_FAS_AMER,IPHONE_NM_2028_PRO,720.00,880.00,48.00,95.00,USD,Phase2B7 realism profile; role=DAD; sales company HQ / finished goods receiving AMER
+DAD_FAS_EURO,IPHONE_NM_2028_BASE,575.00,670.00,40.00,85.00,USD,Phase2B7 realism profile; role=DAD; sales company HQ / finished goods receiving EURO
+DAD_FAS_EURO,IPHONE_NM_2028_PRO,745.00,910.00,50.00,102.00,USD,Phase2B7 realism profile; role=DAD; sales company HQ / finished goods receiving EURO
+DAD_FAS_APAC,IPHONE_NM_2028_BASE,550.00,640.00,36.00,75.00,USD,Phase2B7 realism profile; role=DAD; sales company HQ / finished goods receiving APAC
+DAD_FAS_APAC,IPHONE_NM_2028_PRO,710.00,860.00,46.00,90.00,USD,Phase2B7 realism profile; role=DAD; sales company HQ / finished goods receiving APAC
+WS_NA,IPHONE_NM_2028_BASE,650.00,720.00,44.00,65.00,USD,Phase2B7 realism profile; role=WS; warehouse North America
+WS_NA,IPHONE_NM_2028_PRO,840.00,960.00,56.00,78.00,USD,Phase2B7 realism profile; role=WS; warehouse North America
+WS_EU,IPHONE_NM_2028_BASE,665.00,735.00,46.00,70.00,USD,Phase2B7 realism profile; role=WS; warehouse Europe
+WS_EU,IPHONE_NM_2028_PRO,865.00,985.00,58.00,84.00,USD,Phase2B7 realism profile; role=WS; warehouse Europe
+WS_EURO,IPHONE_NM_2028_BASE,665.00,735.00,46.00,70.00,USD,Phase2B7 realism profile; role=WS; warehouse Europe legacy node alias
+WS_EURO,IPHONE_NM_2028_PRO,865.00,985.00,58.00,84.00,USD,Phase2B7 realism profile; role=WS; warehouse Europe legacy node alias
+WS_APAC,IPHONE_NM_2028_BASE,630.00,705.00,42.00,60.00,USD,Phase2B7 realism profile; role=WS; warehouse APAC
+WS_APAC,IPHONE_NM_2028_PRO,815.00,930.00,54.00,72.00,USD,Phase2B7 realism profile; role=WS; warehouse APAC
+RT_US_CARRIER,IPHONE_NM_2028_BASE,730.00,820.00,70.00,65.00,USD,Phase2B7 realism profile; role=RT; US carrier channel
+RT_US_CARRIER,IPHONE_NM_2028_PRO,955.00,1160.00,92.00,76.00,USD,Phase2B7 realism profile; role=RT; US carrier channel
+RT_US_ONLINE,IPHONE_NM_2028_BASE,715.00,800.00,62.00,60.00,USD,Phase2B7 realism profile; role=RT; US online channel
+RT_US_ONLINE,IPHONE_NM_2028_PRO,935.00,1135.00,82.00,70.00,USD,Phase2B7 realism profile; role=RT; US online channel
+RT_JP_APPLE,IPHONE_NM_2028_BASE,735.00,835.00,68.00,70.00,USD,Phase2B7 realism profile; role=RT; Japan Apple direct channel
+RT_JP_APPLE,IPHONE_NM_2028_PRO,960.00,1180.00,88.00,82.00,USD,Phase2B7 realism profile; role=RT; Japan Apple direct channel
+RT_DE_ONLINE,IPHONE_NM_2028_BASE,745.00,850.00,70.00,72.00,USD,Phase2B7 realism profile; role=RT; Germany online channel
+RT_DE_ONLINE,IPHONE_NM_2028_PRO,975.00,1190.00,90.00,84.00,USD,Phase2B7 realism profile; role=RT; Germany online channel
+RT_CN_ONLINE,IPHONE_NM_2028_BASE,700.00,805.00,60.00,56.00,USD,Phase2B7 realism profile; role=RT; China online channel
+RT_CN_ONLINE,IPHONE_NM_2028_PRO,910.00,1140.00,78.00,68.00,USD,Phase2B7 realism profile; role=RT; China online channel
+RT_UK_CARRIER,IPHONE_NM_2028_BASE,730.00,830.00,68.00,68.00,USD,Phase2B7 realism profile; role=RT; UK carrier channel
+RT_UK_CARRIER,IPHONE_NM_2028_PRO,955.00,1170.00,88.00,80.00,USD,Phase2B7 realism profile; role=RT; UK carrier channel
+RT_IN_ECOM,IPHONE_NM_2028_BASE,650.00,760.00,48.00,48.00,USD,Phase2B7 realism profile; role=RT; India ecommerce channel
+RT_IN_ECOM,IPHONE_NM_2028_PRO,850.00,1080.00,65.00,58.00,USD,Phase2B7 realism profile; role=RT; India ecommerce channel
+RT_IN_ASPIRER,IPHONE_NM_2028_BASE,650.00,760.00,48.00,48.00,USD,Phase2B7 realism profile; role=RT; India aspirer retail legacy alias
+RT_IN_ASPIRER,IPHONE_NM_2028_PRO,850.00,1080.00,65.00,58.00,USD,Phase2B7 realism profile; role=RT; India aspirer retail legacy alias
+CS_US_MAINSTREAM,IPHONE_NM_2028_BASE,450.00,899.00,205.00,108.00,USD,Phase2B7 realism profile; role=CS; US mainstream market/front channel
+CS_US_MAINSTREAM,IPHONE_NM_2028_PRO,600.00,1180.00,270.00,140.00,USD,Phase2B7 realism profile; role=CS; US mainstream market/front channel
+CS_US_PREMIUM,IPHONE_NM_2028_BASE,500.00,999.00,230.00,120.00,USD,Phase2B7 realism profile; role=CS; US premium market/front channel
+CS_US_PREMIUM,IPHONE_NM_2028_PRO,650.00,1299.00,299.00,156.00,USD,Phase2B7 realism profile; role=CS; US premium market/front channel
+CS_CN_PREMIUM,IPHONE_NM_2028_BASE,480.00,960.00,220.00,105.00,USD,Phase2B7 realism profile; role=CS; China premium market/front channel
+CS_CN_PREMIUM,IPHONE_NM_2028_PRO,625.00,1249.00,285.00,137.00,USD,Phase2B7 realism profile; role=CS; China premium market/front channel
+CS_DE_PREMIUM,IPHONE_NM_2028_BASE,505.00,1010.00,235.00,125.00,USD,Phase2B7 realism profile; role=CS; Germany premium market/front channel
+CS_DE_PREMIUM,IPHONE_NM_2028_PRO,660.00,1319.00,305.00,160.00,USD,Phase2B7 realism profile; role=CS; Germany premium market/front channel
+CS_UK_MAINSTREAM,IPHONE_NM_2028_BASE,470.00,930.00,215.00,115.00,USD,Phase2B7 realism profile; role=CS; UK mainstream market/front channel
+CS_UK_MAINSTREAM,IPHONE_NM_2028_PRO,615.00,1210.00,278.00,148.00,USD,Phase2B7 realism profile; role=CS; UK mainstream market/front channel
+CS_JP_REPLACEMENT,IPHONE_NM_2028_BASE,465.00,910.00,210.00,118.00,USD,Phase2B7 realism profile; role=CS; Japan replacement market/front channel
+CS_JP_REPLACEMENT,IPHONE_NM_2028_PRO,605.00,1190.00,274.00,150.00,USD,Phase2B7 realism profile; role=CS; Japan replacement market/front channel
+CS_IN_ASPIRER,IPHONE_NM_2028_BASE,390.00,780.00,160.00,85.00,USD,Phase2B7 realism profile; role=CS; India aspirer market/front channel
+CS_IN_ASPIRER,IPHONE_NM_2028_PRO,520.00,1090.00,230.00,120.00,USD,Phase2B7 realism profile; role=CS; India aspirer market/front channel
