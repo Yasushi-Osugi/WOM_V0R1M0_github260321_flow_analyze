@@ -958,6 +958,7 @@ class WOMCockpit(tk.Tk):
 
         # state vars
         self.var_product = tk.StringVar(value=getattr(env, "product_selected", self.products[0] if self.products else ""))
+        self.var_leaf_node = tk.StringVar(value="")
         self.var_node = tk.StringVar(value=self.node_names[0] if self.node_names else "")
         # temporary alias during migration
         self.var_mom = self.var_node
@@ -1078,6 +1079,7 @@ class WOMCockpit(tk.Tk):
         self.df_animation_kpi = None
 
         # initial draw
+        self.refresh_leaf_node_dropdown()
         self.refresh()
 
         # condumer node CSV input
@@ -1139,6 +1141,16 @@ class WOMCockpit(tk.Tk):
         )
         self.cb_product.pack(side="left", padx=5)
         self.cb_product.bind("<<ComboboxSelected>>", lambda e: self.on_change_product())
+
+        ttk.Label(select_row, text="Leaf:", width=6).pack(side="left", padx=(20, 0))
+        self.cb_leaf_node = ttk.Combobox(
+            select_row,
+            textvariable=self.var_leaf_node,
+            values=[],
+            width=24,
+            state="readonly",
+        )
+        self.cb_leaf_node.pack(side="left", padx=5)
 
         ttk.Label(select_row, text="Node:", width=6).pack(side="left", padx=(20, 0))
         self.cb_node = ttk.Combobox(
@@ -1672,6 +1684,31 @@ class WOMCockpit(tk.Tk):
 
         return sorted(set(dads))
 
+    def refresh_leaf_node_dropdown(self):
+        product_name = (self.var_product.get() or "").strip()
+        if not product_name:
+            self.cb_leaf_node["values"] = []
+            self.var_leaf_node.set("")
+            return
+
+        try:
+            from pysi.reporting.leaf_node_candidates import get_leaf_node_candidates_for_product
+
+            candidates = get_leaf_node_candidates_for_product(
+                self.env,
+                product_name=product_name,
+            )
+        except Exception as e:
+            print(f"[price-cost-structure] leaf dropdown refresh skipped: {e}")
+            candidates = []
+
+        self.cb_leaf_node["values"] = candidates
+        if candidates:
+            if self.var_leaf_node.get() not in candidates:
+                self.var_leaf_node.set(candidates[0])
+        else:
+            self.var_leaf_node.set("")
+
     def on_change_node(self):
         node_name = (self.var_node.get() or "").strip()
         if not node_name:
@@ -1701,6 +1738,7 @@ class WOMCockpit(tk.Tk):
         prod = self.var_product.get()
         self.decouple_node_selected = self._detect_default_decouple_nodes(prod)
 
+        self.refresh_leaf_node_dropdown()
         self.refresh()
 
         try:
@@ -1718,13 +1756,13 @@ class WOMCockpit(tk.Tk):
             messagebox.showwarning("Price & Cost Structure", "Please select a product.")
             return
 
-        leaf_node = simpledialog.askstring(
-            "Price & Cost Structure",
-            "Enter market leaf node:",
-            parent=self,
-        )
-        leaf_node = (leaf_node or "").strip()
+        self.refresh_leaf_node_dropdown()
+        leaf_node = (self.var_leaf_node.get() or "").strip()
         if not leaf_node:
+            messagebox.showwarning(
+                "Price & Cost Structure",
+                "No leaf node candidates found for selected product.",
+            )
             return
 
         try:
