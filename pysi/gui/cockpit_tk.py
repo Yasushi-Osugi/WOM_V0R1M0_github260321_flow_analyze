@@ -1795,6 +1795,12 @@ class WOMCockpit(tk.Tk):
                 msg_lines.extend(str(p) for p in files)
             else:
                 msg_lines.append("No chart files were generated.")
+                msg_lines.append("")
+                msg_lines.append("Possible reasons:")
+                msg_lines.append("- selected product has all-zero price/cost values")
+                msg_lines.append("- no matching E2E route rows")
+                msg_lines.append("- no matching node_price_waterfall rows")
+                msg_lines.append("- Run Full Plan has not been executed")
 
             if warnings:
                 msg_lines.append("")
