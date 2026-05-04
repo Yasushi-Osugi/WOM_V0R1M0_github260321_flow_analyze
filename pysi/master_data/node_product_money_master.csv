@@ -13,3 +13,17 @@ RT_JP_APPLE,IPHONE_NM_2028_BASE,0,1550,0,0,USD,retail japan apple
 CS_IN_ASPIRER,IPHONE_NM_2028_BASE,0,1450,0,0,USD,end customer india aspirer
 CS_CN_PREMIUM,IPHONE_NM_2028_BASE,0,1600,0,0,USD,end customer china premium
 CS_JP_REPLACEMENT,IPHONE_NM_2028_BASE,0,1500,0,0,USD,end customer japan replacement
+supply_point,IPHONE_NM_2028_PRO,0,900,0,0,USD,global office / no inventory valuation | PRO placeholder from BASE multipliers
+MOM_final_assy_ASIA,IPHONE_NM_2028_PRO,1092.5,0,460,13200,USD,final assembly base inventory value | PRO placeholder from BASE multipliers
+MOM_final_assy_EURO,IPHONE_NM_2028_PRO,1127,0,483,13750,USD,final assembly euro | PRO placeholder from BASE multipliers
+DAD_FAS_APAC,IPHONE_NM_2028_PRO,1265,0,23,3300,USD,distribution hub apac | PRO placeholder from BASE multipliers
+DAD_FAS_EURO,IPHONE_NM_2028_PRO,1288,0,25.3,3520,USD,distribution hub euro | PRO placeholder from BASE multipliers
+DAD_FAS_AMER,IPHONE_NM_2028_PRO,1276.5,0,24.15,3410,USD,distribution hub amer | PRO placeholder from BASE multipliers
+WS_APAC,IPHONE_NM_2028_PRO,1380,0,40.25,5500,USD,warehouse apac | PRO placeholder from BASE multipliers
+WS_EURO,IPHONE_NM_2028_PRO,1403,0,41.4,5720,USD,warehouse euro | PRO placeholder from BASE multipliers
+WS_NA,IPHONE_NM_2028_PRO,1391.5,0,42.55,5610,USD,warehouse north america | PRO placeholder from BASE multipliers
+RT_IN_ASPIRER,IPHONE_NM_2028_PRO,0,1812.5,0,0,USD,retail india aspirer | PRO placeholder from BASE multipliers
+RT_JP_APPLE,IPHONE_NM_2028_PRO,0,1937.5,0,0,USD,retail japan apple | PRO placeholder from BASE multipliers
+CS_IN_ASPIRER,IPHONE_NM_2028_PRO,0,1812.5,0,0,USD,end customer india aspirer | PRO placeholder from BASE multipliers
+CS_CN_PREMIUM,IPHONE_NM_2028_PRO,0,2000,0,0,USD,end customer china premium | PRO placeholder from BASE multipliers
+CS_JP_REPLACEMENT,IPHONE_NM_2028_PRO,0,1875,0,0,USD,end customer japan replacement | PRO placeholder from BASE multipliers
