@@ -1,0 +1,55 @@
+node_name,product_name,inventory_unit_value,revenue_unit_value,variable_cost_unit_value,fixed_cost_weekly,currency,remarks
+PAD_final_assy_ASIA,IPHONE_NM_2028_BASE,520,620,45,8000,USD,upstream assembly asia realistic demo | Phase2B7 added node coverage
+PAD_final_assy_EURO,IPHONE_NM_2028_BASE,545,650,50,8500,USD,upstream assembly euro realistic demo | Phase2B7 added node coverage
+MOM_final_assy_ASIA,IPHONE_NM_2028_BASE,620,700,55,10000,USD,mother plant asia realistic demo | Phase2B7 business-plausible demo value
+MOM_final_assy_EURO,IPHONE_NM_2028_BASE,650,730,60,10500,USD,mother plant euro realistic demo | Phase2B7 business-plausible demo value
+supply_point,IPHONE_NM_2028_BASE,700,760,15,2000,USD,global supply point transfer price realistic demo | Phase2B7 business-plausible demo value
+DAD_FAS_APAC,IPHONE_NM_2028_BASE,750,800,20,3000,USD,regional distribution hub apac realistic demo | Phase2B7 business-plausible demo value
+DAD_FAS_EURO,IPHONE_NM_2028_BASE,770,825,24,3200,USD,regional distribution hub euro realistic demo | Phase2B7 business-plausible demo value
+DAD_FAS_AMER,IPHONE_NM_2028_BASE,760,810,22,3100,USD,regional distribution hub amer realistic demo | Phase2B7 business-plausible demo value
+WS_APAC,IPHONE_NM_2028_BASE,800,840,32,4200,USD,warehouse apac realistic demo | Phase2B7 business-plausible demo value
+WS_EU,IPHONE_NM_2028_BASE,825,865,34,4400,USD,warehouse eu realistic demo | Phase2B7 added node coverage
+WS_EURO,IPHONE_NM_2028_BASE,825,865,34,4400,USD,warehouse euro legacy realistic demo | Phase2B7 business-plausible demo value
+WS_NA,IPHONE_NM_2028_BASE,810,850,35,4500,USD,warehouse north america realistic demo | Phase2B7 business-plausible demo value
+RT_US_CARRIER,IPHONE_NM_2028_BASE,0,930,70,1800,USD,retail us carrier realistic demo | Phase2B7 added node coverage
+RT_US_ONLINE,IPHONE_NM_2028_BASE,0,910,55,1500,USD,retail us online realistic demo | Phase2B7 added node coverage
+RT_UK_CARRIER,IPHONE_NM_2028_BASE,0,925,65,1700,USD,retail uk carrier realistic demo | Phase2B7 added node coverage
+RT_DE_ONLINE,IPHONE_NM_2028_BASE,0,950,60,1600,USD,retail de online realistic demo | Phase2B7 added node coverage
+RT_CN_ONLINE,IPHONE_NM_2028_BASE,0,980,70,1800,USD,retail cn online realistic demo | Phase2B7 added node coverage
+RT_JP_APPLE,IPHONE_NM_2028_BASE,0,920,65,1800,USD,retail japan apple realistic demo | Phase2B7 business-plausible demo value
+RT_IN_ECOM,IPHONE_NM_2028_BASE,0,799,45,1300,USD,retail india ecommerce realistic demo | Phase2B7 added node coverage
+RT_IN_ASPIRER,IPHONE_NM_2028_BASE,0,799,45,1300,USD,retail india aspirer legacy realistic demo | Phase2B7 business-plausible demo value
+CS_US_MAINSTREAM,IPHONE_NM_2028_BASE,0,899,0,0,USD,end customer us mainstream realistic demo | Phase2B7 added node coverage
+CS_US_PREMIUM,IPHONE_NM_2028_BASE,0,999,0,0,USD,end customer us premium realistic demo | Phase2B7 added node coverage
+CS_UK_MAINSTREAM,IPHONE_NM_2028_BASE,0,925,0,0,USD,end customer uk mainstream realistic demo | Phase2B7 added node coverage
+CS_DE_PREMIUM,IPHONE_NM_2028_BASE,0,950,0,0,USD,end customer de premium realistic demo | Phase2B7 added node coverage
+CS_CN_PREMIUM,IPHONE_NM_2028_BASE,0,980,0,0,USD,end customer china premium realistic demo | Phase2B7 business-plausible demo value
+CS_JP_REPLACEMENT,IPHONE_NM_2028_BASE,0,920,0,0,USD,end customer japan replacement realistic demo | Phase2B7 business-plausible demo value
+CS_IN_ASPIRER,IPHONE_NM_2028_BASE,0,799,0,0,USD,end customer india aspirer realistic demo | Phase2B7 business-plausible demo value
+PAD_final_assy_ASIA,IPHONE_NM_2028_PRO,680,820,65,9200,USD,upstream assembly asia pro realistic demo | Phase2B7 added node coverage
+PAD_final_assy_EURO,IPHONE_NM_2028_PRO,710,850,70,9700,USD,upstream assembly euro pro realistic demo | Phase2B7 added node coverage
+MOM_final_assy_ASIA,IPHONE_NM_2028_PRO,760,900,75,11500,USD,mother plant asia pro realistic demo | Phase2B7 business-plausible demo value
+MOM_final_assy_EURO,IPHONE_NM_2028_PRO,790,930,82,12000,USD,mother plant euro pro realistic demo | Phase2B7 business-plausible demo value
+supply_point,IPHONE_NM_2028_PRO,900,980,20,2300,USD,global supply point pro transfer price realistic demo | Phase2B7 business-plausible demo value
+DAD_FAS_APAC,IPHONE_NM_2028_PRO,980,1040,23,3400,USD,regional distribution hub apac pro realistic demo | Phase2B7 business-plausible demo value
+DAD_FAS_EURO,IPHONE_NM_2028_PRO,1000,1060,27,3600,USD,regional distribution hub euro pro realistic demo | Phase2B7 business-plausible demo value
+DAD_FAS_AMER,IPHONE_NM_2028_PRO,990,1050,25,3500,USD,regional distribution hub amer pro realistic demo | Phase2B7 business-plausible demo value
+WS_APAC,IPHONE_NM_2028_PRO,1040,1090,36,4700,USD,warehouse apac pro realistic demo | Phase2B7 business-plausible demo value
+WS_EU,IPHONE_NM_2028_PRO,1060,1110,38,4900,USD,warehouse eu pro realistic demo | Phase2B7 added node coverage
+WS_EURO,IPHONE_NM_2028_PRO,1060,1110,38,4900,USD,warehouse euro legacy pro realistic demo | Phase2B7 business-plausible demo value
+WS_NA,IPHONE_NM_2028_PRO,1050,1100,39,5000,USD,warehouse north america pro realistic demo | Phase2B7 business-plausible demo value
+RT_US_CARRIER,IPHONE_NM_2028_PRO,0,1220,90,2200,USD,retail us carrier pro realistic demo | Phase2B7 added node coverage
+RT_US_ONLINE,IPHONE_NM_2028_PRO,0,1190,70,1900,USD,retail us online pro realistic demo | Phase2B7 added node coverage
+RT_UK_CARRIER,IPHONE_NM_2028_PRO,0,1210,82,2100,USD,retail uk carrier pro realistic demo | Phase2B7 added node coverage
+RT_DE_ONLINE,IPHONE_NM_2028_PRO,0,1240,78,2000,USD,retail de online pro realistic demo | Phase2B7 added node coverage
+RT_CN_ONLINE,IPHONE_NM_2028_PRO,0,1260,88,2200,USD,retail cn online pro realistic demo | Phase2B7 added node coverage
+RT_JP_APPLE,IPHONE_NM_2028_PRO,0,1249,86,2200,USD,retail japan apple pro realistic demo | Phase2B7 business-plausible demo value
+RT_IN_ECOM,IPHONE_NM_2028_PRO,0,1099,60,1700,USD,retail india ecommerce pro realistic demo | Phase2B7 added node coverage
+RT_IN_ASPIRER,IPHONE_NM_2028_PRO,0,1099,60,1700,USD,retail india aspirer legacy pro realistic demo | Phase2B7 business-plausible demo value
+CS_US_MAINSTREAM,IPHONE_NM_2028_PRO,0,1099,0,0,USD,end customer us mainstream pro realistic demo | Phase2B7 added node coverage
+CS_US_PREMIUM,IPHONE_NM_2028_PRO,0,1299,0,0,USD,end customer us premium pro realistic demo | Phase2B7 added node coverage
+CS_UK_MAINSTREAM,IPHONE_NM_2028_PRO,0,1199,0,0,USD,end customer uk mainstream pro realistic demo | Phase2B7 added node coverage
+CS_DE_PREMIUM,IPHONE_NM_2028_PRO,0,1249,0,0,USD,end customer de premium pro realistic demo | Phase2B7 added node coverage
+CS_CN_PREMIUM,IPHONE_NM_2028_PRO,0,1260,0,0,USD,end customer china premium pro realistic demo | Phase2B7 business-plausible demo value
+CS_JP_REPLACEMENT,IPHONE_NM_2028_PRO,0,1249,0,0,USD,end customer japan replacement pro realistic demo | Phase2B7 business-plausible demo value
+CS_IN_ASPIRER,IPHONE_NM_2028_PRO,0,1099,0,0,USD,end customer india aspirer pro realistic demo | Phase2B7 business-plausible demo value
