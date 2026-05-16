@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-ALLOWED_PLAN_TYPES: set[str] = {"S", "P", "demand", "supply"}
+ALLOWED_PLAN_TYPES: set[str] = {"S", "P", "demand", "supply", "initial_inventory"}
 ALLOWED_SOURCE_GRANULARITIES: set[str] = {"monthly", "weekly", "case_weekly"}
 
 
