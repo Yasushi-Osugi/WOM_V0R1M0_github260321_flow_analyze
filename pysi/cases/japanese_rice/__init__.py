@@ -14,6 +14,13 @@ from pysi.cases.japanese_rice.rice_real_plannode_seed_integration import (
     make_real_like_plan_node,
     seed_rice_weekly_input_to_real_like_plan_tree,
 )
+from pysi.cases.japanese_rice.rice_actual_prod_tree_seed_integration import (
+    RiceActualPlanNodeSeedResult,
+    build_plan_node_lookup_from_roots as build_actual_product_plan_node_lookup_from_roots,
+    build_plan_node_lookup_from_tree as build_actual_product_plan_node_lookup_from_tree,
+    resolve_product_plan_roots,
+    seed_rice_weekly_input_to_actual_product_plan_nodes,
+)
 from pysi.cases.japanese_rice.rice_plan_input_integration import (
     RicePlanInputSeedResult,
     build_rice_row_attributes,
@@ -58,4 +65,9 @@ __all__ = [
     "build_plan_node_lookup_from_tree",
     "build_plan_node_lookup_from_roots",
     "seed_rice_weekly_input_to_real_like_plan_tree",
+    "RiceActualPlanNodeSeedResult",
+    "resolve_product_plan_roots",
+    "build_actual_product_plan_node_lookup_from_tree",
+    "build_actual_product_plan_node_lookup_from_roots",
+    "seed_rice_weekly_input_to_actual_product_plan_nodes",
 ]
