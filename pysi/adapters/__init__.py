@@ -12,6 +12,11 @@ from pysi.adapters.plan_input_granularity import (
     weekly_plan_to_weekly_rows,
 )
 from pysi.adapters.plan_input_pipeline import weekly_rows_to_lots_and_seed_table
+from pysi.adapters.plan_node_seeding import (
+    PSI_BUCKET_INDEX,
+    PlanNodeSeedingResult,
+    apply_psi_seed_records_to_plan_nodes,
+)
 from pysi.adapters.psi_seed import (
     DEFAULT_BUCKET_MAPPING,
     PsiSeedRecord,
@@ -42,4 +47,7 @@ __all__ = [
     "generate_psi_seed_records",
     "build_psi_seed_table",
     "weekly_rows_to_lots_and_seed_table",
+    "PSI_BUCKET_INDEX",
+    "PlanNodeSeedingResult",
+    "apply_psi_seed_records_to_plan_nodes",
 ]
