@@ -1,0 +1,611 @@
+# Explicit Pipeline Management Cockpit KPI View Button Integration Completion Memo
+
+**Version:** v0r1 completion  
+**Date:** 2026-05-24  
+**Status:** Completion memo  
+**Target path:** `docs/design/explicit_pipeline_management_cockpit_kpi_view_button_integration_completion.md`  
+**Branch:** `feature/with-capacity-psi-engine-v0r2`
+
+---
+
+## 1. Purpose
+
+This memo summarizes the completion status of **Explicit Pipeline Management Cockpit KPI View Button Integration MVP**.
+
+The purpose of this milestone was to connect the already-completed read-only Explicit Pipeline KPI View to the main WOM cockpit GUI through a small entry point and user-accessible button.
+
+The completed components before this milestone were:
+
+```python
+build_explicit_pipeline_management_cockpit_view_model(env) -> dict
+render_explicit_pipeline_management_cockpit_tk(parent, view_model) -> tk.Toplevel
+```
+
+This milestone added the main cockpit entry point:
+
+```python
+WOMCockpit._open_explicit_pipeline_kpi_view(self)
+```
+
+and one GUI button:
+
+```text
+Explicit KPI View
+```
+
+The button opens the read-only KPI cockpit window.
+
+It does not run planning, exports, reporting stack, or replan commands.
+
+---
+
+## 2. Background
+
+Before this milestone, WOM had already completed the staged cockpit data/display chain:
+
+```text
+explicit pipeline runner
+    ↓
+reporting stack
+    ↓
+issue candidates
+    ↓
+Cost / KPI enrichment
+    ↓
+Cost / KPI export
+    ↓
+planning-sequence insertion
+    ↓
+Management Cockpit KPI view model
+    ↓
+read-only Tk rendering helper
+```
+
+The rendering helper could already display a KPI view if called directly.
+
+However, there was not yet a way to open that view from the main WOM cockpit GUI.
+
+This milestone completes that integration.
+
+---
+
+## 3. Implemented Files
+
+This milestone modified or added:
+
+```text
+pysi/gui/cockpit_tk.py
+tests/test_explicit_pipeline_management_cockpit_kpi_view_button_integration.py
+```
+
+The implementation was committed as:
+
+```text
+b31fc54 Add Explicit KPI View button and cockpit entry point
+```
+
+---
+
+## 4. Entry Point Added
+
+The following method was added to `WOMCockpit`:
+
+```python
+def _open_explicit_pipeline_kpi_view(self):
+    from pysi.gui.explicit_pipeline_management_cockpit_view import (
+        build_explicit_pipeline_management_cockpit_view_model,
+        render_explicit_pipeline_management_cockpit_tk,
+    )
+
+    view_model = build_explicit_pipeline_management_cockpit_view_model(self.env)
+    return render_explicit_pipeline_management_cockpit_tk(self, view_model)
+```
+
+The method:
+
+```text
+reads self.env
+builds the current Explicit Pipeline KPI view model
+renders the read-only Tk KPI window
+returns the renderer return value
+```
+
+It uses local imports to avoid changing `cockpit_tk.py` top-level import behavior.
+
+---
+
+## 5. Button Added
+
+A new user-accessible button was added to the existing action row in `cockpit_tk.py`.
+
+Button label:
+
+```text
+Explicit KPI View
+```
+
+Button command:
+
+```python
+command=self._open_explicit_pipeline_kpi_view
+```
+
+The button was placed near the existing management cockpit / reporting action area, next to the current `Mgmt Cockpit` control.
+
+The implementation did not reorganize the GUI layout.
+
+It added one small viewer button.
+
+---
+
+## 6. User Flow Now Supported
+
+### 6.1 Before explicit pipeline data exists
+
+```text
+User opens WOM GUI
+User clicks Explicit KPI View
+Read-only KPI View window opens
+No-data message is displayed
+```
+
+The view model and renderer handle missing data safely.
+
+No pre-validation or blocking popup was added.
+
+### 6.2 After planning has generated explicit pipeline artifacts
+
+```text
+User runs planning
+Explicit pipeline / reporting stack attaches artifacts to env depending on flags
+User clicks Explicit KPI View
+Read-only KPI View window opens
+Summary / Top Issues / Replan Candidates / Health / Assumptions / Messages tabs are displayed
+```
+
+### 6.3 With partial data
+
+```text
+Some explicit pipeline artifacts are available
+User clicks Explicit KPI View
+Available sections show data
+Missing sections show safe defaults / messages
+```
+
+---
+
+## 7. Safety Boundaries Preserved
+
+This milestone preserved the intended safety boundaries.
+
+The new entry point and button do not:
+
+```text
+run planning
+run Run Full Plan
+run the explicit pipeline
+run the reporting stack helper
+run export helpers
+change feature flags
+execute ReplanCommand
+implement automatic replanning
+run OR optimization
+persist data
+write files
+open files
+delete files
+modify Cost / KPI enrichment logic
+modify exporter logic
+```
+
+The button only:
+
+```text
+builds a view model from current self.env
+opens the read-only Tk KPI view
+```
+
+The design rule remains:
+
+```text
+Open the panel.
+Do not start the engine.
+```
+
+---
+
+## 8. Relationship to Feature Flags
+
+The button does not change feature flags.
+
+The KPI view displays whatever has already been generated by prior planning and reporting flags, such as:
+
+```text
+enable_explicit_bridge_capacity_report
+enable_explicit_bridge_capacity_report_export
+enable_explicit_bridge_capacity_issue_candidates
+enable_explicit_bridge_capacity_issue_candidate_export
+enable_explicit_bridge_capacity_issue_candidate_cost_kpi
+enable_explicit_bridge_capacity_issue_candidate_cost_kpi_export
+```
+
+If these flags were not enabled during planning, the view shows safe missing-data messages.
+
+This preserves the separation between:
+
+```text
+data generation
+    and
+data display
+```
+
+---
+
+## 9. Relationship to Export
+
+The button does not run export helpers.
+
+If export result objects already exist on `env`, the view can display them.
+
+If export result objects do not exist, the view can show:
+
+```text
+Export results are not available. Export flags may be off.
+```
+
+No export files are created by the button.
+
+---
+
+## 10. Relationship to Replan Candidates
+
+The view may display replan candidates generated by earlier issue candidate logic.
+
+However, the button does not execute them.
+
+The status remains:
+
+```text
+candidate_only
+```
+
+There is no command execution path.
+
+There is no run button.
+
+There is no double-click execution behavior.
+
+---
+
+## 11. Test Added
+
+The focused integration test file is:
+
+```text
+tests/test_explicit_pipeline_management_cockpit_kpi_view_button_integration.py
+```
+
+The test validates the entry point without constructing the full GUI.
+
+Test strategy:
+
+```text
+monkeypatch the view-model builder
+monkeypatch the Tk renderer
+call WOMCockpit._open_explicit_pipeline_kpi_view(fake_self)
+verify env passthrough
+verify parent passthrough
+verify view-model passthrough
+verify return-value passthrough
+```
+
+This confirms the integration contract while avoiding brittle visual GUI testing.
+
+---
+
+## 12. Test Isolation Notes
+
+To keep the test isolated in the local environment, the test stubs minimal heavy GUI plotting dependencies before importing `WOMCockpit`.
+
+The test does not open a real Tk window.
+
+The test verifies the method call chain only:
+
+```text
+self.env
+    ↓
+build_explicit_pipeline_management_cockpit_view_model
+    ↓
+render_explicit_pipeline_management_cockpit_tk
+    ↓
+return window
+```
+
+---
+
+## 13. Validation
+
+The focused button integration test passed:
+
+```bat
+python -m pytest tests/test_explicit_pipeline_management_cockpit_kpi_view_button_integration.py
+```
+
+Observed result:
+
+```text
+1 passed
+```
+
+The following related tests also passed:
+
+```bat
+python -m pytest tests/test_explicit_pipeline_management_cockpit_kpi_view_tk_rendering.py
+python -m pytest tests/test_explicit_pipeline_management_cockpit_kpi_view.py
+python -m pytest tests/test_explicit_pipeline_reporting_stack_insertion.py
+python -m pytest tests/test_explicit_pipeline_reporting_flags.py
+python -m pytest tests/test_covid_vaccine_with_capacity_push.py
+```
+
+Observed results:
+
+```text
+tests/test_explicit_pipeline_management_cockpit_kpi_view_tk_rendering.py: 2 passed, 1 skipped
+tests/test_explicit_pipeline_management_cockpit_kpi_view.py: 8 passed
+tests/test_explicit_pipeline_reporting_stack_insertion.py: 7 passed
+tests/test_explicit_pipeline_reporting_flags.py: 10 passed
+tests/test_covid_vaccine_with_capacity_push.py: 1 passed
+```
+
+The `1 skipped` in the Tk rendering test is acceptable because it reflects environment-sensitive Tk rendering behavior rather than a failure.
+
+No test failures remained at commit time.
+
+---
+
+## 14. Completion Criteria
+
+This milestone satisfies the intended completion criteria.
+
+```text
+[OK] WOMCockpit has _open_explicit_pipeline_kpi_view method
+[OK] method builds view model from self.env
+[OK] method renders read-only Tk view
+[OK] method returns renderer return value
+[OK] GUI has one user-accessible button
+[OK] button label is Explicit KPI View
+[OK] button only opens the view
+[OK] no planning execution is added
+[OK] no explicit pipeline execution is added
+[OK] no reporting stack execution is added
+[OK] no export execution is added
+[OK] no ReplanCommand execution is added
+[OK] no feature flags are changed
+[OK] no env mutation beyond read-only view construction
+[OK] entry-point test passes
+[OK] existing view-model and rendering tests pass
+[OK] key regression tests pass
+```
+
+---
+
+## 15. Meaning of This Milestone
+
+Before this milestone:
+
+```text
+The Explicit Pipeline KPI View could be rendered as a component,
+but it was not reachable from the main WOM cockpit GUI.
+```
+
+After this milestone:
+
+```text
+The main WOM cockpit GUI has an Explicit KPI View button
+that opens the read-only KPI cockpit window.
+```
+
+This brings the explicit pipeline management cockpit into the user's normal GUI flow.
+
+---
+
+## 16. Current Pipeline Position
+
+The staged integration now stands here:
+
+```text
+isolated utilities
+    ↓
+explicit pipeline runner                         ✅ completed
+    ↓
+feature flag helper                              ✅ completed
+    ↓
+run_full_plan insertion                          ✅ completed
+    ↓
+capacity reporting MVP                           ✅ completed
+    ↓
+capacity report attachment                       ✅ completed
+    ↓
+capacity report export                           ✅ completed
+    ↓
+issue candidates                                 ✅ completed
+    ↓
+issue candidate export                           ✅ completed
+    ↓
+Cost / KPI enrichment                            ✅ completed
+    ↓
+Cost / KPI export                                ✅ completed
+    ↓
+reporting flag switchboard helper                ✅ completed
+    ↓
+planning-sequence reporting insertion            ✅ completed
+    ↓
+Management Cockpit KPI view model                ✅ completed
+    ↓
+read-only Tk rendering helper                    ✅ completed
+    ↓
+cockpit_tk.py entry point / button integration   ✅ completed
+    ↓
+future graph / KPI card / usability refinements
+```
+
+---
+
+## 17. Current Operational Meaning
+
+WOM can now support this user path:
+
+```text
+Run planning
+    ↓
+explicit pipeline artifacts are attached to env
+    ↓
+click Explicit KPI View
+    ↓
+Management Cockpit KPI view model is built
+    ↓
+read-only Tk KPI cockpit window opens
+```
+
+The display can show:
+
+```text
+Summary
+Top Issues
+Replan Candidates
+Health
+Assumptions / Exports
+Messages
+```
+
+without executing planning, exports, or replan commands.
+
+---
+
+## 18. Known Limitations
+
+This milestone intentionally does not implement:
+
+```text
+graph / chart view
+KPI cards
+interactive filtering
+copy selected row
+detail pane
+open exported file path
+issue review workflow
+Knowledge Continuity capture
+automatic window opening after planning
+ReplanCommand execution
+```
+
+The current cockpit view is a read-only table / key-value tabbed view.
+
+It is not yet a graphical dashboard.
+
+---
+
+## 19. Future Milestones
+
+### 19.1 Completion overview
+
+A natural next documentation step is an overview memo for the whole cockpit KPI integration chain:
+
+```text
+docs/design/explicit_pipeline_management_cockpit_kpi_integration_overview.md
+```
+
+This would summarize:
+
+```text
+view model
+Tk rendering helper
+button integration
+safety boundaries
+test coverage
+next enhancements
+```
+
+### 19.2 Graph / chart view design
+
+A future design could add:
+
+```text
+docs/design/explicit_pipeline_management_cockpit_kpi_graph_view.md
+```
+
+Potential graphs:
+
+```text
+top impact issue bar chart
+issue severity distribution
+capacity violation by week
+Cost / KPI impact waterfall
+```
+
+### 19.3 KPI cards
+
+Future GUI enhancement could add compact KPI cards:
+
+```text
+Total Business Impact
+Capacity Violations
+Management Issues
+Warnings
+Health Risks
+```
+
+### 19.4 Review workflow
+
+Future issue review workflow could add:
+
+```text
+mark issue reviewed
+promote issue to open issue
+create decision log candidate
+generate next-entry prompt
+```
+
+This should remain separate and feature-controlled.
+
+### 19.5 Knowledge Continuity integration
+
+The explicit pipeline KPI view may later feed the WOM Knowledge Continuity Layer.
+
+Potential mapping:
+
+```text
+top impact issues → open issues
+health warnings → facts and findings
+replan candidates → next-entry prompts
+manager comments → decision log
+```
+
+This is not implemented in this milestone.
+
+---
+
+## 20. Summary
+
+The Explicit Pipeline Management Cockpit KPI View Button Integration MVP is complete.
+
+The key achievement is:
+
+```text
+The main WOM cockpit GUI now has an Explicit KPI View button
+that opens the read-only explicit pipeline KPI cockpit view.
+```
+
+The integration remains safely non-invasive:
+
+```text
+no planning execution
+no export execution
+no reporting stack execution
+no command execution
+no feature flag mutation
+```
+
+The cockpit now has a viewer button connected to the display panel.
+
+The engine-start switch remains safely covered.

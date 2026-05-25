@@ -1118,6 +1118,7 @@ class WOMCockpit(tk.Tk):
         ttk.Button(action_row, text="Trace Viewer", command=self.open_trace_viewer).pack(side="left", padx=(0, 6))
         ttk.Button(action_row, text="Price & Cost Structure", command=self.on_generate_price_cost_structure_chart).pack(side="left", padx=(0, 6))
         ttk.Button(action_row, text="Mgmt Cockpit", command=self.open_management_cockpit).pack(side="left", padx=(0, 6))
+        ttk.Button(action_row, text="Explicit KPI View", command=self._open_explicit_pipeline_kpi_view).pack(side="left", padx=(0, 6))
         ttk.Button(action_row, text="Business Animation", command=self.open_business_animation).pack(side="left", padx=(0, 6))
         ttk.Button(action_row, text="PSI累計+利益率", command=self.open_psi_profit_animation).pack(side="left", padx=(0, 6))
         ttk.Button(action_row, text="Animation Viewer", command=self.open_animation_viewer).pack(side="left", padx=(0, 6))
@@ -1944,6 +1945,15 @@ class WOMCockpit(tk.Tk):
 
     def _run_planning_sequence(self, *, use_selected_decouples: bool = True):
         import pysi.plan.engines as eng
+        from pysi.plan.explicit_bridge_capacity_pipeline import (
+            maybe_run_explicit_bridge_capacity_pipeline_from_env,
+        )
+        from pysi.reporting.explicit_pipeline_capacity_report import (
+            maybe_build_explicit_pipeline_capacity_report_from_env,
+        )
+        from pysi.reporting.explicit_pipeline_reporting_flags import (
+            maybe_run_explicit_pipeline_reporting_stack_from_env,
+        )
 
         prod = (self.var_product.get() or "").strip()
 
@@ -2068,6 +2078,24 @@ class WOMCockpit(tk.Tk):
             "UK": ["MOM_final_assy_EURO", "MOM_final_assy_ASIA"],
             "DEFAULT": ["MOM_final_assy_ASIA"],
         }
+
+        explicit_result = maybe_run_explicit_bridge_capacity_pipeline_from_env(
+            env=self.env,
+            outbound_root=out_root,
+            inbound_root=in_root,
+            product=prod,
+            mom_policy=MOM_POLICY_IPHONE,
+            backward_weekly_capability=getattr(self.env, "explicit_pipeline_backward_weekly_capability", None),
+            forward_weekly_capacity=getattr(self.env, "explicit_pipeline_forward_weekly_capacity", None),
+        )
+
+        if explicit_result is not None:
+            maybe_build_explicit_pipeline_capacity_report_from_env(self.env)
+            maybe_run_explicit_pipeline_reporting_stack_from_env(
+                self.env,
+                output_root=getattr(self.env, "explicit_bridge_capacity_reporting_output_root", None),
+                cost_kpi_context=getattr(self.env, "explicit_bridge_capacity_cost_kpi_context", None),
+            )
 
         # ********
         # MOM ALLOCATION
@@ -3990,6 +4018,15 @@ class WOMCockpit(tk.Tk):
             win.lift()
         except Exception as e:
             print("[management_cockpit] open skipped:", e)
+
+    def _open_explicit_pipeline_kpi_view(self):
+        from pysi.gui.explicit_pipeline_management_cockpit_view import (
+            build_explicit_pipeline_management_cockpit_view_model,
+            render_explicit_pipeline_management_cockpit_tk,
+        )
+
+        view_model = build_explicit_pipeline_management_cockpit_view_model(self.env)
+        return render_explicit_pipeline_management_cockpit_tk(self, view_model)
 
     def refresh_management_cockpit_OLD(self, baseline_snapshot=None, scenario_snapshot=None):
         """

@@ -1,0 +1,5 @@
+scenario_id,tree_side,node_name,product_name,week,capacity_type,capacity_qty,cap_mode,unit,priority,calendar_id,comment
+BASE,INBOUND,MOM_CHINA,IPHONE_NM_2028_BASE,2026-W01,P,100,soft,LOT,100,STD_CAL,weekly production capacity
+BASE,OUTBOUND,DAD_US,IPHONE_NM_2028_BASE,2026-W01,S,80,soft,LOT,100,STD_CAL,weekly shipping capacity
+BASE,OUTBOUND,DAD_US,IPHONE_NM_2028_BASE,2026-W01,I,500,soft,LOT,100,STD_CAL,inventory absorption capacity
+BASE,INBOUND,MOM_CHINA,*,2026-W02,P,200,soft,LOT,100,STD_CAL,wildcard product capacity

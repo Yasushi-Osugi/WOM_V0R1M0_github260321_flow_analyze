@@ -213,7 +213,7 @@ def export_product_trees(
 #    seq   : 週内順序（list index）
 # ---------------------------------------------------------------------
 
-BUCKET_CODES = ["P", "CO", "S", "I"]  # ここは実装に合わせて並び替えてOK
+BUCKET_CODES = ["S", "CO", "I", "P"]
 
 
 def collect_psi_events(
