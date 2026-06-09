@@ -3235,5 +3235,11 @@ class WOMApp(tk.Tk):
     def _status(self, msg: str) -> None:
         self._status_var.set(msg)
 
+# ======================================================================
+# Entry point
+# ======================================================================
+def launch():
+    """Entry point called by main.py."""
+    WOMApp().mainloop()
 
 # =======================================
