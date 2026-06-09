@@ -1,0 +1,7 @@
+product_id,market_node,base_price,target_margin_rate,minimum_margin_rate,max_discount_rate,brand_floor_price,campaign_budget_rate,competitor_follow_flag
+RICE_KOSHIHIKARI,MARKET_TOKYO,5000,0.30,0.15,0.10,4000,0.05,false
+RICE_KOSHIHIKARI,MARKET_OSAKA,4800,0.28,0.15,0.10,3900,0.05,false
+RICE_KOSHIHIKARI,MARKET_NAGOYA,4700,0.27,0.15,0.12,3800,0.05,false
+RICE_AKITAKOMACHI,MARKET_TOKYO,4500,0.28,0.14,0.10,3700,0.05,false
+RICE_AKITAKOMACHI,MARKET_OSAKA,4300,0.26,0.14,0.10,3600,0.05,false
+RICE_AKITAKOMACHI,MARKET_NAGOYA,4200,0.25,0.14,0.12,3500,0.05,false

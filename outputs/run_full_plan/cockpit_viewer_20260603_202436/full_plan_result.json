@@ -1,0 +1,210 @@
+{
+  "capacity_result_summary": {
+    "capacity_node": "DC_KANTO",
+    "capacity_type": "S",
+    "totals": {
+      "accepted": 260,
+      "blocked": 25,
+      "blocked_pct": 8.771929824561402,
+      "blocked_ratio": 0.08771929824561403,
+      "capacity": 270,
+      "capacity_usage_pct": 96.29629629629629,
+      "capacity_usage_ratio": 0.9629629629629629,
+      "requested": 285,
+      "shortage": 15,
+      "unused_capacity": 10
+    },
+    "unit": "lot",
+    "weekly": {
+      "2027-W40": {
+        "accepted": 80,
+        "blocked": 0,
+        "capacity": 90,
+        "requested": 80
+      },
+      "2027-W41": {
+        "accepted": 90,
+        "blocked": 5,
+        "capacity": 90,
+        "requested": 95
+      },
+      "2027-W42": {
+        "accepted": 90,
+        "blocked": 20,
+        "capacity": 90,
+        "requested": 110
+      }
+    }
+  },
+  "contract_version": "wom_full_plan_result_v0r1",
+  "diagnostics": [
+    {
+      "bridge_source_contract_version": "japanese_rice_first_runner_output_v0r1",
+      "bridge_source_full_psi_plan": false,
+      "bridge_source_run_mode": "diagnostic_first_psi_smoke"
+    }
+  ],
+  "full_psi_plan": false,
+  "master_load_summary": {
+    "capacity": {
+      "input_row_count": 9,
+      "row_source": "env.capacity_weekly_rows",
+      "runtime_attachment_applied": true
+    },
+    "demand": {
+      "leaf_plan_node_psi4demand_counts": {
+        "2027-W40": 80,
+        "2027-W41": 95,
+        "2027-W42": 110
+      },
+      "node": "MARKET_TOKYO",
+      "total_lots": 285,
+      "weekly_lot_counts": {
+        "2027-W40": 80,
+        "2027-W41": 95,
+        "2027-W42": 110
+      }
+    },
+    "master_counts": {
+      "capacity_rows": 9,
+      "demand_lots": 285,
+      "demand_rows": 3,
+      "network_edges": 8,
+      "network_nodes": 9
+    },
+    "network": {
+      "dad_node": "DC_KANTO",
+      "inbound_path_exists": true,
+      "market_leaf": "MARKET_TOKYO",
+      "mom_node": "RICE_MILL_A",
+      "outbound_path_exists": true,
+      "partner_key": "RICE_CORE",
+      "supply_point": "supply_point",
+      "supply_source": "FARM_REGION_A"
+    }
+  },
+  "messages": [
+    "WOM Japanese Rice first PSI smoke",
+    "Scenario: JAPANESE_RICE_VSLICE_001",
+    "Product: JAPANESE_RICE_STANDARD",
+    "Mode: diagnostic_first_psi_smoke",
+    "Full PSI plan: False",
+    "",
+    "Masters:",
+    "  capacity_rows=9, demand_rows=3, demand_lots=285, network_nodes=9, network_edges=8",
+    "",
+    "Actual ProductPlanNode:",
+    "  inbound_nodes=5, outbound_nodes=5",
+    "  demand_node=MARKET_TOKYO",
+    "  demand_lot_source=MARKET_TOKYO.psi4demand[week][0]",
+    "",
+    "Weekly demand S-slot:",
+    "  2027-W40: 80",
+    "  2027-W41: 95",
+    "  2027-W42: 110",
+    "",
+    "DC_KANTO S capacity gate:",
+    "  2027-W40: requested=80, capacity=90, accepted=80, blocked=0",
+    "  2027-W41: requested=95, capacity=90, accepted=90, blocked=5",
+    "  2027-W42: requested=110, capacity=90, accepted=90, blocked=20",
+    "",
+    "Totals:",
+    "  requested=285, capacity=270, accepted=260, blocked=25",
+    "WOM Run Full Plan uses diagnostic_smoke_bridge; full PSI planning is not executed."
+  ],
+  "output_paths": {
+    "full_plan_result_json": "outputs\\run_full_plan\\cockpit_viewer_20260603_202436\\full_plan_result.json",
+    "run_dir": "outputs\\run_full_plan\\cockpit_viewer_20260603_202436",
+    "visual_capacity_gate_weekly_csv": "outputs\\run_full_plan\\cockpit_viewer_20260603_202436\\visual_capacity_gate_weekly.csv"
+  },
+  "run_id": "cockpit_viewer_20260603_202436",
+  "run_mode": "diagnostic_smoke_bridge",
+  "runtime_model_summary": {
+    "actual_plan_node_tree": {
+      "available": true,
+      "demand_lot_source": "MARKET_TOKYO.psi4demand[week][0]",
+      "demand_node": "MARKET_TOKYO",
+      "inbound_node_count": 5,
+      "outbound_node_count": 5,
+      "product_name": "JAPANESE_RICE_STANDARD",
+      "weekly_s_slot_counts": {
+        "2027-W40": 80,
+        "2027-W41": 95,
+        "2027-W42": 110
+      }
+    },
+    "demand_lot_source": "MARKET_TOKYO.psi4demand[week][0]",
+    "inbound_node_count": 5,
+    "market_node": "MARKET_TOKYO",
+    "market_tokyo_weekly_s_slot_counts": {
+      "2027-W40": 80,
+      "2027-W41": 95,
+      "2027-W42": 110
+    },
+    "outbound_node_count": 5
+  },
+  "scenario_id": "japanese_rice_vslice_001",
+  "scenario_root": "examples/scenarios/japanese_rice_vslice_001",
+  "status": "success",
+  "visualization_datasets": {
+    "capacity_gate_weekly": {
+      "path": "outputs\\run_full_plan\\cockpit_viewer_20260603_202436\\visual_capacity_gate_weekly.csv",
+      "rows": [
+        {
+          "accepted": 80,
+          "blocked": 0,
+          "blocked_pct": 0.0,
+          "blocked_ratio": 0.0,
+          "capacity": 90,
+          "capacity_type": "S",
+          "capacity_usage_pct": 88.88888888888889,
+          "capacity_usage_ratio": 0.8888888888888888,
+          "node_name": "DC_KANTO",
+          "product_name": "JAPANESE_RICE_STANDARD",
+          "requested": 80,
+          "run_id": "cockpit_viewer_20260603_202436",
+          "scenario_id": "japanese_rice_vslice_001",
+          "shortage": 0,
+          "unused_capacity": 10,
+          "week": "2027-W40"
+        },
+        {
+          "accepted": 90,
+          "blocked": 5,
+          "blocked_pct": 5.263157894736842,
+          "blocked_ratio": 0.05263157894736842,
+          "capacity": 90,
+          "capacity_type": "S",
+          "capacity_usage_pct": 100.0,
+          "capacity_usage_ratio": 1.0,
+          "node_name": "DC_KANTO",
+          "product_name": "JAPANESE_RICE_STANDARD",
+          "requested": 95,
+          "run_id": "cockpit_viewer_20260603_202436",
+          "scenario_id": "japanese_rice_vslice_001",
+          "shortage": 5,
+          "unused_capacity": 0,
+          "week": "2027-W41"
+        },
+        {
+          "accepted": 90,
+          "blocked": 20,
+          "blocked_pct": 18.181818181818183,
+          "blocked_ratio": 0.18181818181818182,
+          "capacity": 90,
+          "capacity_type": "S",
+          "capacity_usage_pct": 100.0,
+          "capacity_usage_ratio": 1.0,
+          "node_name": "DC_KANTO",
+          "product_name": "JAPANESE_RICE_STANDARD",
+          "requested": 110,
+          "run_id": "cockpit_viewer_20260603_202436",
+          "scenario_id": "japanese_rice_vslice_001",
+          "shortage": 20,
+          "unused_capacity": 0,
+          "week": "2027-W42"
+        }
+      ]
+    }
+  }
+}

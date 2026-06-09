@@ -441,7 +441,56 @@ class ManagementCockpitPanel(tk.Frame):
         self._pl_tree.pack(side="left", fill="x", expand=True)
         pl_vsb.pack(side="right", fill="y")
 
-        # ── Charts row ───────────────────────────────────────────────
+        # ── Strategic KPI Cards ──────────────────────────────────────
+        skpi_frame = tk.LabelFrame(self,
+                                   text="  \U0001f3ed Strategic KPI  (Planning Engine)",
+                                   bg=BG_MID, fg=FG_ACC,
+                                   font=("Segoe UI", 9, "bold"),
+                                   relief="groove", bd=1)
+        skpi_frame.pack(fill="x", padx=8, pady=(0, 4))
+
+        # 5 KPI cards in a row
+        self._skpi_cards: dict[str, dict] = {}
+        card_defs = [
+            ("fixed_cost_coverage", "固定費吸収率",    "≥ 75%",    "生産量 / CapHard"),
+            ("production_leveling", "生産平準化指数",  "≥ 80%",    "1 - 変動係数"),
+            ("buffer_retention",    "在庫滞留率",      "20–50%",   "バッファ保有率"),
+            ("fill_rate",           "需要充足率",      "≥ 95%",    "出荷 / 需要"),
+            ("avg_cap_utilization", "設備稼働率",      "70–90%",   "P / CapHard"),
+        ]
+        for key, label_ja, target, formula in card_defs:
+            card = tk.Frame(skpi_frame, bg=BG_DARK, bd=1, relief="solid",
+                            padx=10, pady=6)
+            card.pack(side="left", fill="both", expand=True, padx=3, pady=4)
+
+            tk.Label(card, text=label_ja,
+                     bg=BG_DARK, fg="#90A4AE",
+                     font=("Segoe UI", 8)).pack(anchor="w")
+
+            val_var = tk.StringVar(value="--")
+            val_lbl = tk.Label(card, textvariable=val_var,
+                               bg=BG_DARK, fg=FG_WHITE,
+                               font=("Segoe UI", 14, "bold"))
+            val_lbl.pack(anchor="w")
+
+            status_var = tk.StringVar(value="")
+            status_lbl = tk.Label(card, textvariable=status_var,
+                                  bg=BG_DARK, fg="#90A4AE",
+                                  font=("Segoe UI", 8))
+            status_lbl.pack(anchor="w")
+
+            tk.Label(card, text=f"目標: {target}  ({formula})",
+                     bg=BG_DARK, fg="#546E7A",
+                     font=("Segoe UI", 7)).pack(anchor="w")
+
+            self._skpi_cards[key] = {
+                "val_var": val_var,
+                "val_lbl": val_lbl,
+                "status_var": status_var,
+                "status_lbl": status_lbl,
+            }
+
+        # Charts row ──────────────────────────────────────────────────
         chart_row = tk.Frame(self, bg=BG_DARK)
         chart_row.pack(fill="both", expand=True, padx=8, pady=4)
 
@@ -518,8 +567,44 @@ class ManagementCockpitPanel(tk.Frame):
     def load(self, mgr: ScenarioManager) -> None:
         self._mgr = mgr
         self._refresh_pl_table()
+        self._refresh_strategic_kpis()
         self._refresh_charts()
         self._refresh_issue_selector()
+
+    # ── Strategic KPI colours ────────────────────────────────────────
+    _STATUS_FG = {"OK": "#69F0AE", "WARN": "#FFD740", "ISSUE": "#FF5252"}
+    _STATUS_ICON = {"OK": "✅", "WARN": "⚠️", "ISSUE": "🔴"}
+
+    def _refresh_strategic_kpis(self):
+        """Update the 5 Strategic KPI card widgets."""
+        skpi = getattr(self._mgr, "strategic_kpi", None) if self._mgr else None
+        if skpi is None:
+            for card in self._skpi_cards.values():
+                card["val_var"].set("--")
+                card["status_var"].set("Planning Engine 未実行")
+                card["val_lbl"].configure(fg=FG_WHITE)
+                card["status_lbl"].configure(fg="#546E7A")
+            return
+
+        def _apply(key, value: float, status_fn):
+            card = self._skpi_cards[key]
+            card["val_var"].set(f"{value:.1%}")
+            st = status_fn()
+            icon = self._STATUS_ICON.get(st, "")
+            card["status_var"].set(f"{icon} {st}")
+            card["val_lbl"].configure(fg=self._STATUS_FG.get(st, FG_WHITE))
+            card["status_lbl"].configure(fg=self._STATUS_FG.get(st, "#90A4AE"))
+
+        _apply("fixed_cost_coverage", skpi.fixed_cost_coverage,
+               skpi.status_fixed_cost_coverage)
+        _apply("production_leveling", skpi.production_leveling,
+               skpi.status_production_leveling)
+        _apply("buffer_retention",    skpi.buffer_retention,
+               skpi.status_buffer_retention)
+        _apply("fill_rate",           skpi.fill_rate,
+               skpi.status_fill_rate)
+        _apply("avg_cap_utilization", skpi.avg_cap_utilization,
+               skpi.status_cap_utilization)
 
     def _refresh_pl_table(self):
         if self._mgr is None or self._mgr.scenario_money_kpi is None:
@@ -633,10 +718,14 @@ class ManagementCockpitPanel(tk.Frame):
             self._issue_tree.insert("", "end", tags=("RISK",), values=[
                 "RISK", rsk.severity, rsk.scenario, rsk.code, rsk.title_ja
             ])
-        # Narrative
+        # Narrative (management analysis + strategic KPI)
         self._narrative_text.configure(state="normal")
         self._narrative_text.delete("1.0", "end")
         self._narrative_text.insert("end", result.narrative or "（分析結果なし）")
+        # Append Strategic KPI narrative if available
+        skpi = getattr(self._mgr, "strategic_kpi", None) if self._mgr else None
+        if skpi is not None:
+            self._narrative_text.insert("end", "\n\n" + skpi.to_narrative_ja())
         self._narrative_text.configure(state="disabled")
 
 
@@ -2655,11 +2744,7 @@ class WOMApp(tk.Tk):
         n_prods = len(sc_tree.products)
         n_nodes = sum(1 for p in sc_tree.products
                       for _ in sc_tree.iter_all_nodes(p))
-        self._status(
-            f"✔ Planning Engine complete. "
-            f"Products: {n_prods}  |  Nodes: {n_nodes}  "
-            f"│  Open 🌐 Network tab → PSI List to explore"
-        )
+
         self._network_panel.load_planning_tree(sc_tree)
 
         # ── Build EventTimeline for animation ─────────────────────────
@@ -2673,54 +2758,121 @@ class WOMApp(tk.Tk):
             print(f"[EventTimeline] build failed: {exc}")
             traceback.print_exc()
 
+        # ── Integrate Planning results into KPI/Management tabs ───────
+        planning_status = ""
+        try:
+            from wom.engine.sc_tree_to_df import (
+                sc_tree_to_planning_df, apply_inv_value, SCENARIO_PLANNING)
+            from wom.engine.money import evaluate_money, build_scenario_money_kpi
+            from wom.engine.management import analyze_all_scenarios
+            from wom.engine.scenario import ScenarioManager
+
+            # Load sku_master for pricing
+            sku_path = self._f_sku.get() if hasattr(self, "_f_sku") else ""
+            sku_master = (pd.read_csv(sku_path)
+                          if sku_path and os.path.exists(sku_path)
+                          else pd.DataFrame())
+
+            # Convert SCTree lots → quantity DataFrame
+            plan_df = sc_tree_to_planning_df(sc_tree,
+                                             scenario_name=SCENARIO_PLANNING)
+            apply_inv_value(plan_df, sku_master)
+
+            # Merge into existing ScenarioManager (or create one)
+            if self._mgr is None:
+                self._mgr = ScenarioManager()
+
+            # Remove stale Planning scenario if re-running
+            self._mgr._results.pop(SCENARIO_PLANNING, None)
+            self._mgr.add(SCENARIO_PLANNING, plan_df)
+
+            # Re-evaluate money KPIs across ALL scenarios
+            combined = self._mgr.combined()
+            weekly_money, summary_money = evaluate_money(combined, sku_master)
+            self._mgr.weekly_money  = weekly_money
+            self._mgr.summary_money = summary_money
+            scenario_money_kpi = build_scenario_money_kpi(summary_money)
+            self._mgr.scenario_money_kpi = scenario_money_kpi
+
+            # Re-run management analysis (only if Base scenario exists)
+            if "Base" in self._mgr.scenarios():
+                mgmt_results = analyze_all_scenarios(scenario_money_kpi,
+                                                     base_scenario="Base")
+                self._mgr.management_results = mgmt_results
+
+            # Compute Strategic KPIs from SCTree lots
+            try:
+                from wom.engine.strategic_kpi import compute_strategic_kpi
+                self._mgr.strategic_kpi = compute_strategic_kpi(sc_tree)
+            except Exception as _skpi_exc:
+                print(f"[StrategicKPI] compute failed: {_skpi_exc}")
+
+            # Reload all KPI panels
+            self._chart_panel.load(self._mgr)
+            self._kpi_panel.load(self._mgr)
+            self._load_risk_tab(self._mgr)
+            self._load_delta_tab(self._mgr)
+            self._mgmt_panel.load(self._mgr)
+            self._network_panel.load(self._mgr)
+
+            # Build status summary for Planning scenario
+            p_rows = plan_df
+            avg_fr = p_rows[Cols.FILL_RATE].mean() if not p_rows.empty else 0
+            total_so = p_rows[Cols.STOCKOUT_QTY].sum() if not p_rows.empty else 0
+            planning_status = (f"  |  Planning: fill {avg_fr:.1%}, "
+                               f"stockout {total_so:,.0f}")
+
+        except Exception as exc:
+            import traceback
+            tb = traceback.format_exc()
+            print(f"[Planning→KPI] integration failed: {exc}")
+            print(tb)
+            planning_status = "  |  ⚠ KPI integration error (see console)"
+
+        self._status(
+            f"✔ Planning Engine complete. "
+            f"Products: {n_prods}  |  Nodes: {n_nodes}"
+            + planning_status +
+            f"  │  Check Charts/KPI/Management tabs for 'Planning' scenario"
+        )
+
     def _on_planning_error(self, tb: str):
         self._progress.stop()
-        self._status("Planning Engine error – see dialog.")
-        messagebox.showerror("Planning Engine Error", tb)
+        self._status_var.set("Planning Engine failed — see console")
+        import tkinter.messagebox as _mb
+        _mb.showerror("Planning Engine Error",
+                      f"Planning Engine failed:\n\n{tb[:1200]}")
+
+    # ------------------------------------------------------------------ #
+    # Export
+    # ------------------------------------------------------------------ #
 
     def _export_excel(self):
         if not self._mgr:
-            messagebox.showinfo("No Results", "Run the simulation first.")
+            import tkinter.messagebox as _mb
+            _mb.showinfo("No Results", "Run the simulation first.")
             return
         path = filedialog.asksaveasfilename(
             defaultextension=".xlsx",
-            filetypes=[("Excel", "*.xlsx")],
-            initialfile="wom_results.xlsx",
+            filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")],
+            title="Export Results to Excel",
         )
         if not path:
             return
         try:
-            out_dir = os.path.dirname(path)
-            fname   = os.path.basename(path)
-            write_excel(self._mgr, out_dir, fname)
-            self._status(f"✔ Excel exported → {path}")
-            messagebox.showinfo("Export complete", f"Saved to:\n{path}")
-        except Exception as e:
-            messagebox.showerror("Export Error", str(e))
-
-    def _export_csv(self):
-        if not self._mgr:
-            messagebox.showinfo("No Results", "Run the simulation first.")
-            return
-        directory = filedialog.askdirectory(title="Select output folder")
-        if not directory:
-            return
-        try:
-            paths = write_csv(self._mgr, directory)
-            self._status(f"✔ {len(paths)} CSV files exported → {directory}")
-            messagebox.showinfo("Export complete",
-                                f"{len(paths)} files saved to:\n{directory}")
-        except Exception as e:
-            messagebox.showerror("Export Error", str(e))
-
-    # ------------------------------------------------------------------ #
-    # Helpers
-    # ------------------------------------------------------------------ #
-
-    def _status(self, msg: str):
-        self._status_var.set(msg)
+            with pd.ExcelWriter(path, engine="openpyxl") as writer:
+                for scen in self._mgr.scenarios():
+                    df = self._mgr.get(scen)
+                    safe = scen[:31]
+                    df.to_excel(writer, sheet_name=safe, index=False)
+                if self._mgr.scenario_money_kpi is not None:
+                    self._mgr.scenario_money_kpi.to_excel(
+                        writer, sheet_name="Money_KPI", index=False)
+            self._status_var.set(f"Exported: {path}")
+        except Exception as exc:
+            import tkinter.messagebox as _mb
+            _mb.showerror("Export Error", str(exc))
 
 
-def launch():
-    app = WOMApp()
-    app.mainloop()
+if __name__ == "__main__":
+    WOMApp().mainloop()

@@ -1,0 +1,4 @@
+scenario_id,run_id,product_name,node_name,capacity_type,week,requested,capacity,accepted,blocked,shortage,unused_capacity,capacity_usage_ratio,blocked_ratio,capacity_usage_pct,blocked_pct
+japanese_rice_vslice_001,cockpit_viewer_20260603_202436,JAPANESE_RICE_STANDARD,DC_KANTO,S,2027-W40,80,90,80,0,0,10,0.8888888888888888,0.0,88.88888888888889,0.0
+japanese_rice_vslice_001,cockpit_viewer_20260603_202436,JAPANESE_RICE_STANDARD,DC_KANTO,S,2027-W41,95,90,90,5,5,0,1.0,0.05263157894736842,100.0,5.263157894736842
+japanese_rice_vslice_001,cockpit_viewer_20260603_202436,JAPANESE_RICE_STANDARD,DC_KANTO,S,2027-W42,110,90,90,20,20,0,1.0,0.18181818181818182,100.0,18.181818181818183

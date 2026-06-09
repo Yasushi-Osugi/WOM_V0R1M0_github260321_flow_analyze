@@ -1,3 +1,3 @@
-product,node_count,total_revenue,total_variable_cost,total_fixed_cost,total_inventory_value,total_tax_base,total_profit,profit_ratio
-IPHONE_NM_2028_BASE,25,54918950.0,1963610.0,32500.0,75438640.0,52922840.0,52922840.0,0.9636535294283667
-IPHONE_NM_2028_PRO,25,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+product,node_count,total_revenue,total_purchase_amount,total_variable_cost,total_fixed_cost,total_ending_inventory_value,total_issue_cost,total_profit_before_tax,total_tax,total_profit_after_tax,profit_ratio,total_inventory_value,total_tax_base,total_profit
+IPHONE_NM_2028_BASE,25,288968597.0,0.0,34128310.0,419972.0,38038160.0,220260455.0,34159860.0,0.0,34159860.0,0.11821305274911931,38038160.0,34159860.0,34159860.0
+IPHONE_NM_2028_PRO,25,208420552.0,0.0,23186843.0,517068.0,0.0,152691975.0,32024666.0,0.0,32024666.0,0.15365406958522976,0.0,32024666.0,32024666.0

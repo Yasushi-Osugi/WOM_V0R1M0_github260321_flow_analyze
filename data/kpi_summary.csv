@@ -1,2 +1,2 @@
-node_count,product_count,total_revenue,total_variable_cost,total_fixed_cost,total_inventory_value,total_tax_base,total_profit,profit_ratio
-25,2,54918950.0,1963610.0,32500.0,75438640.0,52922840.0,52922840.0,0.9636535294283667
+node_count,product_count,total_revenue,total_purchase_amount,total_variable_cost,total_fixed_cost,total_ending_inventory_value,total_issue_cost,total_profit_before_tax,total_tax,total_profit_after_tax,profit_ratio,total_inventory_value,total_tax_base,total_profit
+25,2,497389149.0,0.0,57315153.0,937040.0,38038160.0,372952430.0,66184526.0,0.0,66184526.0,0.13306387188595464,38038160.0,66184526.0,66184526.0
