@@ -3069,6 +3069,16 @@ class WOMApp(tk.Tk):
             print(f"[EventTimeline] build failed: {exc}")
             traceback.print_exc()
 
+        # -- Load node_master into World Map (same logic as _on_simulation_done)
+        try:
+            node_path = self._f_node.get() if hasattr(self, "_f_node") else ""
+            if not node_path:
+                node_path = os.path.join(self._sample_dir, "node_master.csv")
+            if os.path.exists(node_path):
+                self._worldmap_panel.load_default(node_path)
+        except Exception as _wm_exc:
+            print(f"[WorldMap] node load failed: {_wm_exc}")
+
         # -- Integrate Planning results into KPI/Management tabs
         planning_status = ""
         try:
@@ -3206,7 +3216,7 @@ class WOMApp(tk.Tk):
         path = filedialog.asksaveasfilename(
             defaultextension=".xlsx",
             filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")],
-            title="Export Results to Excel",
+            title="Export to Excel",
         )
         if not path:
             return
@@ -3219,7 +3229,6 @@ class WOMApp(tk.Tk):
             import tkinter.messagebox as _mb
             _mb.showerror("Export Error", str(exc))
 
-    # ------------------------------------------------------------------ #
     # Status helper
     # ------------------------------------------------------------------ #
 
@@ -3227,10 +3236,4 @@ class WOMApp(tk.Tk):
         self._status_var.set(msg)
 
 
-# ======================================================================
-# Entry point
-# ======================================================================
-
-def launch():
-    """Entry point called by main.py."""
-    WOMApp().mainloop()
+# =======================================
