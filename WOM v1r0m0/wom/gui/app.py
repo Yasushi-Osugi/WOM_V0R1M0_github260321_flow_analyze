@@ -96,12 +96,14 @@ class FileEntry(tk.Frame):
         tk.Label(self, text=label, bg=BG_MID, fg=FG_WHITE,
                  font=("Segoe UI", 9), width=18, anchor="w").pack(side="left")
         self.var = tk.StringVar()
-        tk.Entry(self, textvariable=self.var, width=34,
-                 bg=BG_LIGHT, fg=FG_ACC, state="readonly",
-                 relief="flat", font=("Segoe UI", 9)).pack(side="left", padx=(4, 0))
+        # Pack button first (right-anchored) so it stays visible at any width
         tk.Button(self, text="…", command=self._browse,
-                  bg=BG_LIGHT, fg=FG_WHITE, relief="flat",
-                  font=("Segoe UI", 9), width=3).pack(side="left", padx=(4, 0))
+                  bg="#37474F", fg=FG_WHITE, relief="flat",
+                  font=("Segoe UI", 9, "bold"), width=3,
+                  cursor="hand2").pack(side="right", padx=(2, 0))
+        tk.Entry(self, textvariable=self.var,
+                 bg=BG_LIGHT, fg=FG_ACC, state="readonly",
+                 relief="flat", font=("Segoe UI", 9)).pack(side="left", padx=(4, 0), fill="x", expand=True)
 
     def _browse(self):
         path = filedialog.askopenfilename(
@@ -2534,11 +2536,13 @@ class WOMApp(tk.Tk):
     def _try_load_sample_paths(self):
         sd = self._sample_dir
         for attr, fname in [
-            ("_f_sku",  "sku_master.csv"),
-            ("_f_dem",  "demand_forecast.csv"),
-            ("_f_inv",  "inventory_master.csv"),
-            ("_f_cap",  "capacity_plan.csv"),
-            ("_f_node", "node_master.csv"),
+            ("_f_sku",       "sku_master.csv"),
+            ("_f_dem",       "demand_forecast.csv"),
+            ("_f_inv",       "inventory_master.csv"),
+            ("_f_cap",       "capacity_plan.csv"),
+            ("_f_node",      "node_master.csv"),
+            ("_f_edge_cost", "edge_cost_master.csv"),
+            ("_f_route",     "route_master.csv"),
         ]:
             path = os.path.join(sd, fname)
             if os.path.exists(path):
@@ -3025,6 +3029,12 @@ class WOMApp(tk.Tk):
             import tkinter.messagebox as _mb
             _mb.showerror("Export Error", str(exc))
 
+    # ------------------------------------------------------------------ #
+    # Status helper
+    # ------------------------------------------------------------------ #
+
+    def _status(self, msg: str) -> None:
+        self._status_var.set(msg)
 
 
 # ======================================================================
