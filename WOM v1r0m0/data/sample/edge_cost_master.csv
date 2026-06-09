@@ -1,0 +1,25 @@
+scenario,src_region,dst_region,tariff_rate,fx_rate,src_currency,dst_currency,freight_usd_per_lot,notes
+Base,CN,AMER,0.00,1.00,USD,USD,50,No tariff baseline
+Base,CN,EMEA,0.00,1.10,USD,EUR,40,No tariff baseline
+Base,CN,APAC,0.00,1.00,USD,USD,25,No tariff baseline
+Base,JP,AMER,0.025,0.0067,JPY,USD,60,Japan MFN auto parts
+Base,JP,EMEA,0.025,0.011,JPY,EUR,50,Japan MFN auto parts
+Base,JP,APAC,0.00,0.0067,JPY,USD,20,Japan intra-region
+TrumpTariff,CN,AMER,0.25,1.00,USD,USD,50,Trump 25pct on CN goods
+TrumpTariff,CN,EMEA,0.00,1.10,USD,EUR,40,EU unchanged
+TrumpTariff,CN,APAC,0.00,1.00,USD,USD,25,APAC unchanged - reroute target
+TrumpTariff,JP,AMER,0.25,0.0067,JPY,USD,60,Trump 25pct on JP goods
+TrumpTariff,JP,EMEA,0.025,0.011,JPY,EUR,50,EU unchanged
+TrumpTariff,JP,APAC,0.00,0.0067,JPY,USD,20,APAC unchanged
+KD_Parts,CN,AMER,0.025,1.00,USD,USD,80,KD parts lower tariff + higher freight
+KD_Parts,CN,EMEA,0.00,1.10,USD,EUR,40,EU unchanged
+KD_Parts,CN,APAC,0.00,1.00,USD,USD,25,APAC unchanged
+KD_Parts,JP,AMER,0.025,0.0067,JPY,USD,80,JP parts to US assembly
+KD_Parts,JP,EMEA,0.025,0.011,JPY,EUR,50,EU unchanged
+KD_Parts,JP,APAC,0.00,0.0067,JPY,USD,20,APAC unchanged
+CNtoAPAC,CN,AMER,0.25,1.00,USD,USD,50,Keep Trump tariff on AMER
+CNtoAPAC,CN,EMEA,0.00,1.10,USD,EUR,40,EU unchanged
+CNtoAPAC,CN,APAC,0.00,1.00,USD,USD,25,Reroute CN production to APAC
+CNtoAPAC,JP,AMER,0.025,0.0067,JPY,USD,60,JP AMER unchanged
+CNtoAPAC,JP,EMEA,0.025,0.011,JPY,EUR,50,JP EMEA unchanged
+CNtoAPAC,JP,APAC,0.00,0.0067,JPY,USD,20,JP APAC unchanged

@@ -405,16 +405,21 @@ class ManagementCockpitPanel(tk.Frame):
     Layout (top to bottom):
       ┌─────────────────────────────────────────┐
       │  P&L Summary Table (scenario comparison) │
+      ├─────────────────────────────────────────┤
+      │  Strategic KPI Cards                     │
+      ├─────────────────────────────────────────┤
+      │  Tariff & FX (Landed Cost) comparison    │
       ├───────────────────────┬─────────────────┤
-      │  CCC Chart            │  AR/AP chart     │
+      │  CCC Chart            │  GP chart        │
       ├───────────────────────┴─────────────────┤
-      │  Issues & Risks list  (Japanese text)   │
+      │  Issues & Risks list  (Japanese text)    │
       └─────────────────────────────────────────┘
     """
 
     def __init__(self, parent, **kw):
         super().__init__(parent, bg=BG_DARK, **kw)
         self._mgr: Optional[ScenarioManager] = None
+        self._lc_comparison_df = None
         self._build()
 
     def _build(self):
@@ -489,6 +494,47 @@ class ManagementCockpitPanel(tk.Frame):
                 "status_var": status_var,
                 "status_lbl": status_lbl,
             }
+
+        # ── Tariff & FX (Landed Cost) ────────────────────────────────
+        lc_frame = tk.LabelFrame(self, text="  🌐 Tariff & FX — Landed Cost Impact  ",
+                                 bg=BG_MID, fg="#FFD54F",
+                                 font=("Segoe UI", 9, "bold"),
+                                 relief="groove", bd=1)
+        lc_frame.pack(fill="x", padx=8, pady=(0, 4))
+
+        lc_cols = ["wom_scenario", "lc_scenario", "revenue",
+                   "customs_duty", "freight", "landed_gm%",
+                   "margin_impact", "tariff_burden%"]
+        self._lc_tree = ttk.Treeview(lc_frame, columns=lc_cols,
+                                     show="headings", height=4)
+        _lc_widths = {"wom_scenario": 80, "lc_scenario": 100, "revenue": 100,
+                      "customs_duty": 100, "freight": 80,
+                      "landed_gm%": 85, "margin_impact": 95, "tariff_burden%": 95}
+        _lc_heads  = {"wom_scenario": "WOM Scen", "lc_scenario": "LC Scenario",
+                      "revenue": "Revenue", "customs_duty": "Customs Duty",
+                      "freight": "Freight", "landed_gm%": "Landed GM%",
+                      "margin_impact": "ΔMargin pp", "tariff_burden%": "Tariff %"}
+        for c in lc_cols:
+            self._lc_tree.heading(c, text=_lc_heads.get(c, c))
+            self._lc_tree.column(c, width=_lc_widths.get(c, 90), anchor="center")
+        self._lc_tree.tag_configure("HIGH",   background="#4A1A1A", foreground="#FF6B6B")
+        self._lc_tree.tag_configure("MEDIUM", background="#3A2A10", foreground="#FFD740")
+        self._lc_tree.tag_configure("OK",     background=BG_LIGHT,  foreground="#69F0AE")
+
+        lc_vsb = ttk.Scrollbar(lc_frame, orient="vertical", command=self._lc_tree.yview)
+        self._lc_tree.configure(yscrollcommand=lc_vsb.set)
+        self._lc_tree.pack(side="left", fill="x", expand=True)
+        lc_vsb.pack(side="right", fill="y")
+
+        # LC narrative text
+        self._lc_narrative = tk.Text(
+            lc_frame, height=4, width=45,
+            bg="#0D1B2A", fg="#FFD54F",
+            font=("Segoe UI", 8), relief="flat",
+            wrap="word", state="disabled",
+        )
+        self._lc_narrative.pack(side="left", fill="both", expand=True,
+                                padx=(8, 4), pady=2)
 
         # Charts row ──────────────────────────────────────────────────
         chart_row = tk.Frame(self, bg=BG_DARK)
@@ -568,6 +614,7 @@ class ManagementCockpitPanel(tk.Frame):
         self._mgr = mgr
         self._refresh_pl_table()
         self._refresh_strategic_kpis()
+        self._refresh_lc_table()
         self._refresh_charts()
         self._refresh_issue_selector()
 
@@ -605,6 +652,44 @@ class ManagementCockpitPanel(tk.Frame):
                skpi.status_fill_rate)
         _apply("avg_cap_utilization", skpi.avg_cap_utilization,
                skpi.status_cap_utilization)
+
+    def _refresh_lc_table(self):
+        """Update the Tariff & FX (Landed Cost) treeview and narrative."""
+        lc_df = getattr(self._mgr, "lc_comparison_df", None) if self._mgr else None
+        self._lc_tree.delete(*self._lc_tree.get_children())
+
+        self._lc_narrative.configure(state="normal")
+        self._lc_narrative.delete("1.0", "end")
+
+        if lc_df is None or lc_df.empty:
+            self._lc_narrative.insert("end",
+                "（Edge Cost Master / Route Master を設定して\n"
+                "Planning Engine を実行すると\nLanded Cost 分析が表示されます）")
+            self._lc_narrative.configure(state="disabled")
+            return
+
+        for _, row in lc_df.iterrows():
+            delta = float(row.get("margin_impact_pp", 0) or 0)
+            tag   = "HIGH" if delta < -0.02 else ("MEDIUM" if delta < 0 else "OK")
+            self._lc_tree.insert("", "end", tags=(tag,), values=[
+                row.get("wom_scenario", ""),
+                row.get("lc_scenario",  ""),
+                f"${float(row.get('revenue', 0) or 0):,.0f}",
+                f"${float(row.get('customs_duty', 0) or 0):,.0f}",
+                f"${float(row.get('freight_total', 0) or 0):,.0f}",
+                f"{float(row.get('landed_gross_margin', 0) or 0)*100:.1f}%",
+                f"{delta*100:+.1f}pp",
+                f"{float(row.get('tariff_burden_pct', 0) or 0)*100:.1f}%",
+            ])
+
+        # Build narrative
+        try:
+            from wom.engine.landed_cost import build_lc_narrative
+            narrative = build_lc_narrative(lc_df)
+        except Exception:
+            narrative = "（Landed Cost 分析完了）"
+        self._lc_narrative.insert("end", narrative)
+        self._lc_narrative.configure(state="disabled")
 
     def _refresh_pl_table(self):
         if self._mgr is None or self._mgr.scenario_money_kpi is None:
@@ -2292,6 +2377,16 @@ class WOMApp(tk.Tk):
         self._f_node = FileEntry(fsec, "Node Master:")
         self._f_node.pack(fill="x", padx=6, pady=2)
 
+        # ── Tariff & FX files ─────────────────────────────────────────
+        lcsec = tk.LabelFrame(parent, text="  Tariff & FX (Landed Cost)  ",
+                              bg=BG_MID, fg="#FFD54F", font=("Segoe UI", 9, "bold"),
+                              relief="groove", bd=1)
+        lcsec.pack(fill="x", padx=8, pady=4)
+        self._f_edge_cost = FileEntry(lcsec, "Edge Cost Master:")
+        self._f_edge_cost.pack(fill="x", padx=6, pady=2)
+        self._f_route = FileEntry(lcsec, "Route Master:")
+        self._f_route.pack(fill="x", padx=6, pady=2)
+
         # ── Scenarios ────────────────────────────────────────────────
         scsec = tk.LabelFrame(parent, text="  Scenarios  ",
                               bg=BG_MID, fg=FG_ACC, font=("Segoe UI", 9, "bold"),
@@ -2526,6 +2621,26 @@ class WOMApp(tk.Tk):
             f"Total stockout: {total_so:,.0f} units"
             + money_suffix
         )
+        # Compute Landed Cost comparison (simulation path)
+        try:
+            from wom.engine.landed_cost import (
+                load_edge_cost_master, load_route_master,
+                build_route_index, compare_lc_scenarios)
+            edge_path  = self._f_edge_cost.get() if hasattr(self, "_f_edge_cost") else ""
+            route_path = self._f_route.get()     if hasattr(self, "_f_route")     else ""
+            if (edge_path and os.path.exists(edge_path)
+                    and mgr.scenario_money_kpi is not None):
+                lc_scens  = load_edge_cost_master(edge_path)
+                route_idx = {}
+                if route_path and os.path.exists(route_path):
+                    route_idx = build_route_index(load_route_master(route_path))
+                mgr.lc_comparison_df = compare_lc_scenarios(
+                    mgr.scenario_money_kpi, lc_scens, route_idx)
+            else:
+                mgr.lc_comparison_df = None
+        except Exception as _lc_exc:
+            print(f"[LandedCost] sim compute failed: {_lc_exc}")
+
         self._chart_panel.load(mgr)
         self._kpi_panel.load(mgr)
         self._load_risk_tab(mgr)
@@ -2751,7 +2866,7 @@ class WOMApp(tk.Tk):
 
         self._network_panel.load_planning_tree(sc_tree)
 
-        # ── Build EventTimeline for animation ─────────────────────────
+        # -- Build EventTimeline for animation
         try:
             from wom.engine.event_timeline import build_event_timeline
             timeline = build_event_timeline(sc_tree)
@@ -2762,7 +2877,7 @@ class WOMApp(tk.Tk):
             print(f"[EventTimeline] build failed: {exc}")
             traceback.print_exc()
 
-        # ── Integrate Planning results into KPI/Management tabs ───────
+        # -- Integrate Planning results into KPI/Management tabs
         planning_status = ""
         try:
             from wom.engine.sc_tree_to_df import (
@@ -2777,7 +2892,7 @@ class WOMApp(tk.Tk):
                           if sku_path and os.path.exists(sku_path)
                           else pd.DataFrame())
 
-            # Convert SCTree lots → quantity DataFrame
+            # Convert SCTree lots -> quantity DataFrame
             plan_df = sc_tree_to_planning_df(sc_tree,
                                              scenario_name=SCENARIO_PLANNING)
             apply_inv_value(plan_df, sku_master)
@@ -2811,6 +2926,25 @@ class WOMApp(tk.Tk):
             except Exception as _skpi_exc:
                 print(f"[StrategicKPI] compute failed: {_skpi_exc}")
 
+            # Compute Landed Cost comparison
+            try:
+                from wom.engine.landed_cost import (
+                    load_edge_cost_master, load_route_master,
+                    build_route_index, compare_lc_scenarios)
+                edge_path  = self._f_edge_cost.get() if hasattr(self, "_f_edge_cost") else ""
+                route_path = self._f_route.get()     if hasattr(self, "_f_route")     else ""
+                if edge_path and os.path.exists(edge_path):
+                    lc_scens = load_edge_cost_master(edge_path)
+                    route_idx = {}
+                    if route_path and os.path.exists(route_path):
+                        route_idx = build_route_index(load_route_master(route_path))
+                    self._mgr.lc_comparison_df = compare_lc_scenarios(
+                        scenario_money_kpi, lc_scens, route_idx)
+                else:
+                    self._mgr.lc_comparison_df = None
+            except Exception as _lc_exc:
+                print(f"[LandedCost] compute failed: {_lc_exc}")
+
             # Reload all KPI panels
             self._chart_panel.load(self._mgr)
             self._kpi_panel.load(self._mgr)
@@ -2829,20 +2963,20 @@ class WOMApp(tk.Tk):
         except Exception as exc:
             import traceback
             tb = traceback.format_exc()
-            print(f"[Planning→KPI] integration failed: {exc}")
+            print(f"[Planning->KPI] integration failed: {exc}")
             print(tb)
-            planning_status = "  |  ⚠ KPI integration error (see console)"
+            planning_status = "  |  Warning: KPI integration error (see console)"
 
         self._status(
-            f"✔ Planning Engine complete. "
+            f"Planning Engine complete. "
             f"Products: {n_prods}  |  Nodes: {n_nodes}"
             + planning_status +
-            f"  │  Check Charts/KPI/Management tabs for 'Planning' scenario"
+            f"  |  Check Charts/KPI/Management tabs for 'Planning' scenario"
         )
 
     def _on_planning_error(self, tb: str):
         self._progress.stop()
-        self._status_var.set("Planning Engine failed — see console")
+        self._status_var.set("Planning Engine failed -- see console")
         import tkinter.messagebox as _mb
         _mb.showerror("Planning Engine Error",
                       f"Planning Engine failed:\n\n{tb[:1200]}")
@@ -2883,24 +3017,20 @@ class WOMApp(tk.Tk):
         if not path:
             return
         try:
-            with pd.ExcelWriter(path, engine="openpyxl") as writer:
-                for scen in self._mgr.scenarios():
-                    df = self._mgr.get(scen)
-                    safe = scen[:31]
-                    df.to_excel(writer, sheet_name=safe, index=False)
-                if self._mgr.scenario_money_kpi is not None:
-                    self._mgr.scenario_money_kpi.to_excel(
-                        writer, sheet_name="Money_KPI", index=False)
-            self._status_var.set(f"Exported: {path}")
+            from wom.reports.output import write_excel
+            out_dir = os.path.dirname(path)
+            out_path = write_excel(self._mgr, out_dir)
+            self._status_var.set(f"Excel exported: {out_path}")
         except Exception as exc:
             import tkinter.messagebox as _mb
             _mb.showerror("Export Error", str(exc))
 
 
+
+# ======================================================================
+# Entry point
+# ======================================================================
+
 def launch():
     """Entry point called by main.py."""
     WOMApp().mainloop()
-
-
-if __name__ == "__main__":
-    launch()
