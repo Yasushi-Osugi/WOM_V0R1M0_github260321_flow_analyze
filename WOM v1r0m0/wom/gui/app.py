@@ -2246,6 +2246,10 @@ class WOMApp(tk.Tk):
                           font=("Segoe UI", 9), anchor="w", padx=12)
         status.pack(fill="x", side="bottom")
 
+    def _status(self, msg: str) -> None:
+        """Update the status bar text."""
+        self._status_var.set(msg)
+
     def _build_left_panel(self, parent):
         # ── Config section ───────────────────────────────────────────
         sec = tk.LabelFrame(parent, text="  Planning Config  ",
@@ -2847,6 +2851,25 @@ class WOMApp(tk.Tk):
     # Export
     # ------------------------------------------------------------------ #
 
+    def _export_csv(self):
+        if not self._mgr:
+            import tkinter.messagebox as _mb
+            _mb.showinfo("No Results", "Run the simulation first.")
+            return
+        path = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+            title="Export Results to CSV",
+        )
+        if not path:
+            return
+        try:
+            self._mgr.combined().to_csv(path, index=False)
+            self._status_var.set(f"Exported: {path}")
+        except Exception as exc:
+            import tkinter.messagebox as _mb
+            _mb.showerror("Export Error", str(exc))
+
     def _export_excel(self):
         if not self._mgr:
             import tkinter.messagebox as _mb
@@ -2874,5 +2897,10 @@ class WOMApp(tk.Tk):
             _mb.showerror("Export Error", str(exc))
 
 
-if __name__ == "__main__":
+def launch():
+    """Entry point called by main.py."""
     WOMApp().mainloop()
+
+
+if __name__ == "__main__":
+    launch()
