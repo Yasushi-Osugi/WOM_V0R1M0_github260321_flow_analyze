@@ -1216,6 +1216,17 @@ class SCNetworkPanel(tk.Frame):
         self._scen_cb.pack(side="left", padx=2)
         self._scen_cb.bind("<<ComboboxSelected>>", lambda _: self._refresh_right())
 
+        # Product selector (shown only in hammock mode after Planning Engine)
+        tk.Label(bar, text="Product:", bg=BG_MID, fg=FG_WHITE,
+                 font=("Segoe UI", 9)).pack(side="left", padx=(10, 2))
+        self._prod_var = tk.StringVar(value="")
+        self._prod_cb = ttk.Combobox(bar, textvariable=self._prod_var,
+                                     width=14, state="readonly",
+                                     font=("Segoe UI", 9))
+        self._prod_cb.pack(side="left", padx=2)
+        self._prod_cb.bind("<<ComboboxSelected>>",
+                           lambda _: self._redraw_hammock())
+
         self._node_lbl_var = tk.StringVar(value="← Click a node to inspect its PSI / Cost")
         tk.Label(bar, textvariable=self._node_lbl_var,
                  bg=BG_MID, fg=FG_ACC,
@@ -1332,11 +1343,15 @@ class SCNetworkPanel(tk.Frame):
         self._scen_cb["values"] = scenarios
         if scenarios:
             self._scenario_var.set(scenarios[0])
-        self._build_graph()
-        # Auto-select first Region node
-        region_nodes = [k for k in self._node_map if k.startswith("Region:")]
-        if region_nodes:
-            self._select_node(region_nodes[0])
+        if getattr(self, "_hammock_mode", False):
+            # Hammock mode: Planning Engine drew the tree — redraw to keep it
+            self._redraw_hammock()
+        else:
+            self._build_graph()
+            # Auto-select first Region node
+            region_nodes = [k for k in self._node_map if k.startswith("Region:")]
+            if region_nodes:
+                self._select_node(region_nodes[0])
 
     # ── Graph construction ───────────────────────────────────────────
 
@@ -1465,20 +1480,54 @@ class SCNetworkPanel(tk.Frame):
     # ── Node click ────────────────────────────────────────────────────
 
     def _on_node_click(self, event):
-        if event.inaxes is None or not self._pos:
+        if event.inaxes is None:
             return
         cx, cy = event.xdata, event.ydata
         if cx is None or cy is None:
             return
 
+        # Choose position dict: hammock mode or simulation mode
+        if getattr(self, "_hammock_mode", False) and hasattr(self, "_pos_hammock"):
+            pos_dict = self._pos_hammock
+        elif self._pos:
+            pos_dict = self._pos
+        else:
+            return
+
         best, best_d = None, float("inf")
-        for node, (nx_x, nx_y) in self._pos.items():
+        for node, (nx_x, nx_y) in pos_dict.items():
             d = ((cx - nx_x) ** 2 + (cy - nx_y) ** 2) ** 0.5
             if d < best_d:
                 best_d, best = d, node
 
-        if best_d < 0.5 and best in self._node_map:
-            self._select_node(best)
+        if best_d < 0.6:
+            if getattr(self, "_hammock_mode", False):
+                self._select_hammock_node(best)
+            elif best in self._node_map:
+                self._select_node(best)
+
+    def _select_hammock_node(self, node_id: str):
+        """Handle click on a hammock-mode node."""
+        self._selected_node = node_id
+        node_obj = getattr(self, "_node_map_hammock", {}).get(node_id)
+        disp = node_obj.node_name if node_obj else node_id
+        self._node_lbl_var.set(f"Selected: {disp}")
+        self._draw_hammock(highlight=node_id)
+        # Auto-select in PSI List
+        if node_obj and hasattr(self, "_psi_node_cb"):
+            self._psi_node_var.set(node_obj.node_id)
+            self._on_psi_node_select(None)
+        # Try to refresh right PSI chart if simulation data available
+        if self._mgr and node_obj:
+            region = None
+            if ":" in node_obj.node_id:
+                parts = node_obj.node_id.split(":")
+                if len(parts) >= 4 and parts[0] == "OUT":
+                    region = parts[2]
+            flt  = {"sku": node_obj.product, "region": region}
+            scen = self._scenario_var.get()
+            self._draw_psi(flt, scen)
+            self._draw_cost(flt, scen)
 
     def _select_node(self, node_label: str):
         self._selected_node = node_label
@@ -1813,15 +1862,15 @@ class SCNetworkPanel(tk.Frame):
 
     def load_planning_tree(self, sc_tree) -> None:
         """
-        Load a post-planning SCTree into the PSI List tab.
-
-        Call this after running BackwardPlanner → copy → ForwardPlanner.
-        Populates the node selector combobox with all PlanNode IDs.
+        Load a post-planning SCTree.
+        • Populates PSI List node selector
+        • Replaces the network graph with E2E hammock layout (Phase B)
         """
         if not hasattr(self, "_psi_list_panel"):
             return   # HAS_NX=False: panel was never built
         self._sc_tree = sc_tree
-        # Collect all node IDs across all products
+
+        # ── Populate PSI List node selector ───────────────────────────
         node_ids = []
         for prod_nm in sc_tree.products:
             for node in sc_tree.iter_all_nodes(prod_nm):
@@ -1830,6 +1879,113 @@ class SCNetworkPanel(tk.Frame):
         if node_ids:
             self._psi_node_var.set(node_ids[0])
             self._on_psi_node_select(None)
+
+        # ── Switch network view to E2E hammock ────────────────────────
+        self._hammock_mode = True
+        prods = sc_tree.products
+        self._prod_cb["values"] = prods
+        if prods:
+            self._prod_var.set(prods[0])
+        self._redraw_hammock()
+
+    def _redraw_hammock(self):
+        """Build and draw the E2E hammock graph for the selected product."""
+        if not self._sc_tree or not getattr(self, "_hammock_mode", False):
+            return
+        prod_nm = self._prod_var.get() or self._sc_tree.products[0]
+        try:
+            from wom.engine.hammock_layout import (
+                build_hammock_graph, node_colour, node_size,
+                NODE_COLOUR, NODE_SIZE)
+            G, pos = build_hammock_graph(self._sc_tree, prod_nm)
+        except Exception as exc:
+            print(f"[HammockLayout] build failed: {exc}")
+            import traceback; traceback.print_exc()
+            return
+
+        self._G_hammock  = G
+        self._pos_hammock = pos
+        self._prod_selected = prod_nm
+
+        # Build node_map for click handling
+        self._node_map_hammock = {}
+        for node_id, data in G.nodes(data=True):
+            self._node_map_hammock[node_id] = data.get("node_obj")
+
+        self._draw_hammock(highlight="")
+
+    def _draw_hammock(self, highlight: str = ""):
+        """Render the hammock graph (replaces _draw_graph in Planning mode)."""
+        if not hasattr(self, "_G_hammock"):
+            return
+        from wom.engine.hammock_layout import node_colour, node_size, NODE_COLOUR
+        from matplotlib.patches import Patch
+
+        G   = self._G_hammock
+        pos = self._pos_hammock
+
+        self._net_fig.clf()
+        ax = self._net_fig.add_subplot(111)
+        ax.set_facecolor(BG_DARK)
+        self._net_fig.patch.set_facecolor(BG_DARK)
+        ax.axis("off")
+
+        colours, sizes = [], []
+        for nid in G.nodes:
+            nt  = G.nodes[nid].get("node_type", "virtual")
+            hl  = (nid == highlight)
+            colours.append(node_colour(nt, hl))
+            sizes.append(node_size(nt, hl))
+
+        import networkx as nx
+        nx.draw_networkx_edges(G, pos, ax=ax,
+                               edge_color="#546E7A",
+                               arrows=True, arrowsize=14,
+                               arrowstyle="-|>", width=1.5,
+                               alpha=0.75,
+                               connectionstyle="arc3,rad=0.05")
+        nx.draw_networkx_nodes(G, pos, ax=ax,
+                               node_color=colours,
+                               node_size=sizes,
+                               alpha=0.92)
+
+        # Labels: use node_name (short) stored in graph
+        labels = {nid: G.nodes[nid].get("label", nid)
+                  for nid in G.nodes}
+        nx.draw_networkx_labels(G, pos, labels=labels, ax=ax,
+                                font_color=FG_WHITE,
+                                font_size=7, font_weight="bold")
+
+        # Zone annotations
+        xs = [x for x, y in pos.values()]
+        y_top = max(y for x, y in pos.values()) + 0.8
+        if xs:
+            ax.text(min(xs) * 0.6, y_top,
+                    "← InBound (Supply)",
+                    color="#66BB6A", fontsize=8, ha="center", style="italic")
+            ax.text(max(xs) * 0.6, y_top,
+                    "OutBound (Demand) →",
+                    color="#42A5F5", fontsize=8, ha="center", style="italic")
+
+        # Legend
+        legend_elems = [
+            Patch(facecolor=NODE_COLOUR["supply_point"], label="Supply Point (bridge)"),
+            Patch(facecolor=NODE_COLOUR["mom"],          label="MOM  [InBound]"),
+            Patch(facecolor=NODE_COLOUR["leaf_in"],      label="Leaf-In  [InBound]"),
+            Patch(facecolor=NODE_COLOUR["dad"],          label="DAD  [OutBound]"),
+            Patch(facecolor=NODE_COLOUR["leaf_out"],     label="Leaf-Out  [OutBound]"),
+            Patch(facecolor=NODE_COLOUR["virtual"],      label="Virtual office"),
+            Patch(facecolor="#FFFF00",                   label="Selected"),
+        ]
+        ax.legend(handles=legend_elems, loc="lower center",
+                  facecolor=BG_MID, labelcolor=FG_WHITE,
+                  fontsize=6.5, framealpha=0.85, ncol=2)
+
+        prod_nm = getattr(self, "_prod_selected", "")
+        ax.set_title(f"SC Network  –  E2E Hammock  [{prod_nm}]",
+                     color=FG_WHITE, fontsize=9, pad=6)
+
+        self._net_canvas.draw()
 
     def _on_psi_node_select(self, event):
         """Called when user picks a node from the PSI List combobox."""
@@ -2379,6 +2535,17 @@ class WOMApp(tk.Tk):
         self._f_node = FileEntry(fsec, "Node Master:")
         self._f_node.pack(fill="x", padx=6, pady=2)
 
+        # ── SC Tree Master (Phase B multi-tier) ───────────────────────
+        stsec = tk.LabelFrame(parent, text="  SC Tree Master (Multi-tier)  ",
+                              bg=BG_MID, fg="#A5D6A7", font=("Segoe UI", 9, "bold"),
+                              relief="groove", bd=1)
+        stsec.pack(fill="x", padx=8, pady=4)
+        self._f_sc_tree = FileEntry(stsec, "SC Tree Master:")
+        self._f_sc_tree.pack(fill="x", padx=6, pady=2)
+        tk.Label(stsec,
+                 text="(省略時は Demo 2-tier tree を自動生成)",
+                 bg=BG_MID, fg="#78909C", font=("Segoe UI", 8)).pack(anchor="w", padx=6)
+
         # ── Tariff & FX files ─────────────────────────────────────────
         lcsec = tk.LabelFrame(parent, text="  Tariff & FX (Landed Cost)  ",
                               bg=BG_MID, fg="#FFD54F", font=("Segoe UI", 9, "bold"),
@@ -2543,6 +2710,7 @@ class WOMApp(tk.Tk):
             ("_f_node",      "node_master.csv"),
             ("_f_edge_cost", "edge_cost_master.csv"),
             ("_f_route",     "route_master.csv"),
+            ("_f_sc_tree",   "sc_tree_master.csv"),
         ]:
             path = os.path.join(sd, fname)
             if os.path.exists(path):
@@ -2777,8 +2945,25 @@ class WOMApp(tk.Tk):
             if "lead_time_wks" not in sku_df.columns:
                 sku_df["lead_time_wks"] = 2
 
-            sc_tree = build_demo_sc_tree(sku_df, weeks,
-                                         lt_wks_ot=1, lt_wks_in=2)
+            # ── SC Tree: multi-tier master or demo fallback ────────────
+            sc_tree_path = (self._f_sc_tree.get()
+                            if hasattr(self, "_f_sc_tree") else "")
+            if sc_tree_path and os.path.exists(sc_tree_path):
+                try:
+                    from wom.engine.sc_tree_builder import build_sc_tree_from_master
+                    sc_tree_df = pd.read_csv(sc_tree_path)
+                    sc_tree = build_sc_tree_from_master(sc_tree_df, weeks)
+                    print(f"[SCTreeBuilder] Loaded multi-tier tree from {sc_tree_path}")
+                    print(f"  Products: {sc_tree.products}")
+                except Exception as _stb_exc:
+                    import traceback
+                    print(f"[SCTreeBuilder] Failed: {_stb_exc}")
+                    traceback.print_exc()
+                    sc_tree = build_demo_sc_tree(sku_df, weeks,
+                                                 lt_wks_ot=1, lt_wks_in=2)
+            else:
+                sc_tree = build_demo_sc_tree(sku_df, weeks,
+                                             lt_wks_ot=1, lt_wks_in=2)
 
             # ── Build HookBus and register active plugins ──────────────
             _bus = HookBus()
