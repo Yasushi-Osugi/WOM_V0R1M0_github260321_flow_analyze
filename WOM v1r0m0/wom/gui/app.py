@@ -1520,9 +1520,12 @@ class SCNetworkPanel(tk.Frame):
         # Try to refresh right PSI chart if simulation data available
         if self._mgr and node_obj:
             region = None
-            if ":" in node_obj.node_id:
+            # Only extract region for leaf_out nodes (node_id="OUT:leaf_out:REGION:PROD")
+            # For dad/mom/supply_point, show all regions (region=None)
+            from wom.model.plan_node import NODE_TYPE_LEAF_OUT
+            if node_obj.node_type == NODE_TYPE_LEAF_OUT and ":" in node_obj.node_id:
                 parts = node_obj.node_id.split(":")
-                if len(parts) >= 4 and parts[0] == "OUT":
+                if len(parts) >= 4:
                     region = parts[2]
             flt  = {"sku": node_obj.product, "region": region}
             scen = self._scenario_var.get()
@@ -3113,7 +3116,9 @@ class WOMApp(tk.Tk):
                 from wom.engine.strategic_kpi import compute_strategic_kpi
                 self._mgr.strategic_kpi = compute_strategic_kpi(sc_tree)
             except Exception as _skpi_exc:
+                import traceback
                 print(f"[StrategicKPI] compute failed: {_skpi_exc}")
+                traceback.print_exc()
 
             # Compute Landed Cost comparison
             try:
