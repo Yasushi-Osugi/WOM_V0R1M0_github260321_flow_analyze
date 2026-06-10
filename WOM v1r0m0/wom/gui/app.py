@@ -2474,10 +2474,34 @@ class WOMApp(tk.Tk):
         main = tk.Frame(self, bg=BG_DARK)
         main.pack(fill="both", expand=True, padx=0, pady=0)
 
-        # Left panel
-        left = tk.Frame(main, bg=BG_MID, width=280)
-        left.pack(side="left", fill="y")
-        left.pack_propagate(False)
+        # Left panel — scrollable canvas wrapper
+        left_outer = tk.Frame(main, bg=BG_MID, width=284)
+        left_outer.pack(side="left", fill="y")
+        left_outer.pack_propagate(False)
+
+        _lcanvas = tk.Canvas(left_outer, bg=BG_MID, highlightthickness=0, width=262)
+        _lvsb = ttk.Scrollbar(left_outer, orient="vertical", command=_lcanvas.yview)
+        _lcanvas.configure(yscrollcommand=_lvsb.set)
+        _lvsb.pack(side="right", fill="y")
+        _lcanvas.pack(side="left", fill="both", expand=True)
+
+        left = tk.Frame(_lcanvas, bg=BG_MID)
+        _lcwin = _lcanvas.create_window((0, 0), window=left, anchor="nw")
+
+        def _left_frame_cfg(event, _c=_lcanvas, _w=_lcwin):
+            _c.configure(scrollregion=_c.bbox("all"))
+        def _left_canvas_cfg(event, _c=_lcanvas, _w=_lcwin):
+            _c.itemconfig(_w, width=event.width)
+        def _left_mousewheel(event, _c=_lcanvas):
+            _c.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        left.bind("<Configure>", _left_frame_cfg)
+        _lcanvas.bind("<Configure>", _left_canvas_cfg)
+        _lcanvas.bind("<Enter>",
+            lambda e, _c=_lcanvas: _c.bind_all("<MouseWheel>", _left_mousewheel))
+        _lcanvas.bind("<Leave>",
+            lambda e, _c=_lcanvas: _c.unbind_all("<MouseWheel>"))
+
         self._build_left_panel(left)
 
         # Right panel (notebook)
@@ -2527,16 +2551,45 @@ class WOMApp(tk.Tk):
                              relief="groove", bd=1)
         fsec.pack(fill="x", padx=8, pady=4)
 
-        self._f_sku  = FileEntry(fsec, "SKU Master:")
+        # Load Model Folder button
+        _folder_btn_fr = tk.Frame(fsec, bg=BG_MID)
+        _folder_btn_fr.pack(fill="x", padx=6, pady=(4, 2))
+        tk.Button(_folder_btn_fr, text="📂  Load Model Folder…",
+                  command=self._load_model_folder,
+                  bg="#1565C0", fg="white", relief="flat",
+                  font=("Segoe UI", 9, "bold"), cursor="hand2",
+                  pady=4).pack(fill="x")
+
+        # Compact folder display (visible after folder is loaded)
+        self._folder_disp_fr = tk.Frame(fsec, bg=BG_MID)
+        self._folder_disp_var = tk.StringVar(value="")
+        tk.Label(self._folder_disp_fr, textvariable=self._folder_disp_var,
+                 bg=BG_MID, fg="#81D4FA",
+                 font=("Segoe UI", 8, "bold")).pack(side="left", padx=(6, 0))
+        self._files_toggle_btn = tk.Button(
+            self._folder_disp_fr, text="▼ 詳細",
+            command=self._toggle_file_entries,
+            bg=BG_DARK, fg="#78909C", relief="flat",
+            font=("Segoe UI", 8), cursor="hand2", pady=0)
+        self._files_toggle_btn.pack(side="right", padx=(0, 4))
+        # hidden initially — shown when folder is loaded
+
+        # Individual file entries frame (collapsible)
+        self._file_entries_fr = tk.Frame(fsec, bg=BG_MID)
+        self._file_entries_fr.pack(fill="x")
+
+        self._f_sku  = FileEntry(self._file_entries_fr, "SKU Master:")
         self._f_sku.pack(fill="x", padx=6, pady=2)
-        self._f_dem  = FileEntry(fsec, "Demand Forecast:")
+        self._f_dem  = FileEntry(self._file_entries_fr, "Demand Forecast:")
         self._f_dem.pack(fill="x", padx=6, pady=2)
-        self._f_inv  = FileEntry(fsec, "Inventory Master:")
+        self._f_inv  = FileEntry(self._file_entries_fr, "Inventory Master:")
         self._f_inv.pack(fill="x", padx=6, pady=2)
-        self._f_cap  = FileEntry(fsec, "Capacity Plan:")
+        self._f_cap  = FileEntry(self._file_entries_fr, "Capacity Plan:")
         self._f_cap.pack(fill="x", padx=6, pady=2)
-        self._f_node = FileEntry(fsec, "Node Master:")
+        self._f_node = FileEntry(self._file_entries_fr, "Node Master:")
         self._f_node.pack(fill="x", padx=6, pady=2)
+
+        self._files_collapsed = False  # track state
 
         # ── SC Tree Master (Phase B multi-tier) ───────────────────────
         stsec = tk.LabelFrame(parent, text="  SC Tree Master (Multi-tier)  ",
@@ -2545,9 +2598,11 @@ class WOMApp(tk.Tk):
         stsec.pack(fill="x", padx=8, pady=4)
         self._f_sc_tree = FileEntry(stsec, "SC Tree Master:")
         self._f_sc_tree.pack(fill="x", padx=6, pady=2)
-        tk.Label(stsec,
-                 text="(省略時は Demo 2-tier tree を自動生成)",
-                 bg=BG_MID, fg="#78909C", font=("Segoe UI", 8)).pack(anchor="w", padx=6)
+        self._sc_tree_hint_var = tk.StringVar(value="（省略時は Demo 2-tier tree を自動生成）")
+        self._sc_tree_hint_lbl = tk.Label(
+            stsec, textvariable=self._sc_tree_hint_var,
+            bg=BG_MID, fg="#78909C", font=("Segoe UI", 8))
+        self._sc_tree_hint_lbl.pack(anchor="w", padx=6)
 
         # ── Tariff & FX files ─────────────────────────────────────────
         lcsec = tk.LabelFrame(parent, text="  Tariff & FX (Landed Cost)  ",
@@ -2718,6 +2773,80 @@ class WOMApp(tk.Tk):
             path = os.path.join(sd, fname)
             if os.path.exists(path):
                 getattr(self, attr).set(path)
+
+    # ------------------------------------------------------------------ #
+    # Load Model Folder + Auto-detect Period
+    # ------------------------------------------------------------------ #
+
+    def _load_model_folder(self):
+        """Open folder dialog; fill all 8 FileEntry fields from standard filenames."""
+        folder = filedialog.askdirectory(title="モデルフォルダを選択 (CSVファイルが入ったフォルダ)")
+        if not folder:
+            return
+        FILE_MAP = [
+            ("_f_sku",       "sku_master.csv"),
+            ("_f_dem",       "demand_forecast.csv"),
+            ("_f_inv",       "inventory_master.csv"),
+            ("_f_cap",       "capacity_plan.csv"),
+            ("_f_node",      "node_master.csv"),
+            ("_f_edge_cost", "edge_cost_master.csv"),
+            ("_f_route",     "route_master.csv"),
+            ("_f_sc_tree",   "sc_tree_master.csv"),
+        ]
+        loaded, missing = [], []
+        for attr, fname in FILE_MAP:
+            path = os.path.join(folder, fname)
+            if os.path.exists(path):
+                getattr(self, attr).set(path)
+                loaded.append(fname)
+            else:
+                missing.append(fname)
+        # Auto-detect planning period from demand file
+        self._auto_detect_planning_period()
+
+        # Compact folder display: hide individual entries, show folder name
+        base = os.path.basename(folder)
+        self._folder_disp_var.set(f"📁  {base}/")
+        self._folder_disp_fr.pack(fill="x", padx=6, pady=(0, 2))
+        self._file_entries_fr.pack_forget()
+        self._files_toggle_btn.config(text="▼ 詳細")
+        self._files_collapsed = True
+
+        msg = f"📂 {base}: {len(loaded)} files loaded"
+        if missing:
+            msg += f"  (not found: {', '.join(missing)})"
+        self._status(msg)
+
+    def _toggle_file_entries(self):
+        """Toggle collapse/expand of the 5 individual FileEntry widgets."""
+        if getattr(self, "_files_collapsed", False):
+            self._file_entries_fr.pack(fill="x", before=self._folder_disp_fr)
+            self._files_toggle_btn.config(text="▲ 閉じる")
+            self._files_collapsed = False
+        else:
+            self._file_entries_fr.pack_forget()
+            self._files_toggle_btn.config(text="▼ 詳細")
+            self._files_collapsed = True
+
+    def _auto_detect_planning_period(self):
+        """Read demand_forecast.csv and auto-set Start Week / # Weeks."""
+        dem_path = self._f_dem.get() if hasattr(self, "_f_dem") else ""
+        if not dem_path or not os.path.exists(dem_path):
+            return
+        try:
+            dem_df = pd.read_csv(dem_path)
+            if "week" not in dem_df.columns:
+                return
+            weeks_sorted = sorted(dem_df["week"].dropna().unique().tolist())
+            if not weeks_sorted:
+                return
+            start_wk = weeks_sorted[0]
+            n_weeks  = len(weeks_sorted)
+            self._e_start.set(start_wk)
+            self._e_weeks.set(str(n_weeks))
+            print(f"[AutoDetect] period: {start_wk}  ×  {n_weeks} weeks")
+        except Exception as exc:
+            print(f"[AutoDetect] failed: {exc}")
 
     # ------------------------------------------------------------------ #
     # Simulation
@@ -2958,6 +3087,11 @@ class WOMApp(tk.Tk):
                     sc_tree = build_sc_tree_from_master(sc_tree_df, weeks)
                     print(f"[SCTreeBuilder] Loaded multi-tier tree from {sc_tree_path}")
                     print(f"  Products: {sc_tree.products}")
+                    def _reset_sc_hint():
+                        if hasattr(self, "_sc_tree_hint_var"):
+                            self._sc_tree_hint_var.set("✅ SC Tree Master 使用中")
+                            self._sc_tree_hint_lbl.config(fg="#A5D6A7")
+                    self.after(0, _reset_sc_hint)
                 except Exception as _stb_exc:
                     import traceback
                     print(f"[SCTreeBuilder] Failed: {_stb_exc}")
@@ -2967,6 +3101,13 @@ class WOMApp(tk.Tk):
             else:
                 sc_tree = build_demo_sc_tree(sku_df, weeks,
                                              lt_wks_ot=1, lt_wks_in=2)
+                # Show warning that demo tree is being used
+                def _warn_demo_tree():
+                    self._status("⚠ SC Tree Master 未指定 — Demo 2-tier tree で実行")
+                    if hasattr(self, "_sc_tree_hint_var"):
+                        self._sc_tree_hint_var.set("⚠ Demo 2-tier tree 使用中（SC Tree Master 未指定）")
+                        self._sc_tree_hint_lbl.config(fg="#FFA726")
+                self.after(0, _warn_demo_tree)
 
             # ── Build HookBus and register active plugins ──────────────
             _bus = HookBus()
