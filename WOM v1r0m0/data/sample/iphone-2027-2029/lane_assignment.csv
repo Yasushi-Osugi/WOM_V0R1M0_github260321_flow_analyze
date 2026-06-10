@@ -1,0 +1,4 @@
+sku_id,leaf_node_name,mom_node_id,priority
+iPhone16,Retail_AMER,IN:mom:Foxconn_IN:iPhone16,1
+iPhone16,EMEA,IN:mom:Foxconn_CN:iPhone16,1
+iPhone16,APAC,IN:mom:Foxconn_CN:iPhone16,1

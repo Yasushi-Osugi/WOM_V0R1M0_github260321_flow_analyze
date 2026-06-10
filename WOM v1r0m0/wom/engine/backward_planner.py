@@ -50,6 +50,7 @@ from typing import Dict, List, Optional, Tuple
 
 from wom.model.plan_node import PlanNode, S, CO, I, P
 from wom.model.sc_tree   import SCTree
+from wom.engine.lane_assignment import LaneTable
 
 
 # ---------------------------------------------------------------------------
@@ -106,8 +107,10 @@ class BackwardPlanner:
         results = planner.run_all()
     """
 
-    def __init__(self, sc_tree: SCTree) -> None:
-        self.sc_tree = sc_tree
+    def __init__(self, sc_tree: SCTree,
+                 lane_table: Optional[LaneTable] = None) -> None:
+        self.sc_tree    = sc_tree
+        self.lane_table = lane_table or LaneTable.empty()
 
     # ======================================================================
     # Public API
@@ -136,14 +139,33 @@ class BackwardPlanner:
         for node in ot_root.walk_postorder():
             self._ot_propagate(node, n_weeks, result)
 
-        # ── Phase 2: Bridge supply_point → MOM ───────────────────────────
-        for w in range(n_weeks):
-            transfer = self.sc_tree.bridge_backward(prod_nm, w)
-            result.bridge_lots += len(transfer.lot_ids)
+        # ── Phase 2: Bridge supply_point → MOM (with Lane Assignment) ───
+        in_roots = self.sc_tree.get_in_roots(prod_nm)  # {node_id: PlanNode}
+        primary_mom = self.sc_tree.get_in_root(prod_nm)
 
-        # ── Phase 3: InBound PRE-ORDER ────────────────────────────────────
-        for node in in_root.walk_preorder():
-            self._in_propagate(node, n_weeks, result)
+        if self.lane_table.is_empty() or len(in_roots) == 1:
+            # No lane table or single MOM → original 1:1 bridge
+            for w in range(n_weeks):
+                transfer = self.sc_tree.bridge_backward(prod_nm, w)
+                result.bridge_lots += len(transfer.lot_ids)
+        else:
+            # Multi-MOM: route each lot to its assigned MOM via LaneTable
+            lot_leaf_index = self._build_lot_leaf_index(ot_root)
+            for w in range(n_weeks):
+                for lot_id in list(ot_root.psi4demand[w][S]):
+                    # Resolve destination MOM: leaf_node_name first, region fallback
+                    leaf       = lot_leaf_index.get(lot_id)
+                    leaf_name  = leaf.node_name if leaf else ""
+                    region     = leaf.region    if leaf else ""
+                    mom_id     = self.lane_table.resolve(prod_nm, leaf_name, region)
+                    target_mom = in_roots.get(mom_id, primary_mom)
+                    target_mom.add_lot_demand(w, S, lot_id)
+                    result.bridge_lots += 1
+
+        # ── Phase 3: InBound PRE-ORDER (all MOM roots) ───────────────────
+        for mom_node in in_roots.values():
+            for node in mom_node.walk_preorder():
+                self._in_propagate(node, n_weeks, result)
 
         # ── Build node summary ────────────────────────────────────────────
         for node in self.sc_tree.iter_all_nodes(prod_nm):
