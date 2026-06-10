@@ -2586,6 +2586,8 @@ class WOMApp(tk.Tk):
         self._f_inv.pack(fill="x", padx=6, pady=2)
         self._f_cap  = FileEntry(self._file_entries_fr, "Capacity Plan:")
         self._f_cap.pack(fill="x", padx=6, pady=2)
+        self._f_push = FileEntry(self._file_entries_fr, "Push Config:")
+        self._f_push.pack(fill="x", padx=6, pady=2)
         self._f_node = FileEntry(self._file_entries_fr, "Node Master:")
         self._f_node.pack(fill="x", padx=6, pady=2)
 
@@ -2765,6 +2767,7 @@ class WOMApp(tk.Tk):
             ("_f_dem",       "demand_forecast.csv"),
             ("_f_inv",       "inventory_master.csv"),
             ("_f_cap",       "capacity_plan.csv"),
+            ("_f_push",      "push_config.csv"),
             ("_f_node",      "node_master.csv"),
             ("_f_edge_cost", "edge_cost_master.csv"),
             ("_f_route",     "route_master.csv"),
@@ -2788,6 +2791,7 @@ class WOMApp(tk.Tk):
             ("_f_dem",       "demand_forecast.csv"),
             ("_f_inv",       "inventory_master.csv"),
             ("_f_cap",       "capacity_plan.csv"),
+            ("_f_push",      "push_config.csv"),
             ("_f_node",      "node_master.csv"),
             ("_f_edge_cost", "edge_cost_master.csv"),
             ("_f_route",     "route_master.csv"),
@@ -3178,6 +3182,24 @@ class WOMApp(tk.Tk):
                 copy_demand_to_supply(sc_tree, prod_nm)
                 _bus.fire(HOOK_POST_COPY, sc_tree=sc_tree,
                           prod_nm=prod_nm, weeks=weeks, config=_cfg)
+                # Step 8: PUSH/PULL — apply before ForwardPlanner if push_config.csv provided
+                _push_path = self._f_push.get() if hasattr(self, "_f_push") else ""
+                if _push_path and os.path.exists(_push_path):
+                    import csv as _csv
+                    from wom.engine.push_pull import PushProductionPlanner, PushConfig
+                    _push_cfgs = {}
+                    with open(_push_path, newline="", encoding="utf-8") as _pf:
+                        for _pr in _csv.DictReader(_pf):
+                            _pn = _pr.get("sku_id", "").strip()
+                            if _pn == prod_nm:
+                                _push_cfgs[_pn] = PushConfig(
+                                    node_id=_pr.get("node_id", "").strip(),
+                                    push_qty_per_week=int(_pr.get("push_qty_per_week") or 0),
+                                    buffer_lots=int(_pr.get("buffer_lots") or 0),
+                                    sku_id=_pn,
+                                )
+                    if _push_cfgs:
+                        PushProductionPlanner(sc_tree).setup_all(_push_cfgs)
                 ForwardPlanner(sc_tree).run(prod_nm)
                 _bus.fire(HOOK_POST_FORWARD, sc_tree=sc_tree,
                           prod_nm=prod_nm, weeks=weeks, config=_cfg)
@@ -3357,7 +3379,7 @@ class WOMApp(tk.Tk):
         path = filedialog.asksaveasfilename(
             defaultextension=".xlsx",
             filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")],
-            title="Export to Excel",
+            title="Export Results to Excel",
         )
         if not path:
             return
@@ -3370,17 +3392,18 @@ class WOMApp(tk.Tk):
             import tkinter.messagebox as _mb
             _mb.showerror("Export Error", str(exc))
 
+    # ------------------------------------------------------------------ #
     # Status helper
     # ------------------------------------------------------------------ #
 
     def _status(self, msg: str) -> None:
         self._status_var.set(msg)
 
+
 # ======================================================================
 # Entry point
 # ======================================================================
+
 def launch():
     """Entry point called by main.py."""
     WOMApp().mainloop()
-
-# =======================================
