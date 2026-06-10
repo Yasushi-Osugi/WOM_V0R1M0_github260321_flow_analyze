@@ -1,0 +1,21 @@
+node_id,node_name,node_type,lat,lon,sku_id,region,description
+IN:mom:JA_Niigata_Seihaku:Koshihikari,新潟精米工場,mother_plant,37.9161,139.0364,Koshihikari,,新潟県産コシヒカリ 精米・加工拠点
+IN:mom:JA_Niigata:Koshihikari,JA新潟 集荷,sku_supplier,37.8413,138.8780,Koshihikari,,新潟県農協 玄米集荷センター
+IN:leaf_in:Tanbo_Niigata:Koshihikari,稲作田（新潟）,sku_supplier,37.1100,138.6800,Koshihikari,,越後平野 水田地帯
+IN:mom:JA_Hokkaido_Seihaku:Yumepirika,北海道精米工場,mother_plant,43.0618,141.3545,Yumepirika,,北海道産ユメピリカ 精米・加工拠点
+IN:mom:JA_Hokkaido:Yumepirika,JA北海道 集荷,sku_supplier,43.5000,141.3000,Yumepirika,,北海道農協 玄米集荷センター
+IN:leaf_in:Tanbo_Hokkaido:Yumepirika,稲作田（北海道）,sku_supplier,43.3000,141.6000,Yumepirika,,空知・上川 水田地帯
+OUT:supply_point:SP_Kome:Koshihikari,全国集約倉庫（コシ）,supply_point,35.7056,139.7520,,KANTO,東京近郊 米穀倉庫
+OUT:supply_point:SP_Kome:Yumepirika,全国集約倉庫（ユメ）,supply_point,35.7056,139.7520,,KANTO,東京近郊 米穀倉庫
+OUT:dad:DC_Higashi:Koshihikari,DC東日本,region_dc,35.9000,139.6000,,KANTO,関東・東北向け配送センター
+OUT:dad:DC_Nishi:Koshihikari,DC西日本,region_dc,34.6937,135.5023,,KANSAI,関西・九州向け配送センター
+OUT:dad:DC_Higashi:Yumepirika,DC東日本（ユメ）,region_dc,35.9000,139.6000,,KANTO,関東・東北向け配送センター
+OUT:dad:DC_Nishi:Yumepirika,DC西日本（ユメ）,region_dc,34.6937,135.5023,,KANSAI,関西・九州向け配送センター
+OUT:leaf_out:KANTO:Koshihikari,小売_関東（コシ）,marketing,35.6895,139.6917,Koshihikari,KANTO,首都圏スーパー・小売店
+OUT:leaf_out:TOHOKU:Koshihikari,小売_東北（コシ）,marketing,38.2682,140.8694,Koshihikari,TOHOKU,東北スーパー・小売店
+OUT:leaf_out:KANSAI:Koshihikari,小売_関西（コシ）,marketing,34.6937,135.5023,Koshihikari,KANSAI,関西スーパー・小売店
+OUT:leaf_out:KYUSHU:Koshihikari,小売_九州（コシ）,marketing,33.5904,130.4017,Koshihikari,KYUSHU,九州スーパー・小売店
+OUT:leaf_out:KANTO:Yumepirika,小売_関東（ユメ）,marketing,35.6895,139.6917,Yumepirika,KANTO,首都圏スーパー・小売店
+OUT:leaf_out:TOHOKU:Yumepirika,小売_東北（ユメ）,marketing,38.2682,140.8694,Yumepirika,TOHOKU,東北スーパー・小売店
+OUT:leaf_out:KANSAI:Yumepirika,小売_関西（ユメ）,marketing,34.6937,135.5023,Yumepirika,KANSAI,関西スーパー・小売店
+OUT:leaf_out:KYUSHU:Yumepirika,小売_九州（ユメ）,marketing,33.5904,130.4017,Yumepirika,KYUSHU,九州スーパー・小売店
